@@ -75,6 +75,14 @@
       100% { left: 235px; height: 30px; width: 15px}
     }
 
+  .field-icon {
+    float: right;
+    margin-left: -25px;
+    margin-top: -25px;
+    position: relative;
+    z-index: 2;
+  }
+
     .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:10px;margin:30px 0 30px}
     .K2_CBox .CB_Heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
     .K2_CBox .CB_Heading span{margin:0;font-weight:700;font-family:inherit;font-size:1.1rem}
@@ -236,6 +244,7 @@
     
                 <label for="password"><b>Password</b></label><br>
                 <input id="password" type="password" placeholder="Enter Password" name="password" required>
+                <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
     
                 <label for="warehouse"><b>Warehouse</b></label><br>
                 <input id="warehouse" type="text" placeholder="Enter Warehouse Name" name="warehouse" required>
@@ -285,5 +294,14 @@
       document.getElementById("snowflake-form").style.opacity = "0";
       document.getElementById("side").style.display = "none";
     }
+    $(".toggle-password").click(function() {
+      $(this).toggleClass("fa-eye fa-eye-slash");
+      var input = $($(this).attr("toggle"));
+      if (input.attr("type") == "password") {
+        input.attr("type", "text");
+      } else {
+        input.attr("type", "password");
+      }
+    });
   </script>
 </body>
