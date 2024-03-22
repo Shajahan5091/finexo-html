@@ -83,6 +83,11 @@
     z-index: 2;
   }
 
+  .container{
+    padding-top:50px;
+    margin: auto;
+}
+
     .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:10px;margin:30px 0 30px}
     .K2_CBox .CB_Heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
     .K2_CBox .CB_Heading span{margin:0;font-weight:700;font-family:inherit;font-size:1.1rem}
@@ -230,7 +235,7 @@
         </div>
     </div>
     <div class="main" >
-        <div id="snowflake-form" class="form-container"> 
+        <!-- <div id="snowflake-form" class="form-container"> 
             <form id="snowflakeForm" name="snowflakeForm" action="/connect_snowflake" class="snowflake-form" method="post">
                 <h2 id="form-heading">
                   Destination Connection<br>
@@ -251,7 +256,34 @@
     
                 <button type="submit" id="snowflake-login-btn" onclick="display_loader()">Login</button>
             </form>
-        </div>
+        </div> -->
+        <div class="container">
+          <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+          
+              <div class="panel panel-default">
+                <div class="panel-body">
+                  <form class="form-horizontal" method="" action="">
+          
+                    <div class="form-group">
+                      <label class="col-md-4 control-label">Email</label>
+                      <div class="col-md-6">
+                        <input type="email" class="form-control" name="email" value="">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="col-md-4 control-label">Password</label>
+                      <div class="col-md-6">
+                        <input id="password-field" type="password" class="form-control" name="password" value="secret">
+                        <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
     </div>
   </div>
  <!-- jQery -->
