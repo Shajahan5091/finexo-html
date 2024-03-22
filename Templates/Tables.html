@@ -1,0 +1,18 @@
+{% extends "schemas_copy.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tables</title>
+</head>
+<body>
+    <h1>Schema Name: {{ schema }}</h1>
+    <label for="table-list">Tables: </label>
+    <ul id="table-list">
+        {% for table in tables %}
+        <li>{{table}}</li>    
+        {% endfor %}
+    </ul>
+</body>
+</html>

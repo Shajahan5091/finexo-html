@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/favicon.png') }}" type="">
+  <title> Snow Migrate </title>
+  <!-- bootstrap core css -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}" />
+  <!-- fonts style -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!--owl slider stylesheet -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+  <!-- font awesome style -->
+  <link href="{{ url_for('static',filename='styles/font-awesome.min.css') }}" rel="stylesheet" />
+  <!-- Custom styles for this template -->
+  <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
+</head>
+
+<body class="sub_page">
+  <div class="hero_area">
+    <div class="hero_bg_box">
+      <div class="bg_img_box">
+        <img src="{{ url_for('static',filename='Image/hero-bg.png') }}" alt="">
+      </div>
+    </div>
+    <!-- header section strats -->
+    <header class="header_section">
+      <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg custom_nav-container ">
+          <a class="navbar-brand" href="index.html">
+            <span>
+              Snow Migrate
+            </span>
+          </a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class=""> </span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav  ">
+              <li class="nav-item ">
+                <a class="nav-link" href="index.html">Home </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="about.html"> About</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="service.html">Services</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="team.html">Team</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!-- end header section -->
+  </div>
+  <div class="row2">
+    <div class="side">
+      <!-- <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+        <div class="heading_container">
+          <h2>
+            <label for="bucket" id="bucket">Bucket Name</label>
+          </h2>
+        </div>
+        <div class="form-container" style="border: none;">
+          <input type="text" id="bucket" name="bucket">
+        </div>
+        <div class="heading_container">
+          <h2>
+            Upload the <span>JSON key</span> file
+          </h2><br>
+        </div>
+        <div id="drop-area">
+          <div style="text-align: center;">
+            <input type="file" id="json-file" name="file" accept=".json">
+            <label for="json-file" id="file-label">Choose JSON file</label>
+          </div>
+        </div>
+        <p id="file-name" style="color: #231a6f; padding-top: 5px;"></p>
+        <button id="connect-btn" class="connect-btn" type="submit" style="margin-left: 12vw; border-radius: 5px;">Submit</button>
+      </form> -->
+      <div class="heading_container">
+        <h2>Prerequisites for Bigquery as Source:</h2>
+      </div>
+      <ul style="list-style-type: disc;">
+          <li>A Google Cloud Project with BigQuery enabled</li>
+          <li>A Google Cloud Service Account with the "BigQuery User" and "BigQuery Data Editor" roles in your GCP project</li>
+          <li>A Service Account Json Key to authenticate into your Service Account</li>
+      </ul>
+      <br>
+      <div class="heading_container">
+        <h2>Steps for Creating a GCP Service Account</h2>
+      </div>
+      <ol style="font-weight: bold">
+          <li><h5 style="font-weight: bold">Creating a Service Account</h5></li>
+          <p style="font-weight: normal">It is recommended to use a dedicated Service Account for SnowMigrate to simplify Permission Management and Auditing. If you already have a Service Account with required permissions, you can use it here. Ensure that the chosen Service Account has the necessary roles for performing Data Migration seamlessly. Here is a Detailed guide that explains how to create a Service Account:
+          <br><a href="https://cloud.google.com/iam/docs/service-accounts-create">GCP’s Guide for Creating a Service Account</a></p>
+          <br>
+          <li><h5 style="font-weight: bold">Grant or revoke Roles</h5></li>
+          <p style="font-weight: normal">Add the service account as a Member in your Google Cloud Project with the "BigQuery User" and “BigQuery Data Editor” role. Here is a Detailed guide that explains how to Grant Multiple Roles:
+          <br><a  href="https://cloud.google.com/iam/docs/granting-changing-revoking-access#granting-console">Grant or revoke multiple roles using the Google Cloud console</a></p>
+          <br>
+          <li><h5 style="font-weight: bold">Service Account Keys Configuration</h5></li>
+          <p style="font-weight: normal">SnowMigrate currently supports JSON Keys only, ensure to create your key in the same. Then, download the key as Google permits viewing its contents only at this stage. Here is a detailed guide explaining how to Create Service Account Keys:
+          <br><a href="https://cloud.google.com/iam/docs/keys-create-delete">Creating and Managing Service Account Keys guide to create a Key</a></p>
+      </ol>
+      <br>
+      <h3 style="font-weight: bold" class="text-danger"> Important!!</h3>
+      <ol>
+          <li>Creation of a GCP Storage Bucket will be done automatically by the tool. The Bucket would act as an External Stage for Migrating Tables.</li>
+          <li>The Tool will automatically Grant these Roles “Storage Object Admin” & “Storage Object Viewer” to the Service Account.</li>
+          <li>After Successful Migration, the Bucket will automatically be deleted.</li>
+      </ol>
+    </div>
+    <div class="main" >
+      <div class="bigquery-form">
+        <form id="json-form" name="json-form" action="/upload" method="post" enctype="multipart/form-data">
+          <div class="heading_container">
+            <h2><span>Source </span>Connection</h2>
+          </div>
+          <label for="bucket">Bucket Name</label><br>
+          <input id="bucket" name="bucket" type="text" placeholder="Enter your bucket name"/><br>
+          <label for="Region">Region</label><br>
+          <input type="text" name="Region" id="Region" placeholder="Enter your bucket's region"><br>
+          <label>Upload the JSON file</label><br>
+          <div id="drop-area">
+            <div style="text-align: center;">
+              <input type="file" id="json-file" name="file" accept=".json">
+              <label for="json-file" id="file-label">Choose JSON file</label>
+            </div>
+          </div>
+          <p id="file-name" style="padding: 0; text-wrap: nowrap;"></p>
+          <button id="connect-btn" class="connect-btn" type="submit" style="margin-left: 8vw; border-radius: 5px;">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("json-form");
+  const fileInput = document.getElementById("json-file");
+  const fileLabel = document.getElementById("file-label");
+  const fileNameDisplay = document.getElementById("file-name");
+
+  fileInput.addEventListener("change", function () {
+      if (fileInput.files.length > 0) {
+          const fileName = fileInput.files[0].name;
+          fileNameDisplay.textContent = `Selected file: ${fileName}`;
+      } else {
+          fileNameDisplay.textContent = "";
+      }
+  });
+  });
+</script>
+ <!-- jQery -->
+ <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+ <!-- popper js -->
+ <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+ </script>
+ <!-- bootstrap js -->
+ <script type="text/javascript" src="js/bootstrap.js"></script>
+ <!-- owl slider -->
+ <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js">
+ </script>
+ <!-- custom js -->
+ <script type="text/javascript" src="js/custom.js"></script>
+ <!-- Google Map -->
+ <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
+ </script>
+ <!-- End Google Map -->
+</body>
