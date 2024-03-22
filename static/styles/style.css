@@ -1152,7 +1152,7 @@ a:focus {
   top: 0;
 }
 
-#snowflakeForm input{
+#snowflakeForm input[id]{
   margin-left: 80px;
   width: 400px;
   padding: 12px;
