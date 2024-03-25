@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Open+Sans:wght@300;400;600;700&display=swap");
-
 body {
   font-family: "Open Sans", sans-serif;
   color: #0c0c0c;
@@ -44,13 +43,13 @@ body {
           align-items: flex-start;
 }
 
- h2 {
+.heading_container h2 {
   position: relative;
   font-weight: bold;
   margin-bottom: 0;
 }
 
- h2 span {
+.heading_container h2 span {
   color: #00bbf0;
 }
 

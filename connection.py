@@ -283,14 +283,17 @@ from snowflake.connector.pandas_tools import write_pandas
 app = Flask(__name__)
 
 @app.route('/')
+# First app route that will render the index.html page
 def index():
     return render_template('index.html')
 
 @app.route('/biq', methods=['POST'])
+# This app route will render the file_upload.html page after the bigquery option selected from services
 def biq():
     return render_template('file_upload.html')
 
 @app.route('/upload', methods=['POST'])
+# This app route will render the schemas_copy.html after the submitting the json file
 def upload():
     
     # Check if the POST request has the file part
@@ -321,9 +324,7 @@ def upload():
 
             # Fetch schemas from BigQuery and display them
             schemas = fetch_schemas(bq_client)
-            # Tables = fetch_tables(bq_client)
-            # for i in schemas:
-            #     print(fetch_tables(project_id, i, bq_client))
+            
             return render_template('schemas_copy.html', schemas=schemas)
         except Exception as e:
             return f'Error establishing connection to BigQuery: {str(e)}'
@@ -392,10 +393,6 @@ def connect_snowflake():
         role = 'ACCOUNTADMIN'
     )
     result = create_schemas_and_copy_table(conn,schemas_list)
-    # cursor=conn.cursor()
-    # cursor.execute('SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.USERS')
-    # data = cursor.fetchall()
-    # print(data)
     return result
 
 def create_schemas_and_copy_table(conn,schema_list):
