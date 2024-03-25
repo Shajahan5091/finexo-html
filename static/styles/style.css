@@ -1177,7 +1177,7 @@ a:focus {
 }
 
 .side2 {
-  flex: 20%;
+  flex: 22%;
   padding: 40px; 
   line-height: 30px;
   background-color: #00204a;
@@ -1186,7 +1186,7 @@ a:focus {
 
 /* Main column */
 .main2 {
-  flex: 80%;
+  flex: 78%;
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
