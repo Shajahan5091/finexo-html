@@ -1151,7 +1151,7 @@ a:focus {
   top: 0;
 }
 
-#snowflakeForm input[id]{
+#snowflakeForm input[class]{
   margin-left: 80px;
   width: 400px;
   padding: 12px;
@@ -1162,12 +1162,21 @@ a:focus {
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
 }
 
-#snowflakeForm input:hover{
+#snowflakeForm input[class]:hover{
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
 }
-#snowflakeForm input:focus {
+#snowflakeForm input[class]:focus {
   box-shadow: 0 0 5pt 2pt #D3D3D3;
   outline-width: 0px;
+}
+
+.box{
+  box-shadow: 0 0 5pt 2pt #D3D3D3;
+  outline-width: 0px;
+}
+
+.box .connect-btn{
+  border-radius: 3px;
 }
 
 #snowflakeForm label{
@@ -1189,4 +1198,8 @@ a:focus {
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
+}
+
+#show-password, #show-pass-label:hover{
+  cursor: pointer;
 }
