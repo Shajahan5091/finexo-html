@@ -33,11 +33,25 @@
                 <span id="Error_3" class="failure"></span>
             </li>
             <li>
-                Testing if Storage Integration, File_Format, Stage are Created:  <span id="StorageStageResult" class="loading">Loading...</span>
+                Testing if Storage Integration Created:  <span id="StorageIntegrationResult" class="loading">Loading...</span>
                 <span id="Error_4" class="failure"></span>
             </li>
-            <li>Testing if Storage Integration, File_Format, Stage has Access: <span id="StorageIntegrationResult" class="loading">Loading...</span>
+            <li>Testing if Storage Integration has Access: <span id="StorageIntegrationAccess" class="loading">Loading...</span>
                 <span id="Error_5" class="failure"></span>
+            </li>
+            <li>
+                Testing if File_Format Created:  <span id="FileFormatResult" class="loading">Loading...</span>
+                <span id="Error_6" class="failure"></span>
+            </li>
+            <li>Testing if File_Format has Access: <span id="FileFormatAccess" class="loading">Loading...</span>
+                <span id="Error_7" class="failure"></span>
+            </li>
+            <li>
+                Testing if Stage Created:  <span id="StorageStageResult" class="loading">Loading...</span>
+                <span id="Error_8" class="failure"></span>
+            </li>
+            <li>Testing if Stage has Access: <span id="StorageStageAccess" class="loading">Loading...</span>
+                <span id="Error_9" class="failure"></span>
             </li>
         </ul>
     </div>
@@ -131,35 +145,13 @@
     }
 
 
-     // Function to test creating table and schema permissions
-     async function check_Object_Exist() {
-        try {
-            // Show loading symbol
-            document.getElementById('StorageStageResult').classList.add('loading');
-
-            const response = await fetch('/CheckObjectExistence', {
-                method: 'POST', // Explicitly specify the POST method
-            });
-            const data = await response.json();
-            if (data.success) {
-                showSuccess('StorageStageResult');
-            } else {
-                showFailure('StorageStageResult');
-                document.getElementById('Error_4').textContent = data.error;
-            }
-        } catch (error) {
-            showFailure('StorageStageResult');
-            document.getElementById('Error_4').textContent = error.message;
-        }
-    }
-
-    // Function to test creating table and schema permissions
-    async function StorageIntegrationAccess() {
+     // Function to test Storage Integration Created or not
+     async function Integration_Object_Exist() {
         try {
             // Show loading symbol
             document.getElementById('StorageIntegrationResult').classList.add('loading');
 
-            const response = await fetch('/StorageIntegrationAccess', {
+            const response = await fetch('/IntegrationObjectExistence', {
                 method: 'POST', // Explicitly specify the POST method
             });
             const data = await response.json();
@@ -167,11 +159,124 @@
                 showSuccess('StorageIntegrationResult');
             } else {
                 showFailure('StorageIntegrationResult');
-                document.getElementById('Error_5').textContent = data.error;
+                document.getElementById('Error_4').textContent = data.error;
             }
         } catch (error) {
             showFailure('StorageIntegrationResult');
+            document.getElementById('Error_4').textContent = error.message;
+        }
+    }
+
+    // Function to test Storage Integration Accesible or not
+    async function IntegrationAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageIntegrationAccess').classList.add('loading');
+
+            const response = await fetch('/IntegrationAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageIntegrationAccess');
+            } else {
+                showFailure('StorageIntegrationAccess');
+                document.getElementById('Error_5').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageIntegrationAccess');
             document.getElementById('Error_5').textContent = error.message;
+        }
+    }
+
+    // Function to test File Format Created or not
+    async function FileFormat_Object_Exist() {
+        try {
+            // Show loading symbol
+            document.getElementById('FileFormatResult').classList.add('loading');
+
+            const response = await fetch('/FileFormatObjectExistence', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('FileFormatResult');
+            } else {
+                showFailure('FileFormatResult');
+                document.getElementById('Error_6').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('FileFormatResult');
+            document.getElementById('Error_6').textContent = error.message;
+        }
+    }
+
+
+    // Function to test Storage Integration Accesible or not
+    async function FormatAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('FileFormatAccess').classList.add('loading');
+
+            const response = await fetch('/FormatAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('FileFormatAccess');
+            } else {
+                showFailure('FileFormatAccess');
+                document.getElementById('Error_7').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('FileFormatAccess');
+            document.getElementById('Error_7').textContent = error.message;
+        }
+    }
+
+
+    // Function to test External Stage Created or not
+    async function Stage_Object_Exist() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageStageResult').classList.add('loading');
+
+            const response = await fetch('/StageObjectExistence', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageStageResult');
+            } else {
+                showFailure('StorageStageResult');
+                document.getElementById('Error_8').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageStageResult');
+            document.getElementById('Error_8').textContent = error.message;
+        }
+    }
+
+
+    // Function to test Storage Integration Accesible or not
+    async function StageAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageStageAccess').classList.add('loading');
+
+            const response = await fetch('/StageAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageStageAccess');
+            } else {
+                showFailure('StorageStageAccess');
+                document.getElementById('Error_9').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageStageAccess');
+            document.getElementById('Error_9').textContent = error.message;
         }
     }
 
@@ -180,8 +285,12 @@
             testConnection();
             GrantAccessCheck();
             checkCreatePermissions();
-            check_Object_Exist();
-            StorageIntegrationAccess();
+            Integration_Object_Exist();
+            IntegrationAccess();
+            FileFormat_Object_Exist();
+            FormatAccess();
+            Stage_Object_Exist();
+            StageAccess();
         };
 
     </script>
