@@ -378,20 +378,6 @@ def snowflake_form():
 def connect_snowflake():
     schemas_list = schema_list
     print(schemas_list)
-    account_name = request.form.get("accountname")
-    print(account_name)
-    username = request.form.get("username")
-    print(username)
-    password = request.form.get("password")
-    print(password)
-    warehouse = request.form.get("warehouse")
-    conn = snowflake.connector.connect(
-        user= username,
-        password= password,
-        account= account_name,
-        warehouse= warehouse,
-        role = 'ACCOUNTADMIN'
-    )
     result = create_schemas_and_copy_table(conn,schemas_list)
     return result
 
@@ -535,6 +521,278 @@ def create_schemas_and_copy_table(conn,schema_list):
    auditing_log_into_Snowflake(conn,project_id,schema_list)
    return "Success"
 
+
+# Endpoint to test GCP service account connection
+@app.route('/test_connection', methods=['POST'])
+def test_connection():
+
+    account_name = request.form.get("accountname")
+    print(account_name)
+    username = request.form.get("username")
+    print(username)
+    
+    password = request.form.get("password")
+    print(password)
+    warehouse = request.form.get("warehouse")
+    global conn
+    conn = snowflake.connector.connect(
+        user= username,
+        password= password,
+        account= account_name,
+        warehouse= warehouse,
+        role = 'ACCOUNTADMIN'
+    )
+
+    # Replace this with your actual testing logic
+    print("Received request to test service account connection")
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        # Connection successful, perform your logic here
+        try:
+            cursor.execute('SELECT 5+5')
+            row = cursor.fetchone()
+            if row[0] == 10:
+                success = True
+                print(row[0])
+            # Simulate successful connection
+            return jsonify({"success": True})
+        except Exception as e:
+            error_message = str(e).split(":")[-1].strip()
+            return jsonify({"success": False, "error": error_message})
+        
+
+
+# Endpoint to check if required roles are granted
+@app.route('/GrantAccessCheck', methods=['POST'])
+def grant_access_check():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # Replace this with your actual logic to check access for Warehouse, Database, Role, and User
+            warehouse_access = check_warehouse_access(cursor)
+            database_access = check_database_access(cursor)
+            role_access = check_role_access(cursor)
+            user_access = check_user_access(cursor)
+
+            if warehouse_access and database_access and role_access and user_access:
+                return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not warehouse_access:
+                    error_message += "Warehouse access failed. "
+                if not database_access:
+                    error_message += "Database access failed. "
+                if not role_access:
+                    error_message += "Role access failed. "
+                if not user_access:
+                    error_message += "User access failed. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+# Simulated functions to check access for Warehouse, Database, Role, and User
+def check_warehouse_access(cursor):
+    # Replace with your actual logic
+    cursor.execute('USE WAREHOUSE SNOW_MIGRATE_WAREHOUSE')
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+def check_database_access(cursor):
+    # Replace with your actual logic
+    cursor.execute('USE DATABASE SNOW_MIGRATE_DATABASE')
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+def check_role_access(cursor):
+    # Replace with your actual logic
+    cursor.execute('USE ROLE SNOW_MIGRATE_ROLE')
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+def check_user_access(cursor):
+    # Replace with your actual logic
+    cursor.execute("SHOW USERS LIKE 'SNOW_MIGRATE_USER'")
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+
+
+
+# Endpoint to check if creating table and schema is allowed
+@app.route('/CheckCreatePermissions', methods=['POST'])
+def check_create_permissions():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # Replace this with your actual logic to check permissions
+            schema_creation_allowed = check_schema_creation_permission(cursor)
+            table_creation_allowed = check_table_creation_permission(cursor)
+
+            if table_creation_allowed and schema_creation_allowed:
+                return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not table_creation_allowed:
+                    error_message += "Table creation not allowed. "
+                if not schema_creation_allowed:
+                    error_message += "Schema creation not allowed. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+# Function to check if creating table is allowed
+def check_table_creation_permission(cursor):
+    try:
+        cursor.execute("USE DATABASE SNOW_MIGRATE_DATABASE")
+        cursor.execute("USE SCHEMA test_schema")
+        cursor.execute("CREATE TABLE IF NOT EXISTS test_table (id INT)")
+        cursor.execute("DROP TABLE IF EXISTS test_table")
+        cursor.execute("DROP SCHEMA IF EXISTS test_schema")
+        return True
+    except Exception as e:
+        return False
+
+# Function to check if creating schema is allowed
+def check_schema_creation_permission(cursor):
+    try:
+        cursor.execute("USE DATABASE SNOW_MIGRATE_DATABASE")
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS test_schema")
+        return True
+    except Exception as e:
+        return False
+
+
+
+
+# Endpoint to check Storage integration, file fromat, stage exist
+@app.route('/CheckObjectExistence', methods=['POST'])
+def check_Object_Exist():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            storage_integration_exists = check_object_exists(cursor, 'INTEGRATIONS', 'SNOW_MIGRATE_INTEGRATION')
+            file_format_exists = check_object_exists(cursor, 'FILE FORMATS', 'my_parquet_format')
+            stage_exists = check_object_exists(cursor, 'STAGES', 'SNOW_MIGRATE_STAGE')
+
+            print(f"Storage Integration Exists: {storage_integration_exists}")
+            print(f"File Format Exists: {file_format_exists}")
+            print(f"Stage Exists: {stage_exists}")
+            if storage_integration_exists and file_format_exists and stage_exists:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not storage_integration_exists:
+                    error_message += "Storage Integration Object not Exist. "
+                if not file_format_exists:
+                    error_message += "File Format Object not Exist. "
+                if not stage_exists:
+                    error_message += "Stage Object not Exist. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+        
+    
+# Function to check if an object exists
+def check_object_exists(cursor, object_type, object_name):
+    try:
+            query = f"SHOW {object_type} LIKE '{object_name}'"
+            cursor.execute(query)
+            if(len(cursor.fetchall()) > 0):
+                print(len(cursor.fetchall()))
+                return True
+            else:
+                return False
+    except Exception as e:
+            return False
+    
+
+
+# Endpoint to check access for Storage integration, file fromat, stage exist
+@app.route('/StorageIntegrationAccess', methods=['POST'])
+def StorageIntegrationAccess():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+             # Check grants for integration
+            integration_name = 'SNOW_MIGRATE_INTEGRATION'
+            role_name = 'SNOW_MIGRATE_ROLE'
+            privilege = 'OWNERSHIP'
+            granted_on = 'INTEGRATION'
+            integration_grants = check_grants(cursor, privilege, granted_on, integration_name, role_name)
+            
+            # Check grants for file format
+            file_format_name = 'SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.MY_PARQUET_FORMAT'
+            role_name = 'SNOW_MIGRATE_ROLE'
+            privilege = 'OWNERSHIP'
+            granted_on = 'FILE FORMAT'
+            file_format_grants = check_grants(cursor, privilege, granted_on, file_format_name, role_name)
+            
+            # Check grants for stage
+            stage_name = 'SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.SNOW_MIGRATE_STAGE'
+            role_name = 'SNOW_MIGRATE_ROLE'
+            privilege = 'OWNERSHIP'
+            granted_on = 'STAGE'
+            stage_grants = check_grants(cursor, privilege, granted_on, stage_name, role_name)
+        
+            print(f"Grants for integration '{integration_name}': {integration_grants}")
+            print(f"Grants for file format '{file_format_name}': {file_format_grants}")
+            print(f"Grants for stage '{stage_name}': {stage_grants}")
+
+            if integration_grants and file_format_grants and stage_grants:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not integration_grants:
+                    error_message += "Storage Integration Object not Accessible. "
+                if not file_format_grants:
+                    error_message += "File Format Object not Accessible. "
+                if not stage_grants:
+                    error_message += "Stage Object not Accessible. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+    
+# Function to check if access is granted to the specified object
+def check_grants(cursor, privilege, granted_on, object_name, role_name):      
+    try:
+        query = f"SHOW GRANTS ON {granted_on} {object_name}"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        if(granted_on == 'FILE FORMAT'):
+            granted_on='FILE_FORMAT'
+        for row in results:
+            if row[1] == privilege and row[2] == granted_on and row[3] == object_name and row[5] == role_name:
+                return True
+        return False
+    except Exception as e:
+            return False
+
+
+
 def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_names):
     print(schema_names)
     if len(schema_names)<2:
@@ -604,7 +862,6 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_
     schema = [field.name for field in results_column_lst.schema]
     dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema)
     write_pandas(snowflake_connection_config,dataframe_column_info,'META_COLUMNS_STRUCT_SOURCE',database="SNOWMIGRATE",schema="PUBLIC", auto_create_table=True,overwrite=True,table_type="transient")
- 
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

@@ -1155,7 +1155,7 @@ a:focus {
   margin-left: 80px;
   width: 400px;
   padding: 12px;
-  padding-right: 150px;
+  /* padding-right: 150px; */
   padding-bottom: 10px;
   border-radius: 5px;
   border: solid 1.5px #D3D3D3;
