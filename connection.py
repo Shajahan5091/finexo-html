@@ -525,22 +525,29 @@ def create_schemas_and_copy_table(conn,schema_list):
 # Endpoint to test GCP service account connection
 @app.route('/test_connection', methods=['POST'])
 def test_connection():
-
     account_name = request.form.get("accountname")
     print(account_name)
+    role = request.form.get("role")
+    print(role)
     username = request.form.get("username")
     print(username)
-    
     password = request.form.get("password")
     print(password)
     warehouse = request.form.get("warehouse")
+    print(warehouse)
+    database = request.form.get("database")
+    print(database)
+    schema = request.form.get("schema")
+    print(schema)
     global conn
     conn = snowflake.connector.connect(
         user= username,
         password= password,
         account= account_name,
         warehouse= warehouse,
-        role = 'ACCOUNTADMIN'
+        role = role,
+        database = database,
+        schema = schema
     )
 
     # Replace this with your actual testing logic
@@ -563,7 +570,9 @@ def test_connection():
             error_message = str(e).split(":")[-1].strip()
             return jsonify({"success": False, "error": error_message})
         
-
+@app.route('/snowflake_testing', methods=['POST'])
+def snowflake_testing():
+    render_template("test_snowflake.html")
 
 # Endpoint to check if required roles are granted
 @app.route('/GrantAccessCheck', methods=['POST'])

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snow Migrate</title>
+<style>
+    .loading {
+        display: inline-block;
+    }
+    .success {
+        color: green;
+    }
+    .failure {
+        color: red;
+    }
+</style>
+</head>
+<body>
+    <h1>SNOWFLAKE Testing</h1>
+    <div id="Snowflake_User">
+        Testing Snowflake Connection:
+        <span id="SnowflakeUserResult" class="loading">Loading...</span>
+        <span id="Error_1" class="failure"></span>
+    </div>
+    <div id="requiredRoles">
+        Testing if required roles are granted:
+        <ul>
+            <li>Warehouse, DataBase, Role, User: <span id="RoleResult" class="loading">Loading...</span>
+                <span id="Error_2" class="failure"></span>
+            </li>
+            <li>Access to Create Schema's & Table's: <span id="CreatePermissionsResult" class="loading">Loading...</span>
+                <span id="Error_3" class="failure"></span>
+            </li>
+            <li>
+                Testing if Storage Integration, File_Format, Stage are Created:  <span id="StorageStageResult" class="loading">Loading...</span>
+                <span id="Error_4" class="failure"></span>
+            </li>
+            <li>Testing if Storage Integration, File_Format, Stage has Access: <span id="StorageIntegrationResult" class="loading">Loading...</span>
+                <span id="Error_5" class="failure"></span>
+            </li>
+        </ul>
+    </div>
+    <br>
+    <br>
+    <form action="/migration_result" method="post">
+        <button type="submit"><b>Proceed</b></button>
+    </form>
+
+    <script>
+        // Function to display tick mark
+        function showSuccess(elementId) {
+            document.getElementById(elementId).textContent = '✔';
+            document.getElementById(elementId).classList.add('success');
+            document.getElementById(elementId).classList.remove('loading');
+        }
+
+        // Function to display cross mark
+        function showFailure(elementId) {
+            document.getElementById(elementId).textContent = '✘';
+            document.getElementById(elementId).classList.add('failure');
+            document.getElementById(elementId).classList.remove('loading');
+        }
+
+
+        // Function to test GCP service account connection
+        async function testConnection() {
+            try {
+                // Show loading symbol
+                document.getElementById('SnowflakeUserResult').classList.add('loading');
+                
+                const response = await fetch('/test_connection', {
+                    method: 'POST', // Explicitly specify the POST method
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('SnowflakeUserResult');
+                } else {
+                    showFailure('SnowflakeUserResult');
+                    document.getElementById('Error_1').textContent = data.error;
+                }
+            } catch (error) {
+                showFailure('SnowflakeUserResult');
+                document.getElementById('Error_1').textContent = error.message;
+            }
+        }
+
+        // Function to test required roles
+        async function GrantAccessCheck() {
+            try {
+                // Show loading symbol
+                document.getElementById('RoleResult').classList.add('loading');
+                
+                const response = await fetch('/GrantAccessCheck', {
+                    method: 'POST', // Explicitly specify the POST method
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('RoleResult');
+                } else {
+                    showFailure('RoleResult');
+                    document.getElementById('Error_2').textContent = data.error;
+                }
+            } catch (error) {
+                showFailure('RoleResult');
+                document.getElementById('Error_2').textContent = error.message;
+            }
+        }
+
+
+       // Function to test creating table and schema permissions
+    async function checkCreatePermissions() {
+        try {
+            // Show loading symbol
+            document.getElementById('CreatePermissionsResult').classList.add('loading');
+
+            const response = await fetch('/CheckCreatePermissions', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('CreatePermissionsResult');
+            } else {
+                showFailure('CreatePermissionsResult');
+                document.getElementById('Error_3').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('CreatePermissionsResult');
+            document.getElementById('Error_3').textContent = error.message;
+        }
+    }
+
+
+     // Function to test creating table and schema permissions
+     async function check_Object_Exist() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageStageResult').classList.add('loading');
+
+            const response = await fetch('/CheckObjectExistence', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageStageResult');
+            } else {
+                showFailure('StorageStageResult');
+                document.getElementById('Error_4').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageStageResult');
+            document.getElementById('Error_4').textContent = error.message;
+        }
+    }
+
+    // Function to test creating table and schema permissions
+    async function StorageIntegrationAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageIntegrationResult').classList.add('loading');
+
+            const response = await fetch('/StorageIntegrationAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageIntegrationResult');
+            } else {
+                showFailure('StorageIntegrationResult');
+                document.getElementById('Error_5').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageIntegrationResult');
+            document.getElementById('Error_5').textContent = error.message;
+        }
+    }
+
+        // Run tests when the page is loaded
+        window.onload = function () {
+            testConnection();
+            GrantAccessCheck();
+            checkCreatePermissions();
+            check_Object_Exist();
+            StorageIntegrationAccess();
+        };
+
+    </script>
+</body>
+</html>
