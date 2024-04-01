@@ -7,17 +7,21 @@ import pandas as pd
 from snowflake.connector.pandas_tools import write_pandas
 
 
+
 app = Flask(__name__)
 
 @app.route('/')
+# First app route that will render the index.html page
 def index():
     return render_template('index.html')
 
 @app.route('/biq', methods=['POST'])
+# This app route will render the file_upload.html page after the bigquery option selected from services
 def biq():
     return render_template('file_upload.html')
 
 @app.route('/upload', methods=['POST'])
+# This app route will render the schemas_copy.html after the submitting the json file
 def upload():
     
     # Check if the POST request has the file part
@@ -47,11 +51,8 @@ def upload():
             bq_client = bigquery.Client(credentials=credentials, project=project_id)
 
             # Fetch schemas from BigQuery and display them
-            global schemas
             schemas = fetch_schemas(bq_client)
-            # Tables = fetch_tables(bq_client)
-            # for i in schemas:
-            #     print(fetch_tables(project_id, i, bq_client))
+            
             return render_template('schemas_copy.html', schemas=schemas)
         except Exception as e:
             return f'Error establishing connection to BigQuery: {str(e)}'
@@ -73,8 +74,9 @@ def get_tables():
     # Fetch tables for the given schema
     tables = fetch_schemas_tables(Client, schema_name)
     print(tables)
-    # return render_template("Tables.html", tables = tables, schema = schema_name, schemas= schemas)
+    # return render_template("schemas.html", tables = tables, schema = schema_name,show_popup=True)
     return render_template('schemas_copy.html', show_popup=True,tables = tables, schema = schema_name)
+
 
 #Function to return the tables in a schema
 def fetch_schemas_tables(client,schema_name):
@@ -102,27 +104,420 @@ def snowflake_form():
 
 @app.route('/connect_snowflake', methods = ["GET", "POST"])
 def connect_snowflake():
-    schemas_list = schema_list
-    print(schemas_list)
+    # schemas_list = schema_list
+    # print(schemas_list)
+    global account_name, role, username, password, warehouse, database, schema
     account_name = request.form.get("accountname")
     print(account_name)
+    role = request.form.get("role")
+    print(role)
     username = request.form.get("username")
     print(username)
     password = request.form.get("password")
     print(password)
     warehouse = request.form.get("warehouse")
+    print(warehouse)
+    database = request.form.get("database")
+    print(database)
+    schema = request.form.get("schema")
+    print(schema)
+    global conn
     conn = snowflake.connector.connect(
         user= username,
         password= password,
         account= account_name,
         warehouse= warehouse,
-        role = 'ACCOUNTADMIN'
+        role = role,
+        database = database,
+        schema = schema
     )
-    result = create_schemas_and_copy_table(conn,schemas_list)
-    # cursor=conn.cursor()
-    # cursor.execute('SELECT * FROM SNOWFLAKE.ACCOUNT_USAGE.USERS')
-    # data = cursor.fetchall()
-    # print(data)
+    self_execute(conn, bucket_name , schema , database )
+    # result = create_schemas_and_copy_table(conn,schemas_list)
+    return render_template('test_snowflake.html')
+
+
+def self_execute(conn, bucket_name , schema , database ):
+    query_use_role = """USE role {role};"""
+    query_self_integration = """ 
+      CREATE OR REPLACE STORAGE INTEGRATION SNOW_MIGRATE_INTEGRATION
+      TYPE = EXTERNAL_STAGE
+      STORAGE_PROVIDER = 'GCS'
+      ENABLED = TRUE
+      STORAGE_ALLOWED_LOCATIONS = ('gcs://{bkt}');"""
+
+    
+    query_use_db = """USE DATABASE {db};"""
+    query_create_schema = """CREATE SCHEMA IF NOT EXISTS {schema};"""
+    
+    query_create_ff = """CREATE FILE FORMAT IF NOT EXISTS 
+      {db}.{schema}.my_parquet_format TYPE = PARQUET NULL_IF = ('NULL', 'null');"""
+    
+    
+    query_create_stage = """ CREATE OR Replace STAGE {db}.{schema}.SNOW_MIGRATE_STAGE
+      URL='gcs://{bkt}'
+      STORAGE_INTEGRATION = SNOW_MIGRATE_INTEGRATION
+      FILE_FORMAT = {db}.{schema}.my_parquet_format; """ 
+    
+    print(query_use_role)
+    print(query_use_db.format(db = database))
+    print(query_create_schema.format(schema = schema))
+    print(query_self_integration.format(bkt = bucket_name))
+    print(query_create_ff.format(db = database , schema = schema))
+    print(query_create_stage.format(db = database,schema = schema ,bkt = bucket_name))
+
+    # conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
+    # conn.cursor().execute(query_use_db.format(db = database))
+    # conn.cursor().execute(query_create_schema.format(schema = schema))
+    # conn.cursor().execute(query_create_ff.format(db = database , schema = schema))
+    # conn.cursor().execute(query_create_stage.format(bkt = bucket_name))
+
+    try :
+        # conn.cursor().execute(query_self_updated)
+        conn.cursor().execute(query_use_role.format(role = role))
+        conn.cursor().execute(query_use_db.format(db = database))
+        conn.cursor().execute(query_create_schema.format(schema = schema))
+        conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
+        conn.cursor().execute(query_create_ff.format(db = database , schema = schema))
+        conn.cursor().execute(query_create_stage.format(db = database,schema = schema ,bkt = bucket_name))
+    
+        # print(query_self_updated);
+        print('Execution was succesfull');
+
+    except snowflake.connector.errors.ProgrammingError as e:
+        print('SQL Execu tion Error: {0}'.format(e.msg))
+        print('Snowflake Query Id: {0}'.format(e.sfqid))
+        print('Error Number: {0}'.format(e.errno))
+        print('SQL State: {0}'.format(e.sqlstate))
+
+# Endpoint to test GCP service account connection
+@app.route('/test_connection', methods=['POST'])
+def test_connection():
+    # Replace this with your actual testing logic
+    print("Received request to test service account connection")
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        # Connection successful, perform your logic here
+        try:
+            cursor.execute('SELECT 5+5')
+            row = cursor.fetchone()
+            if row[0] == 10:
+                success = True
+                print(row[0])
+            # Simulate successful connection
+            return jsonify({"success": True})
+        except Exception as e:
+            error_message = str(e).split(":")[-1].strip()
+            return jsonify({"success": False, "error": error_message})
+        
+
+# Endpoint to check if required roles are granted
+@app.route('/GrantAccessCheck', methods=['POST'])
+def grant_access_check():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # Replace this with your actual logic to check access for Warehouse, Database, Role, and User
+            warehouse_access = check_warehouse_access(cursor)
+            database_access = check_database_access(cursor)
+            role_access = check_role_access(cursor)
+            user_access = check_user_access(cursor)
+
+            if warehouse_access and database_access and role_access and user_access:
+                return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not warehouse_access:
+                    error_message += "Warehouse access failed. "
+                if not database_access:
+                    error_message += "Database access failed. "
+                if not role_access:
+                    error_message += "Role access failed. "
+                if not user_access:
+                    error_message += "User access failed. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+# Simulated functions to check access for Warehouse, Database, Role, and User
+def check_warehouse_access(cursor):
+    # Replace with your actual logic
+    warehouse_check = "USE WAREHOUSE {}".format(warehouse)
+    cursor.execute(warehouse_check)
+
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+def check_database_access(cursor):
+    # Replace with your actual logic
+    database_check = "USE DATABASE {}".format(database)
+    cursor.execute(database_check)
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+def check_role_access(cursor):
+    # Replace with your actual logic
+    role_check = "USE ROLE {}".format(role)
+    cursor.execute(role_check)
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+def check_user_access(cursor):
+    # Replace with your actual logic
+    user_check = "SHOW USERS LIKE '{}'".format(username)
+    cursor.execute(user_check)
+    if(cursor.fetchone()):
+             return True
+    else:
+        return False
+
+
+# Endpoint to check if creating table and schema is allowed
+@app.route('/CheckCreatePermissions', methods=['POST'])
+def check_create_permissions():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # Replace this with your actual logic to check permissions
+            schema_creation_allowed = check_schema_creation_permission(cursor)
+            table_creation_allowed = check_table_creation_permission(cursor)
+
+            if table_creation_allowed and schema_creation_allowed:
+                return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not table_creation_allowed:
+                    error_message += "Table creation not allowed. "
+                if not schema_creation_allowed:
+                    error_message += "Schema creation not allowed. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+# Function to check if creating table is allowed
+def check_table_creation_permission(cursor):
+    try:
+        database_check = "USE DATABASE {}".format(database)
+        cursor.execute(database_check)
+        cursor.execute("USE SCHEMA test_schema")
+        cursor.execute("CREATE TABLE IF NOT EXISTS test_table (id INT)")
+        cursor.execute("DROP TABLE IF EXISTS test_table")
+        cursor.execute("DROP SCHEMA IF EXISTS test_schema")
+        return True
+    except Exception as e:
+        return False
+
+# Function to check if creating schema is allowed
+def check_schema_creation_permission(cursor):
+    try:
+        database_check = "USE DATABASE {}".format(database)
+        cursor.execute(database_check)
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS test_schema")
+        return True
+    except Exception as e:
+        return False
+
+
+# Endpoint to check Storage integration, file fromat, stage exist
+@app.route('/IntegrationObjectExistence', methods=['POST'])
+def Integration_Object_Exist():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            storage_integration_exists = check_object_exists(cursor, 'INTEGRATIONS', 'SNOW_MIGRATE_INTEGRATION')
+            print(f"Storage Integration Exists: {storage_integration_exists}")
+        
+            if storage_integration_exists:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not storage_integration_exists:
+                    error_message += "Storage Integration Object not Exist. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+        
+
+# Endpoint to check Storage integration, file fromat, stage exist
+@app.route('/FileFormatObjectExistence', methods=['POST'])
+def FileFormat_Object_Exist():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            file_format_exists = check_object_exists(cursor, 'FILE FORMATS', 'my_parquet_format')
+            print(f"File Format Exists: {file_format_exists}")
+
+            if file_format_exists:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not file_format_exists:
+                    error_message += "File Format Object not Exist. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+        
+
+# Endpoint to check Storage integration, file fromat, stage exist
+@app.route('/StageObjectExistence', methods=['POST'])
+def Stage_Object_Exist():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            stage_exists = check_object_exists(cursor, 'STAGES', 'SNOW_MIGRATE_STAGE')
+            print(f"Stage Exists: {stage_exists}")
+
+            if stage_exists:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not stage_exists:
+                    error_message += "Stage Object not Exist. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+        
+    
+# Function to check if an object exists
+def check_object_exists(cursor, object_type, object_name):
+    try:
+            query = f"SHOW {object_type} LIKE '{object_name}'"
+            cursor.execute(query)
+            if(len(cursor.fetchall()) > 0):
+                print(len(cursor.fetchall()))
+                return True
+            else:
+                return False
+    except Exception as e:
+            return False
+    
+
+
+# Endpoint to check access for Storage integration, file fromat, stage exist
+@app.route('/IntegrationAccess', methods=['POST'])
+def IntegrationAccess():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+             # Check grants for integration
+            integration_name = 'SNOW_MIGRATE_INTEGRATION'
+            role_name = role
+            privilege = 'OWNERSHIP'
+            granted_on = 'INTEGRATION'
+            integration_grants = check_grants(cursor, privilege, granted_on, integration_name, role_name)
+            print(f"Grants for integration '{integration_name}': {integration_grants}")
+
+            if integration_grants:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not integration_grants:
+                    error_message += "Storage Integration Object not Accessible. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+        
+
+# Endpoint to check access for Storage integration, file fromat, stage exist
+@app.route('/FormatAccess', methods=['POST'])
+def FormatAccess():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # Check grants for file format
+            file_format_name = "{}.{}.MY_PARQUET_FORMAT".format(database, schema)
+            role_name = role
+            privilege = 'OWNERSHIP'
+            granted_on = 'FILE FORMAT'
+            file_format_grants = check_grants(cursor, privilege, granted_on, file_format_name, role_name)
+            print(f"Grants for file format '{file_format_name}': {file_format_grants}")
+            if file_format_grants:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not file_format_grants:
+                    error_message += "File Format Object not Accessible. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+        
+
+# Endpoint to check access for Storage integration, file fromat, stage exist
+@app.route('/StageAccess', methods=['POST'])
+def StageAccess():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # Check grants for stage
+            stage_name = "{}.{}.SNOW_MIGRATE_STAGE".format(database,schema)
+            role_name = role
+            privilege = 'OWNERSHIP'
+            granted_on = 'STAGE'
+            stage_grants = check_grants(cursor, privilege, granted_on, stage_name, role_name)
+        
+            print(f"Grants for stage '{stage_name}': {stage_grants}")
+
+            if stage_grants:
+                    return jsonify({"success": True})
+            else:
+                error_message = ""
+                if not stage_grants:
+                    error_message += "Stage Object not Accessible. "
+                return jsonify({"success": False, "error": error_message.strip()})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+    
+# Function to check if access is granted to the specified object
+def check_grants(cursor, privilege, granted_on, object_name, role_name):      
+    try:
+        query = f"SHOW GRANTS ON {granted_on} {object_name}"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        if(granted_on == 'FILE FORMAT'):
+            granted_on='FILE_FORMAT'
+        for row in results:
+            if row[1] == privilege and row[2] == granted_on and row[3] == object_name and row[5] == role_name:
+                return True
+        return False
+    except Exception as e:
+            return False
+    
+@app.route('/migration_result', methods=['POST'])
+def migration_result():
+    result = create_schemas_and_copy_table(conn,schema_list)
     return result
 
 def create_schemas_and_copy_table(conn,schema_list):
@@ -132,15 +527,15 @@ def create_schemas_and_copy_table(conn,schema_list):
    project_query = query.format(project_id)
    query_job = bq_client.query(project_query)
    rows = query_job.result()
-   Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE'] 
+   Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE']
    copy_table = pd.DataFrame(columns = Columns)
    for row in rows:
-       schema = row.schema_name
-       print(schema)
+       schema_local = row.schema_name
+       print(schema_local)
        print("777777777777")
        print(schema_list)
-       if schema in schema_list :
-           print("Gathering ddl {}".format(schema))
+       if schema_local in schema_list :
+           print("Gathering ddl {}".format(schema_local))
            query = """
             select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns , case when t.ddl like 
             '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type, 'N' as copy_done FROM 
@@ -149,7 +544,7 @@ def create_schemas_and_copy_table(conn,schema_list):
             c.table_name,c.table_schema,t.ddl;
            """
     
-           print("Gathering ddl for tables in schema {}".format(schema))
+           print("Gathering ddl for tables in schema {}".format(schema_local))
            table_query = """
            SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
@@ -161,48 +556,47 @@ def create_schemas_and_copy_table(conn,schema_list):
            """
            
            # FOR SCHEMAS
-           ddl_query = query.format(project_id,schema,project_id,schema)
+           ddl_query = query.format(project_id,schema_local,project_id,schema_local)
            query_job = bq_client.query(ddl_query)
-           ddl_set = query_job.result() 
+           ddl_set = query_job.result()
            
            for row in ddl_set:
-
             df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
             copy_table = pd.concat([copy_table,df] , ignore_index=True)
-            table_ddl = " create or replace TABLE SNOWMIGRATE.PUBLIC.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) "
+            table_ddl = " create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) ".format(database, schema)
 
             conn.cursor().execute(table_ddl)
-            write_pandas(conn, copy_table , 'BQ_COPY_TABLE', 'SNOWMIGRATE','PUBLIC' )
-            print("BQ_COPY_TABLE created succesfully in SNOWMIGRATE.PUBLIC")
+            write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
+            print("BQ_COPY_TABLE created succesfully")
             
             schema_name = row.table_schema
-            create_schema = "create schema if not exists SNOWMIGRATE.{}".format(schema_name)
+            create_schema = "create schema if not exists {}.{}".format(database, schema_name)
             conn.cursor().execute(create_schema)
 
-            print("Schema {} created in SNOWMIGRATE Database".format(schema_name))
+            print("Schema {} created in {} Database".format(schema_name, database))
     
            #FOR TABLES
-           ddl_table_query = table_query.format(project_id,schema)
+           ddl_table_query = table_query.format(project_id,schema_local)
            query_table_job = bq_client.query(ddl_table_query)
            ddl_table_set = query_table_job.result()
     
            for my_row in ddl_table_set:
                table_name = my_row.table_name
                ddl = my_row.ddl
-               ddl2 = ddl.replace(project_id, "SNOWMIGRATE")
+               ddl2 = ddl.replace(project_id, database)
                print(ddl2)
                print("Running ddl for table {} in Snowflake".format(table_name))
-               use_schema = "use schema SNOWMIGRATE.{}".format(schema)
+               use_schema = "use schema {}.{}".format(database, schema)
                conn.cursor().execute(use_schema)
                conn.cursor().execute(ddl2)
-               print("Table {} created in SNOWMIGRATE.{} schema".format(table_name,schema))
+               print("Table {} created in {}.{} schema".format(table_name, database, schema))
 
     # FOR EXPORTING DATA
            export_query = """
            select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type
            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE'
            """
-           ddl_query = export_query.format(project_id,schema)
+           ddl_query = export_query.format(project_id,schema_local)
            query_job = bq_client.query(ddl_query)
            ddl_export_set = query_job.result()
 
@@ -210,9 +604,9 @@ def create_schemas_and_copy_table(conn,schema_list):
                table_name = row.table_name
                export_type = row.export_type
                print("Exporting data for table {} ...export type is {}".format(table_name,export_type))
-               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema,table_name,table_name,export_type)
+               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema_local,table_name,table_name,export_type)
                print(destination_uri)
-               dataset_ref = bigquery.DatasetReference(project_id, schema)
+               dataset_ref = bigquery.DatasetReference(project_id, schema_local)
                table_ref = dataset_ref.table(table_name)
                configuration = bigquery.job.ExtractJobConfig()
                configuration.destination_format ='PARQUET'
@@ -221,7 +615,7 @@ def create_schemas_and_copy_table(conn,schema_list):
                        table_ref,
                        destination_uri,
                        job_config=configuration,
-                       location="US",
+                       location="US"
                        )
                else:
                    extract_job = bq_client.extract_table(
@@ -230,9 +624,8 @@ def create_schemas_and_copy_table(conn,schema_list):
                        location="US"
                        )
                extract_job.result()  # Waits for job to complete.
-               print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema, table_name, destination_uri)) 
+               print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema_local, table_name, destination_uri)) 
 
-           
            # LOAD DATA
            SF_query = "select table_name,table_schema,table_columns,export_type from BQ_COPY_TABLE where copy_done ='N'"
            
@@ -249,10 +642,12 @@ def create_schemas_and_copy_table(conn,schema_list):
                 table_schema  = df2['TABLE_SCHEMA'].iloc[i];
                 table_columns = df2['TABLE_COLUMNS'].iloc[i];
                 export_type  = df2['EXPORT_TYPE'].iloc[i];
-                copy_command = "copy into SNOWMIGRATE.{sc}.{tb} from ( select {col_list} from @SNOWMIGRATE.PUBLIC.snowmigrate_stage/{sc}/{tb}/{tb}(file_format => my_parquet_format))"
+                copy_command = "copy into {db}.{sc}.{tb} from ( select {col_list} from @{db}.{sch}.snow_migrate_stage/{sc}/{tb}/{tb}(file_format => my_parquet_format))"
                 print(table_name + export_type)
 
+                copy_command = copy_command.replace('{db}', database,2)
                 copy_command = copy_command.replace('{sc}', table_schema,2)
+                copy_command = copy_command.replace('{sch}', schema)
                 copy_command = copy_command.replace('{tb}', table_name,3)
                 copy_command = copy_command.replace('{col_list}', table_columns )
 
@@ -263,7 +658,83 @@ def create_schemas_and_copy_table(conn,schema_list):
                 print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
        else :
             print("Done")
+   
+   auditing_log_into_Snowflake(conn,project_id,schema_list)
    return "Success"
+
+def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_names):
+    print(schema_names)
+    if len(schema_names)<2:
+        schema_name_single=schema_names[0]
+        # print(schema_name)
+        query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema in ('{schema_name_single}');""")
+        print(query_TABLE_DETAILS)
+    else:
+        schema_name_tuple=tuple(schema_names)
+        query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema in {schema_name_tuple};""")
+    
+    query_job = bq_client.query(query_TABLE_DETAILS)
+    results_schema_database_lst = query_job.result()
+    schema_list_name = [field.name for field in results_schema_database_lst.schema]
+    # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
+    dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
+    
+    if len(schema_names)<2:
+        query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+        (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+        'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
+        '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+        'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema ='{schema_name_single}' """)
+    else :
+        query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+        (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+        'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
+        '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+        'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`INFORMATION_SCHEMA.TABLES where  table_schema  in {schema_name_tuple} """)
+    
+    query_job = bq_client.query(query_ddl)
+    results_ddl_St_db = query_job.result()
+    schema_list_name_2 = [field.name for field in results_ddl_St_db.schema]
+    dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
+    print("1 frame")
+    print(dataframe_ddl_table_info)
+    
+    if len(schema_names)<2:
+        query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
+            `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
+            `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name_single}' group by c.table_catalog,
+            c.table_name,c.table_schema,t.ddl;""")
+    else:
+        query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
+            `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
+            `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema  in {schema_name_tuple} group by c.table_catalog,
+            c.table_name,c.table_schema,t.ddl;""")
+    
+    query_job = bq_client.query(query_copy_dol)
+    results_copy_dol = query_job.result()
+    schema_3 = [field.name for field in results_copy_dol.schema]
+    # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
+    dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
+    print(dataframe_copy_dol)
+
+    result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["table_catalog","table_schema","table_name"])
+    result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["table_catalog","table_schema","table_name"])
+    write_pandas(snowflake_connection_config,result_ddl_ed_table,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+    print(result_ddl_ed_table)
+    
+    if len(schema_names)<2:
+        query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema = '{schema_name_single}' ;""")
+    else:
+        query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema in {schema_name_tuple} ;""")
+    
+    query_job = bq_client.query(query)
+    results_column_lst= query_job.result()
+    schema_4 = [field.name for field in results_column_lst.schema]
+    dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
+    write_pandas(snowflake_connection_config,dataframe_column_info,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+ 
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

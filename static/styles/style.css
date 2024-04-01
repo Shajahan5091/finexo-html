@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Open+Sans:wght@300;400;600;700&display=swap");
-
 body {
   font-family: "Open Sans", sans-serif;
   color: #0c0c0c;
@@ -44,13 +43,13 @@ body {
           align-items: flex-start;
 }
 
- h2 {
+.heading_container h2 {
   position: relative;
   font-weight: bold;
   margin-bottom: 0;
 }
 
- h2 span {
+.heading_container h2 span {
   color: #00bbf0;
 }
 
@@ -1152,23 +1151,32 @@ a:focus {
   top: 0;
 }
 
-#snowflakeForm input{
+#snowflakeForm input[class]{
   margin-left: 80px;
   width: 400px;
   padding: 12px;
-  padding-right: 150px;
+  /* padding-right: 150px; */
   padding-bottom: 10px;
   border-radius: 5px;
   border: solid 1.5px #D3D3D3;
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
 }
 
-#snowflakeForm input:hover{
+#snowflakeForm input[class]:hover{
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
 }
-#snowflakeForm input:focus {
+#snowflakeForm input[class]:focus {
   box-shadow: 0 0 5pt 2pt #D3D3D3;
   outline-width: 0px;
+}
+
+.box{
+  box-shadow: 0 0 5pt 2pt #D3D3D3;
+  outline-width: 0px;
+}
+
+.box .connect-btn{
+  border-radius: 3px;
 }
 
 #snowflakeForm label{
@@ -1177,7 +1185,7 @@ a:focus {
 }
 
 .side2 {
-  flex: 20%;
+  flex: 22%;
   padding: 40px; 
   line-height: 30px;
   background-color: #00204a;
@@ -1186,8 +1194,12 @@ a:focus {
 
 /* Main column */
 .main2 {
-  flex: 80%;
+  flex: 78%;
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
+}
+
+#show-password, #show-pass-label:hover{
+  cursor: pointer;
 }

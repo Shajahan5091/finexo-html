@@ -26,53 +26,15 @@
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
 
   <style>
+    ::selection {
+    color: white;
+    background-color: #00bbf0;
+    }
+
     body {
       background: #eaecfa;
       width: 100%;
       height: 100%;
-    }
-    .loading-container{
-      display: none;
-    }
-
-    .loader {
-      width: 250px;
-      height: 50px;
-      line-height: 50px;
-      text-align: center;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%,-50%);
-      font-family: helvetica, arial, sans-serif;
-      text-transform: uppercase;
-      font-weight: 900;
-      color: #00204a;
-      letter-spacing: 0.2em;
-      
-      &::before, &::after {
-        content: "";
-        display: block;
-        width: 15px;
-        height: 15px;
-        background: #00204a;
-        position: absolute;
-        animation: load .7s infinite alternate ease-in-out;
-      }
-      
-      &::before {
-        top: 0;
-      }
-      
-      &::after {
-        bottom: 0;
-      }
-    }
-
-    @keyframes load {
-      0% { left: 0; height: 30px; width: 15px }
-      50% { height: 8px; width: 40px }
-      100% { left: 235px; height: 30px; width: 15px}
     }
 
     .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:10px;margin:30px 0 30px}
@@ -103,7 +65,7 @@
     <header class="header_section">
       <div class="container-fluid" >
         <nav class="navbar navbar-expand-lg custom_nav-container ">
-          <a class="navbar-brand" href="index.html">
+          <a class="navbar-brand" href="{{ url_for('index') }}">
             <span>
               Snow Migrate
             </span>
@@ -114,7 +76,7 @@
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav  ">
               <li class="nav-item ">
-                <a class="nav-link" href="index.html">Home </a>
+                <a class="nav-link" href="{{ url_for('index') }}">Home </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="about.html"> About</a>
@@ -132,9 +94,9 @@
     </header>
     <!-- end header section -->
   </div>
-  <div id="loading-container" class="loading-container">
+  <!-- <div id="loading-container" class="loading-container">
     <div id="loader" class="loader">Migrating...</div>
-    </div>
+  </div> -->
   <div class="row2" id="side">
     <div class="side">
       <div class="heading_container">
@@ -172,75 +134,97 @@
     
             <!--Add Your Parse HTML code Here-->
             <div id='code1'>
-                <pre>set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
-                set snow_migrate_username = 'SNOW_MIGRATE_USER';
-                set snow_migrate_warehouse = 'SNOW_MIGRATE_WAREHOUSE';
-                set snow_migrate_database = 'SNOW_MIGRATE_DATABASE';
-                set snow_migrate_schema = 'SNOW_MIGRATE_SCHEMA';
-                -- set user password:
-                set snow_migrate_password = 'password';
-                begin;
-        
-                -- create Snow Migrate role:
-                use role securityadmin;
-                create role if not exists identifier($snow_migrate_role);
-                grant role identifier($snow_migrate_role) to role SYSADMIN;
-        
-                -- create Snow Migrate user:
-                create user if not exists identifier($snow_migrate_username) password = $snow_migrate_password default_role = $snow_migrate_role default_warehouse = $snow_migrate_warehouse;
-                grant role identifier($snow_migrate_role) to user identifier($snow_migrate_username);
-        
-                -- change role to sysadmin for warehouse / database steps:
-                use role sysadmin;
-                -- create Snow Migrate warehouse:
-                create warehouse if not exists identifier($snow_migrate_warehouse) warehouse_size = xsmall warehouse_type = standard auto_suspend = 60 auto_resume = true initially_suspended = true;
-                
-                -- create Snow Migrate database:
-                create database if not exists identifier($snow_migrate_database);
-        
-                -- grant Snow Migrate warehouse access:
-                grant USAGE on warehouse identifier($snow_migrate_warehouse) to role identifier($snow_migrate_role);
-                
-                -- grant Snow Migrate database access:
-                grant OWNERSHIP on database identifier($snow_migrate_database) to role identifier($snow_migrate_role);
-                commit;
-        
-        
-                begin;
-                USE DATABASE identifier($snow_migrate_database);
-                -- create schema for Snow Migrate data:
-                CREATE SCHEMA IF NOT EXISTS identifier($snow_migrate_schema);
-                commit;
-                
-                begin;
-                -- grant Snow Migrate schema access:
-                grant OWNERSHIP on schema identifier($snow_migrate_schema) to role identifier($snow_migrate_role);
-                commit;
-                -- Run the script using the Worksheet page or Snowsight.</pre>
+                <pre>-- set variables (these need to be uppercase)
+                  set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
+                  set snow_migrate_username = 'SNOW_MIGRATE_USER';
+                  set snow_migrate_warehouse = 'SNOW_MIGRATE_WAREHOUSE';
+                  set snow_migrate_database = 'SNOW_MIGRATE_DATABASE';
+                  set snow_migrate_schema = 'SNOW_MIGRATE_SCHEMA';
+                  
+                  -- set user password
+                  set snow_migrate_password = 'password';
+                  
+                  begin;
+                  
+                  -- create SNOW_MIGRATE_ROLE
+                  use role securityadmin;
+                  create role if not exists identifier($snow_migrate_role);
+                  grant role identifier($snow_migrate_role) to role SYSADMIN;
+                  
+                  -- create SNOW_MIGRATE_USER
+                  create user if not exists identifier($snow_migrate_username)
+                  password = $snow_migrate_password
+                  default_role = $snow_migrate_role
+                  default_warehouse = $snow_migrate_warehouse;
+                  
+                  
+                  grant role identifier($snow_migrate_role) to user identifier($snow_migrate_username);
+                  
+                  -- change role to sysadmin for warehouse / database steps
+                  use role sysadmin;
+                  
+                  -- create SNOW_MIGRATE_WAREHOUSE
+                  create warehouse if not exists identifier($snow_migrate_warehouse)
+                  warehouse_size = xsmall
+                  warehouse_type = standard
+                  auto_suspend = 60
+                  auto_resume = true
+                  initially_suspended = true;
+                  
+                  -- create SNOW_MIGRATE_DATABASE
+                  create database if not exists identifier($snow_migrate_database);
+                  
+                  -- grant Airbyte wSNOW_MIGRATE_DATABASE.INFORMATION_SCHEMAarehouse access
+                  grant USAGE
+                  on warehouse identifier($snow_migrate_warehouse)
+                  to role identifier($snow_migrate_role);
+                  
+                  -- grant Airbyte database access
+                  grant OWNERSHIP
+                  on database identifier($snow_migrate_database)
+                  to role identifier($snow_migrate_role);
+                  
+                  GRANT CREATE SCHEMA ON DATABASE SNOW_MIGRATE_DATABASE TO ROLE SNOW_MIGRATE_ROLE;
+                  
+                  USE ROLE ACCOUNTADMIN;
+                  
+                  GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SNOW_MIGRATE_ROLE;
+                  
+                  commit;</pre>
                 <div id='toastNotif' class='tNtf'></div>
             </div>
         </div>
     </div>
     <div class="main" >
-        <div id="snowflake-form" class="form-container"> 
+        <div id="snowflake-form" class="form-container heading_container"> 
             <form id="snowflakeForm" name="snowflakeForm" action="/connect_snowflake" class="snowflake-form" method="post">
                 <h2 id="form-heading">
                   Destination Connection<br>
                     <span> Snowflake </span>
                 </h2>
                 <label for="accountname"><b>Account Name</b></label><br>
-                <input id="accountname" type="text" placeholder="Ex: locator.region" name="accountname" required>
-    
+                <input class="accountname" id="accountname" type="text" placeholder="Ex: locator.region" name="accountname" required>
+                <label for="role"><b>Role</b></label><br>
+                <input class="role" id="role" type="text" value="SNOW_MIGRATE_ROLE" name="role" required>
+
                 <label for="username"><b>Username</b></label><br>
-                <input id="username" type="text" placeholder="Enter Username" name="username" required>
-    
-                <label for="password"><b>Password</b></label><br>
-                <input id="password" type="password" placeholder="Enter Password" name="password" required>
+                <input class="username" id="username" type="text" value="SNOW_MIGRATE_USER" name="username" required>
     
                 <label for="warehouse"><b>Warehouse</b></label><br>
-                <input id="warehouse" type="text" placeholder="Enter Warehouse Name" name="warehouse" required>
-    
-                <button type="submit" id="snowflake-login-btn" onclick="display_loader()">Login</button>
+                <input class="warehouse" id="warehouse" type="text" value="SNOW_MIGRATE_WAREHOUSE" name="warehouse" required>
+
+                <label for="database"><b>Database</b></label><br>
+                <input class="database" id="database" type="text" value="SNOW_MIGRATE_DATABASE" name="database" required>
+
+                <label for="schema"><b>Schema</b></label><br>
+                <input class="schema" id="schema" type="text" value="SNOW_MIGRATE_SCHEMA" name="schema" required>
+
+                <label for="password"><b>Password</b></label><br>
+                <input class="password" style="margin-bottom: 5px;" id="password" type="password" placeholder="Enter Password" value="password" name="password" required><br>
+                <input id="show-password" type="checkbox" onclick="myFunction()" style="margin-left: 80px; padding: 0;">
+                <label id="show-pass-label" for="show-password" style="font-size: medium; display: inline; margin-left: 0;"> Show Password</label>
+
+                <button type="submit" id="snowflake-login-btn" onclick="snowflake_form_validation()">Proceed</button>
             </form>
         </div>
     </div>
@@ -264,7 +248,7 @@
  <!-- End Google Map -->
 
  <script>
-    function display_loader(){
+    function snowflake_form_validation(){
       if ( document.forms["snowflakeForm"]["accountname"].value == "") {
         alert("Name must be filled out");
         return false;
@@ -281,9 +265,14 @@
         alert("Name must be filled out");
         return false;
       }
-      document.getElementById("loading-container").style.display = "block";
-      document.getElementById("snowflake-form").style.opacity = "0";
-      document.getElementById("side").style.display = "none";
+    }
+    function myFunction() {
+      var x = document.getElementById("password");
+      if (x.type === "password") {
+        x.type = "text";
+      } else {
+        x.type = "password";
+      }
     }
   </script>
 </body>
