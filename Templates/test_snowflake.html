@@ -14,52 +14,100 @@
     .failure {
         color: red;
     }
+    .loading-container{
+      display: none;
+    }
+
+    .loader {
+      width: 250px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-family: helvetica, arial, sans-serif;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: #00204a;
+      letter-spacing: 0.2em;
+      
+      &::before, &::after {
+        content: "";
+        display: block;
+        width: 15px;
+        height: 15px;
+        background: #00204a;
+        position: absolute;
+        animation: load .7s infinite alternate ease-in-out;
+      }
+      
+      &::before {
+        top: 0;
+      }
+      
+      &::after {
+        bottom: 0;
+      }
+    }
+
+    @keyframes load {
+      0% { left: 0; height: 30px; width: 15px }
+      50% { height: 8px; width: 40px }
+      100% { left: 235px; height: 30px; width: 15px}
+    }
 </style>
 </head>
 <body>
-    <h1>SNOWFLAKE Testing</h1>
-    <div id="Snowflake_User">
-        Testing Snowflake Connection:
-        <span id="SnowflakeUserResult" class="loading">Loading...</span>
-        <span id="Error_1" class="failure"></span>
+    <div id="loading-container" class="loading-container">
+        <div id="loader" class="loader">Migrating...</div>
     </div>
-    <div id="requiredRoles">
-        Testing if required roles are granted:
-        <ul>
-            <li>Warehouse, DataBase, Role, User: <span id="RoleResult" class="loading">Loading...</span>
-                <span id="Error_2" class="failure"></span>
-            </li>
-            <li>Access to Create Schema's & Table's: <span id="CreatePermissionsResult" class="loading">Loading...</span>
-                <span id="Error_3" class="failure"></span>
-            </li>
-            <li>
-                Testing if Storage Integration Created:  <span id="StorageIntegrationResult" class="loading">Loading...</span>
-                <span id="Error_4" class="failure"></span>
-            </li>
-            <li>Testing if Storage Integration has Access: <span id="StorageIntegrationAccess" class="loading">Loading...</span>
-                <span id="Error_5" class="failure"></span>
-            </li>
-            <li>
-                Testing if File_Format Created:  <span id="FileFormatResult" class="loading">Loading...</span>
-                <span id="Error_6" class="failure"></span>
-            </li>
-            <li>Testing if File_Format has Access: <span id="FileFormatAccess" class="loading">Loading...</span>
-                <span id="Error_7" class="failure"></span>
-            </li>
-            <li>
-                Testing if Stage Created:  <span id="StorageStageResult" class="loading">Loading...</span>
-                <span id="Error_8" class="failure"></span>
-            </li>
-            <li>Testing if Stage has Access: <span id="StorageStageAccess" class="loading">Loading...</span>
-                <span id="Error_9" class="failure"></span>
-            </li>
-        </ul>
+    <div id="container-snowflake">
+        <h1>SNOWFLAKE Testing</h1>
+        <div id="Snowflake_User">
+            Testing Snowflake Connection:
+            <span id="SnowflakeUserResult" class="loading">Loading...</span>
+            <span id="Error_1" class="failure"></span>
+        </div>
+        <div id="requiredRoles">
+            Testing if required roles are granted:
+            <ul>
+                <li>Warehouse, DataBase, Role, User: <span id="RoleResult" class="loading">Loading...</span>
+                    <span id="Error_2" class="failure"></span>
+                </li>
+                <li>Access to Create Schema's & Table's: <span id="CreatePermissionsResult" class="loading">Loading...</span>
+                    <span id="Error_3" class="failure"></span>
+                </li>
+                <li>
+                    Testing if Storage Integration Created:  <span id="StorageIntegrationResult" class="loading">Loading...</span>
+                    <span id="Error_4" class="failure"></span>
+                </li>
+                <li>Testing if Storage Integration has Access: <span id="StorageIntegrationAccess" class="loading">Loading...</span>
+                    <span id="Error_5" class="failure"></span>
+                </li>
+                <li>
+                    Testing if File_Format Created:  <span id="FileFormatResult" class="loading">Loading...</span>
+                    <span id="Error_6" class="failure"></span>
+                </li>
+                <li>Testing if File_Format has Access: <span id="FileFormatAccess" class="loading">Loading...</span>
+                    <span id="Error_7" class="failure"></span>
+                </li>
+                <li>
+                    Testing if Stage Created:  <span id="StorageStageResult" class="loading">Loading...</span>
+                    <span id="Error_8" class="failure"></span>
+                </li>
+                <li>Testing if Stage has Access: <span id="StorageStageAccess" class="loading">Loading...</span>
+                    <span id="Error_9" class="failure"></span>
+                </li>
+            </ul>
+        </div>
+        <br>
+        <br>
+        <form action="/migration_result" method="post">
+            <button type="submit" onclick="display_loader()"><b>Proceed</b></button>
+        </form>
     </div>
-    <br>
-    <br>
-    <form action="/migration_result" method="post">
-        <button type="submit"><b>Proceed</b></button>
-    </form>
 
     <script>
         // Function to display tick mark
@@ -243,8 +291,7 @@
 
             const response = await fetch('/StageObjectExistence', {
                 method: 'POST', // Explicitly specify the POST method
-            });
-            const data = await response.json();
+            });            const data = await response.json();
             if (data.success) {
                 showSuccess('StorageStageResult');
             } else {
@@ -293,6 +340,10 @@
             StageAccess();
         };
 
+        function display_loader(){
+        document.getElementById("loading-container").style.display = "block";
+        document.getElementById("container-snowflake").style.opacity = "0";
+        }
     </script>
 </body>
 </html>

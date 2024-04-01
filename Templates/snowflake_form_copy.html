@@ -36,49 +36,6 @@
       width: 100%;
       height: 100%;
     }
-    .loading-container{
-      display: none;
-    }
-
-    .loader {
-      width: 250px;
-      height: 50px;
-      line-height: 50px;
-      text-align: center;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%,-50%);
-      font-family: helvetica, arial, sans-serif;
-      text-transform: uppercase;
-      font-weight: 900;
-      color: #00204a;
-      letter-spacing: 0.2em;
-      
-      &::before, &::after {
-        content: "";
-        display: block;
-        width: 15px;
-        height: 15px;
-        background: #00204a;
-        position: absolute;
-        animation: load .7s infinite alternate ease-in-out;
-      }
-      
-      &::before {
-        top: 0;
-      }
-      
-      &::after {
-        bottom: 0;
-      }
-    }
-
-    @keyframes load {
-      0% { left: 0; height: 30px; width: 15px }
-      50% { height: 8px; width: 40px }
-      100% { left: 235px; height: 30px; width: 15px}
-    }
 
     .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:10px;margin:30px 0 30px}
     .K2_CBox .CB_Heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
@@ -137,9 +94,9 @@
     </header>
     <!-- end header section -->
   </div>
-  <div id="loading-container" class="loading-container">
+  <!-- <div id="loading-container" class="loading-container">
     <div id="loader" class="loader">Migrating...</div>
-    </div>
+  </div> -->
   <div class="row2" id="side">
     <div class="side">
       <div class="heading_container">
@@ -267,7 +224,7 @@
                 <input id="show-password" type="checkbox" onclick="myFunction()" style="margin-left: 80px; padding: 0;">
                 <label id="show-pass-label" for="show-password" style="font-size: medium; display: inline; margin-left: 0;"> Show Password</label>
 
-                <button type="submit" id="snowflake-login-btn" onclick="display_loader()">Proceed</button>
+                <button type="submit" id="snowflake-login-btn" onclick="snowflake_form_validation()">Proceed</button>
             </form>
         </div>
     </div>
@@ -291,7 +248,7 @@
  <!-- End Google Map -->
 
  <script>
-    function display_loader(){
+    function snowflake_form_validation(){
       if ( document.forms["snowflakeForm"]["accountname"].value == "") {
         alert("Name must be filled out");
         return false;
@@ -308,9 +265,6 @@
         alert("Name must be filled out");
         return false;
       }
-      document.getElementById("loading-container").style.display = "block";
-      document.getElementById("snowflake-form").style.opacity = "0";
-      document.getElementById("side").style.display = "none";
     }
     function myFunction() {
       var x = document.getElementById("password");

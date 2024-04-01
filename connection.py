@@ -137,12 +137,14 @@ def connect_snowflake():
 
 
 def self_execute(conn, bucket_name , schema , database ):
+    query_use_role = """USE role {role};"""
     query_self_integration = """ 
       CREATE OR REPLACE STORAGE INTEGRATION SNOW_MIGRATE_INTEGRATION
       TYPE = EXTERNAL_STAGE
       STORAGE_PROVIDER = 'GCS'
       ENABLED = TRUE
       STORAGE_ALLOWED_LOCATIONS = ('gcs://{bkt}');"""
+
     
     query_use_db = """USE DATABASE {db};"""
     query_create_schema = """CREATE SCHEMA IF NOT EXISTS {schema};"""
@@ -151,10 +153,17 @@ def self_execute(conn, bucket_name , schema , database ):
       {db}.{schema}.my_parquet_format TYPE = PARQUET NULL_IF = ('NULL', 'null');"""
     
     
-    query_create_stage = """ CREATE OR Replace STAGE SNOW_MIGRATE_STAGE
+    query_create_stage = """ CREATE OR Replace STAGE {db}.{schema}.SNOW_MIGRATE_STAGE
       URL='gcs://{bkt}'
       STORAGE_INTEGRATION = SNOW_MIGRATE_INTEGRATION
-      FILE_FORMAT = my_parquet_format; """ 
+      FILE_FORMAT = {db}.{schema}.my_parquet_format; """ 
+    
+    print(query_use_role)
+    print(query_use_db.format(db = database))
+    print(query_create_schema.format(schema = schema))
+    print(query_self_integration.format(bkt = bucket_name))
+    print(query_create_ff.format(db = database , schema = schema))
+    print(query_create_stage.format(db = database,schema = schema ,bkt = bucket_name))
 
     # conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
     # conn.cursor().execute(query_use_db.format(db = database))
@@ -164,14 +173,15 @@ def self_execute(conn, bucket_name , schema , database ):
 
     try :
         # conn.cursor().execute(query_self_updated)
-        conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
+        conn.cursor().execute(query_use_role.format(role = role))
         conn.cursor().execute(query_use_db.format(db = database))
         conn.cursor().execute(query_create_schema.format(schema = schema))
+        conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
         conn.cursor().execute(query_create_ff.format(db = database , schema = schema))
-        conn.cursor().execute(query_create_stage.format(bkt = bucket_name))
+        conn.cursor().execute(query_create_stage.format(db = database,schema = schema ,bkt = bucket_name))
     
         # print(query_self_updated);
-        print('Exexcution was succesfull');
+        print('Execution was succesfull');
 
     except snowflake.connector.errors.ProgrammingError as e:
         print('SQL Execu tion Error: {0}'.format(e.msg))
@@ -505,6 +515,10 @@ def check_grants(cursor, privilege, granted_on, object_name, role_name):
     except Exception as e:
             return False
     
+@app.route('/migration_result', methods=['POST'])
+def migration_result():
+    result = create_schemas_and_copy_table(conn,schema_list)
+    return result
 
 def create_schemas_and_copy_table(conn,schema_list):
    query = """
@@ -516,12 +530,12 @@ def create_schemas_and_copy_table(conn,schema_list):
    Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE']
    copy_table = pd.DataFrame(columns = Columns)
    for row in rows:
-       schema = row.schema_name
-       print(schema)
+       schema_local = row.schema_name
+       print(schema_local)
        print("777777777777")
        print(schema_list)
-       if schema in schema_list :
-           print("Gathering ddl {}".format(schema))
+       if schema_local in schema_list :
+           print("Gathering ddl {}".format(schema_local))
            query = """
             select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns , case when t.ddl like 
             '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type, 'N' as copy_done FROM 
@@ -530,7 +544,7 @@ def create_schemas_and_copy_table(conn,schema_list):
             c.table_name,c.table_schema,t.ddl;
            """
     
-           print("Gathering ddl for tables in schema {}".format(schema))
+           print("Gathering ddl for tables in schema {}".format(schema_local))
            table_query = """
            SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
@@ -542,47 +556,47 @@ def create_schemas_and_copy_table(conn,schema_list):
            """
            
            # FOR SCHEMAS
-           ddl_query = query.format(project_id,schema,project_id,schema)
+           ddl_query = query.format(project_id,schema_local,project_id,schema_local)
            query_job = bq_client.query(ddl_query)
            ddl_set = query_job.result()
            
            for row in ddl_set:
             df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
             copy_table = pd.concat([copy_table,df] , ignore_index=True)
-            table_ddl = " create or replace TABLE SNOWMIGRATE.PUBLIC.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) "
+            table_ddl = " create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) ".format(database, schema)
 
             conn.cursor().execute(table_ddl)
-            write_pandas(conn, copy_table , 'BQ_COPY_TABLE', 'SNOWMIGRATE','PUBLIC' )
-            print("BQ_COPY_TABLE created succesfully in SNOWMIGRATE.PUBLIC")
+            write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
+            print("BQ_COPY_TABLE created succesfully")
             
             schema_name = row.table_schema
-            create_schema = "create schema if not exists SNOWMIGRATE.{}".format(schema_name)
+            create_schema = "create schema if not exists {}.{}".format(database, schema_name)
             conn.cursor().execute(create_schema)
 
-            print("Schema {} created in SNOWMIGRATE Database".format(schema_name))
+            print("Schema {} created in {} Database".format(schema_name, database))
     
            #FOR TABLES
-           ddl_table_query = table_query.format(project_id,schema)
+           ddl_table_query = table_query.format(project_id,schema_local)
            query_table_job = bq_client.query(ddl_table_query)
            ddl_table_set = query_table_job.result()
     
            for my_row in ddl_table_set:
                table_name = my_row.table_name
                ddl = my_row.ddl
-               ddl2 = ddl.replace(project_id, "SNOWMIGRATE")
+               ddl2 = ddl.replace(project_id, database)
                print(ddl2)
                print("Running ddl for table {} in Snowflake".format(table_name))
-               use_schema = "use schema SNOWMIGRATE.{}".format(schema)
+               use_schema = "use schema {}.{}".format(database, schema)
                conn.cursor().execute(use_schema)
                conn.cursor().execute(ddl2)
-               print("Table {} created in SNOWMIGRATE.{} schema".format(table_name,schema))
+               print("Table {} created in {}.{} schema".format(table_name, database, schema))
 
     # FOR EXPORTING DATA
            export_query = """
            select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type
            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE'
            """
-           ddl_query = export_query.format(project_id,schema)
+           ddl_query = export_query.format(project_id,schema_local)
            query_job = bq_client.query(ddl_query)
            ddl_export_set = query_job.result()
 
@@ -590,9 +604,9 @@ def create_schemas_and_copy_table(conn,schema_list):
                table_name = row.table_name
                export_type = row.export_type
                print("Exporting data for table {} ...export type is {}".format(table_name,export_type))
-               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema,table_name,table_name,export_type)
+               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema_local,table_name,table_name,export_type)
                print(destination_uri)
-               dataset_ref = bigquery.DatasetReference(project_id, schema)
+               dataset_ref = bigquery.DatasetReference(project_id, schema_local)
                table_ref = dataset_ref.table(table_name)
                configuration = bigquery.job.ExtractJobConfig()
                configuration.destination_format ='PARQUET'
@@ -610,7 +624,7 @@ def create_schemas_and_copy_table(conn,schema_list):
                        location="US"
                        )
                extract_job.result()  # Waits for job to complete.
-               print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema, table_name, destination_uri)) 
+               print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema_local, table_name, destination_uri)) 
 
            # LOAD DATA
            SF_query = "select table_name,table_schema,table_columns,export_type from BQ_COPY_TABLE where copy_done ='N'"
@@ -628,10 +642,12 @@ def create_schemas_and_copy_table(conn,schema_list):
                 table_schema  = df2['TABLE_SCHEMA'].iloc[i];
                 table_columns = df2['TABLE_COLUMNS'].iloc[i];
                 export_type  = df2['EXPORT_TYPE'].iloc[i];
-                copy_command = "copy into SNOWMIGRATE.{sc}.{tb} from ( select {col_list} from @SNOWMIGRATE.PUBLIC.snowmigrate_stage/{sc}/{tb}/{tb}(file_format => my_parquet_format))"
+                copy_command = "copy into {db}.{sc}.{tb} from ( select {col_list} from @{db}.{sch}.snow_migrate_stage/{sc}/{tb}/{tb}(file_format => my_parquet_format))"
                 print(table_name + export_type)
 
+                copy_command = copy_command.replace('{db}', database,2)
                 copy_command = copy_command.replace('{sc}', table_schema,2)
+                copy_command = copy_command.replace('{sch}', schema)
                 copy_command = copy_command.replace('{tb}', table_name,3)
                 copy_command = copy_command.replace('{col_list}', table_columns )
 
@@ -659,9 +675,9 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_
     
     query_job = bq_client.query(query_TABLE_DETAILS)
     results_schema_database_lst = query_job.result()
-    schema = [field.name for field in results_schema_database_lst.schema]
+    schema_list_name = [field.name for field in results_schema_database_lst.schema]
     # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
-    dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema)
+    dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
     
     if len(schema_names)<2:
         query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
@@ -676,12 +692,14 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_
         'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
         '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
         'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema  in {schema_name_tuple} """)
+        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`INFORMATION_SCHEMA.TABLES where  table_schema  in {schema_name_tuple} """)
     
     query_job = bq_client.query(query_ddl)
     results_ddl_St_db = query_job.result()
-    schema = [field.name for field in results_ddl_St_db.schema]
-    dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema)
+    schema_list_name_2 = [field.name for field in results_ddl_St_db.schema]
+    dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
+    print("1 frame")
+    print(dataframe_ddl_table_info)
     
     if len(schema_names)<2:
         query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
@@ -696,13 +714,14 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_
     
     query_job = bq_client.query(query_copy_dol)
     results_copy_dol = query_job.result()
-    schema = [field.name for field in results_copy_dol.schema]
+    schema_3 = [field.name for field in results_copy_dol.schema]
     # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
-    dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema)
- 
+    dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
+    print(dataframe_copy_dol)
+
     result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["table_catalog","table_schema","table_name"])
     result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["table_catalog","table_schema","table_name"])
-    write_pandas(snowflake_connection_config,result_ddl_ed_table,'META_TABLES_STRUCT_SOURCE',database="SNOWMIGRATE",schema="PUBLIC", auto_create_table=True,overwrite=True,table_type="transient")
+    write_pandas(snowflake_connection_config,result_ddl_ed_table,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
     print(result_ddl_ed_table)
     
     if len(schema_names)<2:
@@ -712,9 +731,9 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_
     
     query_job = bq_client.query(query)
     results_column_lst= query_job.result()
-    schema = [field.name for field in results_column_lst.schema]
-    dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema)
-    write_pandas(snowflake_connection_config,dataframe_column_info,'META_COLUMNS_STRUCT_SOURCE',database="SNOWMIGRATE",schema="PUBLIC", auto_create_table=True,overwrite=True,table_type="transient")
+    schema_4 = [field.name for field in results_column_lst.schema]
+    dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
+    write_pandas(snowflake_connection_config,dataframe_column_info,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
  
 
 if __name__ == '__main__':
