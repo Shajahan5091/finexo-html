@@ -133,7 +133,7 @@ def connect_snowflake():
     )
     self_execute(conn, bucket_name , schema , database )
     # result = create_schemas_and_copy_table(conn,schemas_list)
-    return render_template('test_snowflake.html')
+    return render_template('test_snowflake_copy.html', show_popup=True)
 
 
 def self_execute(conn, bucket_name , schema , database ):
