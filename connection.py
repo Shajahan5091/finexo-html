@@ -158,7 +158,7 @@ def self_execute(conn, bucket_name , schema , database ):
       STORAGE_INTEGRATION = SNOW_MIGRATE_INTEGRATION
       FILE_FORMAT = {db}.{schema}.my_parquet_format; """ 
     
-    print(query_use_role)
+    print(query_use_role.format(role = role))
     print(query_use_db.format(db = database))
     print(query_create_schema.format(schema = schema))
     print(query_self_integration.format(bkt = bucket_name))
@@ -174,7 +174,7 @@ def self_execute(conn, bucket_name , schema , database ):
     try :
         # conn.cursor().execute(query_self_updated)
         conn.cursor().execute(query_use_role.format(role = role))
-        conn.cursor().execute(query_use_db.format(db = database))
+        conn.cursor().execute(query_use_db.format(role=role,db = database))
         conn.cursor().execute(query_create_schema.format(schema = schema))
         conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
         conn.cursor().execute(query_create_ff.format(db = database , schema = schema))
