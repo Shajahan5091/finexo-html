@@ -174,7 +174,7 @@ def self_execute(conn, bucket_name , schema , database ):
     try :
         # conn.cursor().execute(query_self_updated)
         conn.cursor().execute(query_use_role.format(role = role))
-        conn.cursor().execute(query_use_db.format(role=role,db = database))
+        conn.cursor().execute(query_use_db.format(db = database))
         conn.cursor().execute(query_create_schema.format(schema = schema))
         conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
         conn.cursor().execute(query_create_ff.format(db = database , schema = schema))
