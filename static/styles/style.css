@@ -1146,17 +1146,17 @@ a:focus {
 }
 
 /*Snowflake Form */
-#snowflake-form{
+/* #snowflake-form{
   position: sticky;
   top: 0;
-}
+} */
 
 #snowflakeForm input[class]{
   margin-left: 80px;
   width: 400px;
-  padding: 12px;
+  padding: 10px;
   /* padding-right: 150px; */
-  padding-bottom: 10px;
+  padding-bottom: 1px;
   border-radius: 5px;
   border: solid 1.5px #D3D3D3;
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
@@ -1180,7 +1180,7 @@ a:focus {
 }
 
 #snowflakeForm label{
-  margin-top: 5px;
+  margin-top: 2px;
   margin-left: 80px;
 }
 
