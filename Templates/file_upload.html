@@ -68,29 +68,6 @@
   </div>
   <div class="row2">
     <div class="side">
-      <!-- <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
-        <div class="heading_container">
-          <h2>
-            <label for="bucket" id="bucket">Bucket Name</label>
-          </h2>
-        </div>
-        <div class="form-container" style="border: none;">
-          <input type="text" id="bucket" name="bucket">
-        </div>
-        <div class="heading_container">
-          <h2>
-            Upload the <span>JSON key</span> file
-          </h2><br>
-        </div>
-        <div id="drop-area">
-          <div style="text-align: center;">
-            <input type="file" id="json-file" name="file" accept=".json">
-            <label for="json-file" id="file-label">Choose JSON file</label>
-          </div>
-        </div>
-        <p id="file-name" style="color: #231a6f; padding-top: 5px;"></p>
-        <button id="connect-btn" class="connect-btn" type="submit" style="margin-left: 12vw; border-radius: 5px;">Submit</button>
-      </form> -->
       <div class="heading_container">
         <h2>Prerequisites for Bigquery as Source:</h2>
       </div>
@@ -130,10 +107,9 @@
           <div class="heading_container">
             <h2><span>Source </span>Connection</h2>
           </div>
+          <br>
           <label for="bucket">Bucket Name</label><br>
           <input id="bucket" name="bucket" type="text" placeholder="Enter your bucket name" required/><br>
-          <label for="Region">Region</label><br>
-          <input type="text" name="Region" id="Region" placeholder="Enter your bucket's region"><br>
           <label>Upload the JSON file</label><br>
           <div id="drop-area">
             <div style="text-align: center;">
@@ -182,3 +158,4 @@
  </script>
  <!-- End Google Map -->
 </body>
+</html>

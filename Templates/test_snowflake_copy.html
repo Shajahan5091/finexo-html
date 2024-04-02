@@ -1,9 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snow Migrate</title>
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/favicon.png') }}" type="">
+  <title> Snow Migrate </title>
+  <!-- bootstrap core css -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}" />
+  <!-- fonts style -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!--owl slider stylesheet -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+  <!-- font awesome style -->
+  <link href="{{ url_for('static',filename='styles/font-awesome.min.css') }}" rel="stylesheet" />
+  <!-- Custom styles for this template -->
+  <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
 <style>
     .loading {
         display: inline-block;
@@ -70,9 +90,49 @@
       min-width: 400px;
       box-shadow: 0 0 10pt 1pt #D3D3D3;
     }
-    .loading{
-        margin-left : 100px;
+    /* table,tr,td{
+        border: 1px solid black;
+    } */
+    .odd{
+        text-align: left;
+        width:400px;
+        padding: 3px;
     }
+    #even{
+        text-align: center;
+        width:150px;
+        line-height: 15px;
+        padding: 3px;
+    }
+    .connect-btn{
+        margin-left: 100px;
+    }
+    .loading {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        width: 20px;
+        height: 20px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+     }
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.failure{
+    font-size: small;
+    margin: 0;
+    padding: 0;
+    line-height: 0%;
+}
 </style>
 </head>
 <body>
@@ -82,47 +142,95 @@
     <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
         <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
         <h2 style="display: inline;"><span>Testing Connection</span></h2><br><br>
-        <div id="Snowflake_User">
-            Testing Snowflake Connection:
-            <span id="SnowflakeUserResult" class="loading">Loading...</span>
-            <span id="Error_1" class="failure"></span>
-        </div>
-        <div id="requiredRoles">
-            Testing if required roles are granted:
-            <ul>
-                <li>Warehouse, DataBase, Role, User: <span id="RoleResult" class="loading">Loading...</span>
+        <table>
+            <tr>
+                <td class="odd">
+                    <div id="Snowflake_User">
+                    Testing Snowflake Connection
+                </td>
+                <td id="even">
+                    <span id="SnowflakeUserResult" class="loading"></span>
+                    <span id="Error_1" class="failure"></span>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                        Warehouse, Database, Role, User are created  
+                </td>
+                <td id="even">
+                    <span id="RoleResult" class="loading"></span>
                     <span id="Error_2" class="failure"></span>
-                </li>
-                <li>Access to Create Schema's & Table's: <span id="CreatePermissionsResult" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd"> 
+                    Given access to Create Schemas and its objects
+                </td>
+                <td id="even">
+                    <span id="CreatePermissionsResult" class="loading"></span>
                     <span id="Error_3" class="failure"></span>
-                </li>
-                <li>
-                    Testing if Storage Integration Created:  <span id="StorageIntegrationResult" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    Storage Integration is Created
+                </td>
+                <td id="even">
+                    <span id="StorageIntegrationResult" class="loading"></span>
                     <span id="Error_4" class="failure"></span>
-                </li>
-                <li>Testing if Storage Integration has Access: <span id="StorageIntegrationAccess" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    Storage Integration has Access
+                </td>
+                <td id="even">
+                    <span id="StorageIntegrationAccess" class="loading"></span>
                     <span id="Error_5" class="failure"></span>
-                </li>
-                <li>
-                    Testing if File_Format Created:  <span id="FileFormatResult" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    File Format is Created
+                </td>
+                <td id="even"> 
+                    <span id="FileFormatResult" class="loading"></span>
                     <span id="Error_6" class="failure"></span>
-                </li>
-                <li>Testing if File_Format has Access: <span id="FileFormatAccess" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    File Format has Access                    
+                </td>
+                <td id="even">
+                    <span id="FileFormatAccess" class="loading"></span>
                     <span id="Error_7" class="failure"></span>
-                </li>
-                <li>
-                    Testing if Stage Created:  <span id="StorageStageResult" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    Stage is Created
+                </td>
+                <td id="even">
+                    <span id="StorageStageResult" class="loading"></span>
                     <span id="Error_8" class="failure"></span>
-                </li>
-                <li>Testing if Stage has Access: <span id="StorageStageAccess" class="loading">Loading...</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    Stage has Access
+                </td>
+                <td id="even">
+                    <span id="StorageStageAccess" class="loading"></span>
                     <span id="Error_9" class="failure"></span>
-                </li>
-            </ul>
-        </div>
-        <br>
+                </td>
+            </tr>
+        </table>    
         <br>
         <form action="/migration_result" method="post">
-            <button type="submit" onclick="display_loader()"><b>Proceed</b></button>
+            <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
+            <button  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
         </form>
     </div>
 

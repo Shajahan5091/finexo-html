@@ -113,8 +113,8 @@
                                 </div>
                                 <div class="detail-box">
                                     <form action="/get_tables" method="post">
-                                        <h5><label for="connect-btn">{{ schema }}</label></h5>
-                                        <button value="{{ schema }}" id="connect-btn" name="connect-btn" class="connect-btn" type="submit">Show Tables</button>
+                                        <h5><label for="connect_btn_{{ schema }}">{{ schema }}</label></h5>
+                                        <button value="{{ schema }}"  id="connect_btn_{{ schema }}" id="connect-btn" name="connect-btn" class="connect-btn" type="submit">Show Tables</button>
                                     </form>
                                 </div>
                             </div>
@@ -184,3 +184,4 @@
   });
 </script>
 </body>
+</html>
