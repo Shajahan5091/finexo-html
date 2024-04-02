@@ -353,7 +353,7 @@ def Integration_Object_Exist():
         return jsonify({"success": False, "error": cursor})
     else:
         try:
-            storage_integration_exists = check_object_exists(cursor, 'INTEGRATIONS', 'SNOW_MIGRATE_INTEGRATIONS')
+            storage_integration_exists = check_object_exists(cursor, 'INTEGRATIONS', 'SNOW_MIGRATE_INTEGRATION')
             print(f"Storage Integration Exists: {storage_integration_exists}")
         
             if storage_integration_exists:
@@ -438,7 +438,7 @@ def IntegrationAccess():
     else:
         try:
              # Check grants for integration
-            integration_name = 'SNOW_MIGRATE_INTEGRATIONS'
+            integration_name = 'SNOW_MIGRATE_INTEGRATION'
             role_name = role
             privilege = 'OWNERSHIP'
             granted_on = 'INTEGRATION'
