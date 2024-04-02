@@ -1074,20 +1074,20 @@ a:focus {
 
 
 .row2 {  
-  display: flex;
+  display: flex; 
   flex-wrap: wrap;
   width: 100vw;
-  height: 100vh;
-}
+} 
 
 /* Create two unequal columns that sits next to each other */
 /* Sidebar/left column */
 .side {
-  flex: 50%;
+  flex: 50%; 
   padding: 40px; 
   line-height: 30px;
   background-color: #00204a;
   color: #ffffff;
+  height: 90vh ; 
 }
 
 /* Main column */
@@ -1096,7 +1096,13 @@ a:focus {
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
+  height: 90vh; 
 }
+.main,.side {
+  overflow: scroll ;
+  overscroll-behavior: contain ;
+}
+
 .side a {
   text-decoration: none;
 }
@@ -1146,10 +1152,10 @@ a:focus {
 }
 
 /*Snowflake Form */
-#snowflake-form{
+/* #snowflake-form{
   position: sticky;
   top: 0;
-}
+} */
 
 #snowflakeForm input[class]{
   margin-left: 80px;
@@ -1190,6 +1196,7 @@ a:focus {
   line-height: 30px;
   background-color: #00204a;
   color: #ffffff;
+  height: 90vh;
 }
 
 /* Main column */
@@ -1198,6 +1205,12 @@ a:focus {
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
+  height: 90vh;
+}
+.main2,
+.side2 {
+  overflow: auto ;
+  overscroll-behavior: contain ;
 }
 
 #show-password, #show-pass-label:hover{

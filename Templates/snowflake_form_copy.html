@@ -43,8 +43,8 @@
     .K2_CBox .C_box_main{cursor:pointer;display:inline-flex;align-items:center;padding:12px;outline:0;border:0;border-radius:50%;background:#004cbd;transition:all .3s ease;-webkit-transition:all .3s ease}.K2_CBox .C_box_main:hover{opacity:.8}.K2_CBox .C_box_main .CBox_icn{flex-shrink:0;display:inline-block;width:18px;height:18px;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fefefe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24'><rect x='5.54615' y='5.54615' width='16.45385' height='16.45385' rx='4'/><path d='M171.33311,181.3216v-8.45385a4,4,0,0,1,4-4H183.787' transform='translate(-169.33311 -166.86775)'/></svg>");background-size:cover;background-repeat:no-repeat;background-position:center}
     .K2_CBox .C_box_main.copied{background:#2dcda7}
     .K2_CBox .C_box_main.copied .CBox_icn{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fefefe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24'><path d='M22 11.07V12a10 10 0 1 1-5.93-9.14'/><polyline points='23 3 12 14 9 11'/></svg>")}
-    .K2_CBox pre{margin:0;background:#f6f6f6;padding:15px;border-radius:5px;color:#08102b;font-size:.8rem;font-family:monospace;overflow:scroll;scroll-behavior:smooth;scroll-snap-type:x mandatory;-ms-overflow-style:none;-webkit-overflow-scrolling:touch; white-space: pre-wrap;}
-    .K2_CBox pre::before, .K2_CBox pre::after{content:''}
+    .K2_CBox pre{margin:0;background:#f6f6f6;padding:5px;border-radius:5px;color:#08102b;font-size:.8rem;font-family:monospace;overflow:scroll;scroll-behavior:smooth;scroll-snap-type:x mandatory;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}
+    .K2_CBox pre::before, .K2_CBox p::after{content:''}
     .dark-Mode .K2_CBox{background:#2d2d30}.dark-Mode .K2_CBox pre{background:#252526;color:#fffdfc}
     .tNtf span{position:fixed;left:24px;bottom:-70px;display:inline-flex;align-items:center;text-align:center;justify-content:center;margin-bottom:20px;z-index:99981;background:#323232;color:rgba(255,255,255,.8);font-size:14px;font-family:inherit;border-radius:3px;padding:13px 24px; box-shadow:0 5px 35px rgba(149,157,165,.3);opacity:0;transition:all .1s ease;animation:slideinwards 2s ease forwards;-webkit-animation:slideinwards 2s ease forwards}
     @media screen and (max-width:500px){.tNtf span{margin-bottom:20px;left:20px;right:20px;font-size:13px}}
@@ -134,63 +134,65 @@
     
             <!--Add Your Parse HTML code Here-->
             <div id='code1'>
-                <pre>-- set variables (these need to be uppercase)
-                  set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
-                  set snow_migrate_username = 'SNOW_MIGRATE_USER';
-                  set snow_migrate_warehouse = 'SNOW_MIGRATE_WAREHOUSE';
-                  set snow_migrate_database = 'SNOW_MIGRATE_DATABASE';
-                  set snow_migrate_schema = 'SNOW_MIGRATE_SCHEMA';
-                  
-                  -- set user password
-                  set snow_migrate_password = 'password';
-                  
-                  begin;
-                  
-                  -- create SNOW_MIGRATE_ROLE
-                  use role securityadmin;
-                  create role if not exists identifier($snow_migrate_role);
-                  grant role identifier($snow_migrate_role) to role SYSADMIN;
-                  
-                  -- create SNOW_MIGRATE_USER
-                  create user if not exists identifier($snow_migrate_username)
-                  password = $snow_migrate_password
-                  default_role = $snow_migrate_role
-                  default_warehouse = $snow_migrate_warehouse;
-                  
-                  
-                  grant role identifier($snow_migrate_role) to user identifier($snow_migrate_username);
-                  
-                  -- change role to sysadmin for warehouse / database steps
-                  use role sysadmin;
-                  
-                  -- create SNOW_MIGRATE_WAREHOUSE
-                  create warehouse if not exists identifier($snow_migrate_warehouse)
-                  warehouse_size = xsmall
-                  warehouse_type = standard
-                  auto_suspend = 60
-                  auto_resume = true
-                  initially_suspended = true;
-                  
-                  -- create SNOW_MIGRATE_DATABASE
-                  create database if not exists identifier($snow_migrate_database);
-                  
-                  -- grant Airbyte wSNOW_MIGRATE_DATABASE.INFORMATION_SCHEMAarehouse access
-                  grant USAGE
-                  on warehouse identifier($snow_migrate_warehouse)
-                  to role identifier($snow_migrate_role);
-                  
-                  -- grant Airbyte database access
-                  grant OWNERSHIP
-                  on database identifier($snow_migrate_database)
-                  to role identifier($snow_migrate_role);
-                  
-                  GRANT CREATE SCHEMA ON DATABASE SNOW_MIGRATE_DATABASE TO ROLE SNOW_MIGRATE_ROLE;
-                  
-                  USE ROLE ACCOUNTADMIN;
-                  
-                  GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SNOW_MIGRATE_ROLE;
-                  
-                  commit;</pre>
+<pre><code>
+  -- set variables (these need to be uppercase)
+  set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
+  set snow_migrate_username = 'SNOW_MIGRATE_USER';
+  set snow_migrate_warehouse = 'SNOW_MIGRATE_WAREHOUSE';
+  set snow_migrate_database = 'SNOW_MIGRATE_DATABASE';
+    
+  -- set user password
+  set snow_migrate_password = 'password';
+    
+  begin;
+    
+  -- create SNOW_MIGRATE_ROLE
+  use role securityadmin;
+  create role if not exists identifier($snow_migrate_role);
+  grant role identifier($snow_migrate_role) to role SYSADMIN;
+    
+  -- create SNOW_MIGRATE_USER
+  create user if not exists identifier($snow_migrate_username)
+  password = $snow_migrate_password
+  default_role = $snow_migrate_role
+  default_warehouse = $snow_migrate_warehouse;
+    
+    
+  grant role identifier($snow_migrate_role) to user 
+  identifier($snow_migrate_username);
+    
+  -- change role to sysadmin for warehouse / database steps
+  use role sysadmin;
+    
+  -- create SNOW_MIGRATE_WAREHOUSE
+  create warehouse if not exists identifier($snow_migrate_warehouse)
+  warehouse_size = xsmall
+  warehouse_type = standard
+  auto_suspend = 60
+  auto_resume = true
+  initially_suspended = true;
+  
+  -- create SNOW_MIGRATE_DATABASE
+  create database if not exists identifier($snow_migrate_database);
+  
+  -- grant warehouse access
+  grant USAGE
+  on warehouse identifier($snow_migrate_warehouse)
+  to role identifier($snow_migrate_role);
+  
+  -- grant database access
+  grant OWNERSHIP
+  on database identifier($snow_migrate_database)
+  to role identifier($snow_migrate_role);
+  
+  GRANT CREATE SCHEMA ON DATABASE SNOW_MIGRATE_DATABASE TO ROLE SNOW_MIGRATE_ROLE;
+  
+  USE ROLE ACCOUNTADMIN;
+  
+  GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SNOW_MIGRATE_ROLE;
+  
+  commit;
+</code></pre>
                 <div id='toastNotif' class='tNtf'></div>
             </div>
         </div>
@@ -202,24 +204,24 @@
                   Destination Connection<br>
                     <span> Snowflake </span>
                 </h2>
-                <label for="accountname"><b>Account Name</b></label><br>
+                <label for="accountname">Account Name</label><br>
                 <input class="accountname" id="accountname" type="text" placeholder="Ex: locator.region" name="accountname" required>
-                <label for="role"><b>Role</b></label><br>
+                <label for="role">Role</label><br>
                 <input class="role" id="role" type="text" value="SNOW_MIGRATE_ROLE" name="role" required>
 
-                <label for="username"><b>Username</b></label><br>
+                <label for="username">Username</label><br>
                 <input class="username" id="username" type="text" value="SNOW_MIGRATE_USER" name="username" required>
     
-                <label for="warehouse"><b>Warehouse</b></label><br>
+                <label for="warehouse">Warehouse</label><br>
                 <input class="warehouse" id="warehouse" type="text" value="SNOW_MIGRATE_WAREHOUSE" name="warehouse" required>
 
-                <label for="database"><b>Database</b></label><br>
+                <label for="database">Database</label><br>
                 <input class="database" id="database" type="text" value="SNOW_MIGRATE_DATABASE" name="database" required>
 
-                <label for="schema"><b>Schema</b></label><br>
+                <label for="schema">Schema</label><br>
                 <input class="schema" id="schema" type="text" value="SNOW_MIGRATE_SCHEMA" name="schema" required>
 
-                <label for="password"><b>Password</b></label><br>
+                <label for="password">Password</label><br>
                 <input class="password" style="margin-bottom: 5px;" id="password" type="password" placeholder="Enter Password" value="password" name="password" required><br>
                 <input id="show-password" type="checkbox" onclick="myFunction()" style="margin-left: 80px; padding: 0;">
                 <label id="show-pass-label" for="show-password" style="font-size: medium; display: inline; margin-left: 0;"> Show Password</label>
@@ -274,6 +276,8 @@
         x.type = "password";
       }
     }
+    var x = document.getElementById("code"); 	
+    x.innerHTML = x.innerHTML.replace(' ','');
   </script>
 </body>
 </html>

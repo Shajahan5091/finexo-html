@@ -341,7 +341,7 @@ def Integration_Object_Exist():
         return jsonify({"success": False, "error": cursor})
     else:
         try:
-            storage_integration_exists = check_object_exists(cursor, 'INTEGRATIONS', 'SNOW_MIGRATE_INTEGRATION')
+            storage_integration_exists = check_object_exists(cursor, 'INTEGRATIONS', 'SNOW_MIGRATE_INTEGRATIONS')
             print(f"Storage Integration Exists: {storage_integration_exists}")
         
             if storage_integration_exists:
@@ -426,7 +426,7 @@ def IntegrationAccess():
     else:
         try:
              # Check grants for integration
-            integration_name = 'SNOW_MIGRATE_INTEGRATION'
+            integration_name = 'SNOW_MIGRATE_INTEGRATIONS'
             role_name = role
             privilege = 'OWNERSHIP'
             granted_on = 'INTEGRATION'
@@ -532,7 +532,7 @@ def create_schemas_and_copy_table(conn,schema_list):
    for row in rows:
        schema_local = row.schema_name
        print(schema_local)
-       print("777777777777")
+       print("-------------------")
        print(schema_list)
        if schema_local in schema_list :
            print("Gathering ddl {}".format(schema_local))

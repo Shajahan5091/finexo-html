@@ -93,13 +93,46 @@
     /* table,tr,td{
         border: 1px solid black;
     } */
+    .odd{
+        text-align: left;
+        width:400px;
+        padding: 3px;
+    }
     #even{
-        text-align: right;
-        width:50px;
+        text-align: center;
+        width:150px;
+        line-height: 15px;
+        padding: 3px;
     }
     .connect-btn{
         margin-left: 100px;
     }
+    .loading {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        width: 20px;
+        height: 20px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+     }
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.failure{
+    font-size: small;
+    margin: 0;
+    padding: 0;
+    line-height: 0%;
+}
 </style>
 </head>
 <body>
@@ -111,85 +144,85 @@
         <h2 style="display: inline;"><span>Testing Connection</span></h2><br><br>
         <table>
             <tr>
-                <td>
+                <td class="odd">
                     <div id="Snowflake_User">
                     Testing Snowflake Connection
                 </td>
                 <td id="even">
-                    <span id="SnowflakeUserResult" class="loading">Loading...</span>
+                    <span id="SnowflakeUserResult" class="loading"></span>
                     <span id="Error_1" class="failure"></span>
                 </div>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                         Warehouse, Database, Role, User are created  
                 </td>
                 <td id="even">
-                    <span id="RoleResult" class="loading">Loading...</span>
+                    <span id="RoleResult" class="loading"></span>
                     <span id="Error_2" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd"> 
                     Given access to Create Schemas and its objects
                 </td>
                 <td id="even">
-                    <span id="CreatePermissionsResult" class="loading">Loading...</span>
+                    <span id="CreatePermissionsResult" class="loading"></span>
                     <span id="Error_3" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                     Storage Integration is Created
                 </td>
                 <td id="even">
-                    <span id="StorageIntegrationResult" class="loading">Loading...</span>
+                    <span id="StorageIntegrationResult" class="loading"></span>
                     <span id="Error_4" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                     Storage Integration has Access
                 </td>
                 <td id="even">
-                    <span id="StorageIntegrationAccess" class="loading">Loading...</span>
+                    <span id="StorageIntegrationAccess" class="loading"></span>
                     <span id="Error_5" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                     File Format is Created
                 </td>
                 <td id="even"> 
-                    <span id="FileFormatResult" class="loading">Loading...</span>
+                    <span id="FileFormatResult" class="loading"></span>
                     <span id="Error_6" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                     File Format has Access                    
                 </td>
                 <td id="even">
-                    <span id="FileFormatAccess" class="loading">Loading...</span>
+                    <span id="FileFormatAccess" class="loading"></span>
                     <span id="Error_7" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                     Stage is Created
                 </td>
                 <td id="even">
-                    <span id="StorageStageResult" class="loading">Loading...</span>
+                    <span id="StorageStageResult" class="loading"></span>
                     <span id="Error_8" class="failure"></span>
                 </td>
             </tr>
             <tr>
-                <td>
+                <td class="odd">
                     Stage has Access
                 </td>
                 <td id="even">
-                    <span id="StorageStageAccess" class="loading">Loading...</span>
+                    <span id="StorageStageAccess" class="loading"></span>
                     <span id="Error_9" class="failure"></span>
                 </td>
             </tr>
