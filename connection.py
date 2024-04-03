@@ -6,6 +6,10 @@ import snowflake.connector
 import pandas as pd
 from snowflake.connector.pandas_tools import write_pandas
 import streamlit_connection as st
+from google.api_core.exceptions import NotFound
+from googleapiclient import discovery
+from google.cloud import storage
+import csv
 
 def Migration_report(connection,database,schema):
     try:
@@ -50,6 +54,7 @@ def upload():
     if file and file.filename.endswith('.json'):
         # Read JSON file and establish connection to BigQuery
         json_content = file.read()
+        global credentials
         credentials = service_account.Credentials.from_service_account_info(json.loads(json_content))
         global project_id
         project_id = credentials.project_id
@@ -61,23 +66,166 @@ def upload():
             # Establish connection to BigQuery using the provided credentials
             global bq_client
             bq_client = bigquery.Client(credentials=credentials, project=project_id)
-
-            # Fetch schemas from BigQuery and display them
-            schemas = fetch_schemas(bq_client)
-            
-            return render_template('schemas_copy.html', schemas=schemas)
+            global storage_client
+            storage_client = storage.Client(credentials=credentials, project=project_id)
+            # Fetch schemas from BigQuery and display them            
+            return render_template('test_gcp.html',show_popup=True)
         except Exception as e:
             return f'Error establishing connection to BigQuery: {str(e)}'
 
     else:
         return 'Invalid file format'
+
+#Run this pip install command for this library to work
+#pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2
+#pip install google-cloud-storage
+
+def test_service_account_connection():
+    try:
+        client = bq_client
+        # Try to get the service account email to check the connection
+        service_account_email = client.get_service_account_email()
+
+        if service_account_email:
+            print(f"Successfully connected to GCP. Service account email: {service_account_email}")
+            return True
+        else:
+            print("Failed to retrieve service account email. Connection to GCP failed.")
+            return False
+    except Exception as e:
+        print(f"Error connecting to GCP: {e}")
+        return False
     
-def fetch_schemas(client):
+
+def Check_role_permissions():
+    try:
+        # Build the IAM service
+        service = discovery.build('iam', 'v1', credentials=credentials)
+
+        # Name of the role to search for
+        role_name = 'projects/' + project_id + '/roles/MigrateRole'
+
+        # Make a request to get details of the specific role
+        role_details = service.projects().roles().get(name=role_name).execute()
+
+        permissions = role_details.get('includedPermissions', [])
+
+        # Define the expected permissions
+        expected_permissions = {
+            'bigquery.datasets.create',
+            'bigquery.datasets.get',
+            'bigquery.datasets.update',
+            'bigquery.jobs.create',
+            'bigquery.routines.get',
+            'bigquery.routines.list',
+            'bigquery.tables.export',
+            'bigquery.tables.get',
+            'bigquery.tables.getData',
+            'bigquery.tables.list',
+            'bigquery.tables.replicateData',
+            'bigquery.tables.updateData',
+            'bigquery.transfers.get',
+            'bigquery.transfers.update',
+            'resourcemanager.projects.get',
+            'storage.buckets.get',
+            'storage.objects.create',
+            'storage.objects.delete'
+        }
+
+        # Finding missing permissions
+        missing_permissions = expected_permissions - set(permissions)
+
+        missing_permissions_str = ', '.join(sorted(missing_permissions))
+
+        # Check for failures
+        failure_message = ""
+        if missing_permissions:
+            failure_message += f"Missing Permissions: {missing_permissions_str}\n"
+
+        # Print role details
+        print(f"Role Name: {role_details['name']}")
+        print("Permissions:")
+        for permission in sorted(permissions):
+            print(f"- {permission}")
+
+        # Print failure message if any
+        if failure_message:
+            print("\nFailure:")
+            failure_message = failure_message+"Follow steps in GCP Setup page to create Custom Role"
+            print(failure_message)
+            return failure_message
+        
+        return ""
+    
+    except Exception as e:
+        print(f"Failed to create dataset: {e}")
+        return False
+
+
+def Check_Bucket_Existence():
+    """Check if a bucket exists in the specified GCP project."""
+    try:
+        bucket = storage_client.get_bucket(bucket_name)
+        print(f"The bucket '{bucket_name}' exists in the project '{project_id}'.")
+        return True
+    except Exception as e:
+        if isinstance(e, NotFound):
+            print(f"The bucket '{bucket_name}' does not exist in the project '{project_id}'.")
+            return False
+        else:
+            print("An error occurred:", e)
+            return False
+
+@app.route('/test_service_account_connection', methods=['POST'])
+def test_service_account_connection_route():
+    print("Received request to test service account connection")
+    try:
+        success = test_service_account_connection()
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to connect to GCP'}), 500
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while testing the service account connection'}), 500
+
+
+@app.route('/GrantAccessCheck', methods=['POST'])
+def CheckBigqueryDatasetsCreatePermissions():
+    print("Checking Permissions in MigrateRole")
+    try:
+        status = Check_role_permissions()
+        if(status==""):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error':status}), 500
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
+
+
+
+@app.route('/BucketExistCheck', methods=['POST'])
+def CheckBucketCreated():
+    print("Checking whether GCS Bucket Exist or not")
+    try:
+        success = Check_Bucket_Existence()
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error':'Bucket does not Exist with the given name, Make sure to give the correct name in the UI'}), 500
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
+
+@app.route('/fetch_schemas', methods=['POST'])    
+def fetch_schemas():
+    client = bq_client
     datasets = list(client.list_datasets())
     schemas = []
     for dataset in datasets:
         schemas.append(dataset.dataset_id)
-    return schemas
+    return render_template('schemas_copy.html', schemas = schemas)
 
 @app.route('/get_tables',  methods =["GET", "POST"])
 def get_tables():
