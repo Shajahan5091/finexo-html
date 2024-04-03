@@ -6,6 +6,10 @@ import snowflake.connector
 import pandas as pd
 from snowflake.connector.pandas_tools import write_pandas
 import streamlit_connection as st
+from google.api_core.exceptions import NotFound
+from googleapiclient import discovery
+from google.cloud import storage
+import csv
 
 def Migration_report(connection,database,schema):
     try:
@@ -50,6 +54,7 @@ def upload():
     if file and file.filename.endswith('.json'):
         # Read JSON file and establish connection to BigQuery
         json_content = file.read()
+        global credentials
         credentials = service_account.Credentials.from_service_account_info(json.loads(json_content))
         global project_id
         project_id = credentials.project_id
@@ -61,23 +66,166 @@ def upload():
             # Establish connection to BigQuery using the provided credentials
             global bq_client
             bq_client = bigquery.Client(credentials=credentials, project=project_id)
-
-            # Fetch schemas from BigQuery and display them
-            schemas = fetch_schemas(bq_client)
-            
-            return render_template('schemas_copy.html', schemas=schemas)
+            global storage_client
+            storage_client = storage.Client(credentials=credentials, project=project_id)
+            # Fetch schemas from BigQuery and display them            
+            return render_template('test_gcp.html',show_popup=True)
         except Exception as e:
             return f'Error establishing connection to BigQuery: {str(e)}'
 
     else:
         return 'Invalid file format'
+
+#Run this pip install command for this library to work
+#pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2
+#pip install google-cloud-storage
+
+def test_service_account_connection():
+    try:
+        client = bq_client
+        # Try to get the service account email to check the connection
+        service_account_email = client.get_service_account_email()
+
+        if service_account_email:
+            print(f"Successfully connected to GCP. Service account email: {service_account_email}")
+            return True
+        else:
+            print("Failed to retrieve service account email. Connection to GCP failed.")
+            return False
+    except Exception as e:
+        print(f"Error connecting to GCP: {e}")
+        return False
     
-def fetch_schemas(client):
+
+def Check_role_permissions():
+    try:
+        # Build the IAM service
+        service = discovery.build('iam', 'v1', credentials=credentials)
+
+        # Name of the role to search for
+        role_name = 'projects/' + project_id + '/roles/MigrateRole'
+
+        # Make a request to get details of the specific role
+        role_details = service.projects().roles().get(name=role_name).execute()
+
+        permissions = role_details.get('includedPermissions', [])
+
+        # Define the expected permissions
+        expected_permissions = {
+            'bigquery.datasets.create',
+            'bigquery.datasets.get',
+            'bigquery.datasets.update',
+            'bigquery.jobs.create',
+            'bigquery.routines.get',
+            'bigquery.routines.list',
+            'bigquery.tables.export',
+            'bigquery.tables.get',
+            'bigquery.tables.getData',
+            'bigquery.tables.list',
+            'bigquery.tables.replicateData',
+            'bigquery.tables.updateData',
+            'bigquery.transfers.get',
+            'bigquery.transfers.update',
+            'resourcemanager.projects.get',
+            'storage.buckets.get',
+            'storage.objects.create',
+            'storage.objects.delete'
+        }
+
+        # Finding missing permissions
+        missing_permissions = expected_permissions - set(permissions)
+
+        missing_permissions_str = ', '.join(sorted(missing_permissions))
+
+        # Check for failures
+        failure_message = ""
+        if missing_permissions:
+            failure_message += f"Missing Permissions: {missing_permissions_str}\n"
+
+        # Print role details
+        print(f"Role Name: {role_details['name']}")
+        print("Permissions:")
+        for permission in sorted(permissions):
+            print(f"- {permission}")
+
+        # Print failure message if any
+        if failure_message:
+            print("\nFailure:")
+            failure_message = failure_message+"Follow steps in GCP Setup page to create Custom Role"
+            print(failure_message)
+            return failure_message
+        
+        return ""
+    
+    except Exception as e:
+        print(f"Failed to create dataset: {e}")
+        return False
+
+
+def Check_Bucket_Existence():
+    """Check if a bucket exists in the specified GCP project."""
+    try:
+        bucket = storage_client.get_bucket(bucket_name)
+        print(f"The bucket '{bucket_name}' exists in the project '{project_id}'.")
+        return True
+    except Exception as e:
+        if isinstance(e, NotFound):
+            print(f"The bucket '{bucket_name}' does not exist in the project '{project_id}'.")
+            return False
+        else:
+            print("An error occurred:", e)
+            return False
+
+@app.route('/test_service_account_connection', methods=['POST'])
+def test_service_account_connection_route():
+    print("Received request to test service account connection")
+    try:
+        success = test_service_account_connection()
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to connect to GCP'}), 500
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while testing the service account connection'}), 500
+
+
+@app.route('/GrantAccessCheck', methods=['POST'])
+def CheckBigqueryDatasetsCreatePermissions():
+    print("Checking Permissions in MigrateRole")
+    try:
+        status = Check_role_permissions()
+        if(status==""):
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error':status}), 500
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
+
+
+
+@app.route('/BucketExistCheck', methods=['POST'])
+def CheckBucketCreated():
+    print("Checking whether GCS Bucket Exist or not")
+    try:
+        success = Check_Bucket_Existence()
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error':'Bucket does not Exist with the given name, Make sure to give the correct name in the UI'}), 500
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
+
+@app.route('/fetch_schemas', methods=['POST'])    
+def fetch_schemas():
+    client = bq_client
     datasets = list(client.list_datasets())
     schemas = []
     for dataset in datasets:
         schemas.append(dataset.dataset_id)
-    return schemas
+    return render_template('schemas_copy.html', schemas = schemas)
 
 @app.route('/get_tables',  methods =["GET", "POST"])
 def get_tables():
@@ -174,8 +322,8 @@ def self_execute(conn, bucket_name , schema , database ):
     print(query_use_db.format(db = database))
     print(query_create_schema.format(schema = schema))
     print(query_self_integration.format(bkt = bucket_name))
-    print(query_create_ff.format(db = database , schema = schema))
-    print(query_create_stage.format(db = database,schema = schema ,bkt = bucket_name))
+    print(query_create_ff.format(db = database, schema = schema))
+    print(query_create_stage.format(db = database, schema = schema, bkt = bucket_name))
 
     # conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
     # conn.cursor().execute(query_use_db.format(db = database))
@@ -189,8 +337,8 @@ def self_execute(conn, bucket_name , schema , database ):
         conn.cursor().execute(query_use_db.format(db = database))
         conn.cursor().execute(query_create_schema.format(schema = schema))
         conn.cursor().execute(query_self_integration.format(bkt = bucket_name))
-        conn.cursor().execute(query_create_ff.format(db = database , schema = schema))
-        conn.cursor().execute(query_create_stage.format(db = database,schema = schema ,bkt = bucket_name))
+        conn.cursor().execute(query_create_ff.format(db = database, schema = schema))
+        conn.cursor().execute(query_create_stage.format(db = database, schema = schema, bkt = bucket_name))
     
         # print(query_self_updated);
         print('Execution was succesfull');
@@ -533,6 +681,7 @@ def migration_result():
     result = create_schemas_and_copy_table(conn,schema_list)
     return result
 
+# Function to create the schemas and the tables from bigquery to snowflake
 def create_schemas_and_copy_table(conn,schema_list):
    query = """
    select schema_name from `{}`.INFORMATION_SCHEMA.SCHEMATA
@@ -589,7 +738,7 @@ def create_schemas_and_copy_table(conn,schema_list):
             print("Schema {} created in {} Database".format(schema_name, database))
     
            #FOR TABLES
-           ddl_table_query = table_query.format(project_id,schema_local)
+           ddl_table_query = table_query.format(project_id, schema_local)
            query_table_job = bq_client.query(ddl_table_query)
            ddl_table_set = query_table_job.result()
     
@@ -609,15 +758,15 @@ def create_schemas_and_copy_table(conn,schema_list):
            select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type
            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE'
            """
-           ddl_query = export_query.format(project_id,schema_local)
+           ddl_query = export_query.format(project_id, schema_local)
            query_job = bq_client.query(ddl_query)
            ddl_export_set = query_job.result()
 
            for row in ddl_export_set:
                table_name = row.table_name
                export_type = row.export_type
-               print("Exporting data for table {} ...export type is {}".format(table_name,export_type))
-               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema_local,table_name,table_name,export_type)
+               print("Exporting data for table {} ...export type is {}".format(table_name, export_type))
+               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name, schema_local, table_name, table_name, export_type)
                print(destination_uri)
                dataset_ref = bigquery.DatasetReference(project_id, schema_local)
                table_ref = dataset_ref.table(table_name)
@@ -672,13 +821,10 @@ def create_schemas_and_copy_table(conn,schema_list):
        else :
             print("D`one")
    auditing_log_into_Snowflake(conn,project_id,schema_list)
-   
    Migration_report(conn,database,schema)   
-   return "Success"
+   return render_template('result.html')
 
-
-
-
+# Function to create audit log tables in snowflake
 def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_names):
     print(schema_names)
     if len(schema_names)<2:
@@ -880,12 +1026,12 @@ with tab3:
 
     with col1:
         schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
-        schema_name=st.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view',placeholder="Select schema .....",)
+        schema_name=st.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view',)
     with col2:
         
         Table_SQL=('''select distinct "table_name" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "table_schema"='/schema_name/';''').format(schema_name=schema_name)
         Table_List =session.sql(Table_SQL).collect()
-        table_name=st.selectbox('Biquery Table List',Table_List,help='select Table need to view',placeholder="Select table .....",)
+        table_name=st.selectbox('Biquery Table List',Table_List,help='select Table need to view',)
         st.button(":inbox_tray:",help="download Tabel Struct Report",on_click=Table_Struct)
     source_table_sql=('''select "column_name" as  "Column Available On Source","data_type"as  "Data type On Source"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where "table_schema"='/schema_name/' and "table_name"='/table_name/' ;''').format(schema_name=schema_name,table_name=table_name)
     source_table=session.sql(source_table_sql)
@@ -967,6 +1113,5 @@ with tab3:
         text_file.write(stream_script)
 
 
-    
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
