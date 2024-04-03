@@ -24,6 +24,44 @@
   <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
   <!-- responsive style -->
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
+  <style>
+    .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:5px;margin:30px 0 30px}
+    .K2_CBox .CB_Heading{display:flex;justify-content:space-between;align-items:center;}
+    .K2_CBox .CB_Heading span{margin:10px;font-weight:700;font-family:inherit;font-size:1.1rem}
+    .K2_CBox .C_box_main{cursor:pointer;display:inline-flex;align-items:center;padding:7px;outline:0;border:0;border-radius:50%;background:#004cbd;transition:all .3s ease;-webkit-transition:all .3s ease}.K2_CBox .C_box_main:hover{opacity:.8}.K2_CBox .C_box_main .CBox_icn{flex-shrink:0;display:inline-block;width:18px;height:18px;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fefefe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24'><rect x='5.54615' y='5.54615' width='16.45385' height='16.45385' rx='4'/><path d='M171.33311,181.3216v-8.45385a4,4,0,0,1,4-4H183.787' transform='translate(-169.33311 -166.86775)'/></svg>");background-size:cover;background-repeat:no-repeat;background-position:center}
+    .K2_CBox .C_box_main.copied{background:#2dcda7}
+    .K2_CBox .C_box_main.copied .CBox_icn{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fefefe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24'><path d='M22 11.07V12a10 10 0 1 1-5.93-9.14'/><polyline points='23 3 12 14 9 11'/></svg>")}
+    .K2_CBox pre{margin:0;background:#f6f6f6;border-radius:5px;padding:0;color:#08102b;font-size:.8rem;font-family:monospace;overflow:scroll;scroll-behavior:smooth;scroll-snap-type:x mandatory;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}
+    .K2_CBox pre::before, .K2_CBox p::after{content:''}
+    .dark-Mode .K2_CBox{background:#2d2d30}.dark-Mode .K2_CBox pre{background:#252526;color:#fffdfc}
+    .tNtf span{position:fixed;left:24px;bottom:-70px;display:inline-flex;align-items:center;text-align:center;justify-content:center;margin-bottom:20px;z-index:99981;background:#323232;color:rgba(255,255,255,.8);font-size:14px;font-family:inherit;border-radius:3px;padding:13px 24px; box-shadow:0 5px 35px rgba(149,157,165,.3);opacity:0;transition:all .1s ease;animation:slideinwards 2s ease forwards;-webkit-animation:slideinwards 2s ease forwards}
+    @media screen and (max-width:500px){.tNtf span{margin-bottom:20px;left:20px;right:20px;font-size:13px}}
+    @keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
+    @-webkit-keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
+    .darkMode .tNtf span{box-shadow:0 10px 40px rgba(0,0,0,.2)}
+    .connect-btn1{
+      float: right;
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-bottom: 0;
+      padding-top: 0;
+      border-radius: 3px;
+      font-weight: normal;
+    }
+    #yamlfile{
+      background:#072A6C;
+      /* background: white; */
+      display: block;
+      padding: 10px;
+      padding-left: 12px;
+      padding-right: 12px;
+      border-radius: 5px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      /* color:#072A6C ; */
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body class="sub_page">
@@ -67,45 +105,93 @@
     <!-- end header section -->
   </div>
   <div class="row2">
-    <div class="side">
+    <div class="side" style="font-size: medium;">
       <div class="heading_container">
-        <h2>Prerequisites for Bigquery as Source:</h2>
+        <h3>Prerequisites</h3>
       </div>
       <ul style="list-style-type: disc;">
           <li>A Google Cloud Project with BigQuery enabled</li>
-          <li>A Google Cloud Service Account with the "BigQuery User" and "BigQuery Data Editor" roles in your GCP project</li>
+          <li>A Google Cloud Service Account</li>
           <li>A Service Account Json Key to authenticate into your Service Account</li>
+          <li> The "roleAdmin" or "organizationRoleAdmin" roles are required to create the custom role</li>
       </ul>
       <br>
-      <div class="heading_container">
-        <h2>Steps for Creating a GCP Service Account</h2>
-      </div>
-      <ol style="font-weight: bold">
-          <li><h5 style="font-weight: bold">Creating a Service Account</h5></li>
-          <p style="font-weight: normal">It is recommended to use a dedicated Service Account for SnowMigrate to simplify Permission Management and Auditing. If you already have a Service Account with required permissions, you can use it here. Ensure that the chosen Service Account has the necessary roles for performing Data Migration seamlessly. Here is a Detailed guide that explains how to create a Service Account:
+      <!-- <div class="heading_container">
+        <h3>Steps for Creating a GCP Service Account</h3>
+      </div> -->
+
+          <h4><b>Creating a Service Account</b></h4>
+          <p style="font-weight: normal">It is recommended to use a dedicated service account for Snow Migrate to simplify permission management and auditing. 
+            <br>Here is a detailed guide that explains how to create a service account
           <br><a href="https://cloud.google.com/iam/docs/service-accounts-create">GCP’s Guide for Creating a Service Account</a></p>
           <br>
-          <li><h5 style="font-weight: bold">Grant or revoke Roles</h5></li>
+          <!-- <li><h5 style="font-weight: bold">Grant or revoke Roles</h5></li>
           <p style="font-weight: normal">Add the service account as a Member in your Google Cloud Project with the "BigQuery User" and “BigQuery Data Editor” role. Here is a Detailed guide that explains how to Grant Multiple Roles:
           <br><a  href="https://cloud.google.com/iam/docs/granting-changing-revoking-access#granting-console">Grant or revoke multiple roles using the Google Cloud console</a></p>
-          <br>
-          <li><h5 style="font-weight: bold">Service Account Keys Configuration</h5></li>
-          <p style="font-weight: normal">SnowMigrate currently supports JSON Keys only, ensure to create your key in the same. Then, download the key as Google permits viewing its contents only at this stage. Here is a detailed guide explaining how to Create Service Account Keys:
+          <br> -->
+          <h4><b>Service Account Keys Configuration</b></h4>
+          <p style="font-weight: normal">Snow Migrate currently supports JSON Keys only, ensure to create your key in the same. Then, download the key as Google permits viewing its contents only at this stage.
+            <br> Here is a detailed guide explaining how to create service account keys
           <br><a href="https://cloud.google.com/iam/docs/keys-create-delete">Creating and Managing Service Account Keys guide to create a Key</a></p>
-      </ol>
-      <br>
-      <h3 style="font-weight: bold" class="text-danger"> Important!!</h3>
-      <ol>
-          <li>Creation of a GCP Storage Bucket will be done automatically by the tool. The Bucket would act as an External Stage for Migrating Tables.</li>
-          <li>The Tool will automatically Grant these Roles “Storage Object Admin” & “Storage Object Viewer” to the Service Account.</li>
-          <li>After Successful Migration, the Bucket will automatically be deleted.</li>
-      </ol>
+          <br>
+          <h4><b>Creating a Custom Role</b></h4>
+          <p style="font-weight: normal">Create a Custom role to add necessary permissions for Data Migration.<br>
+          Steps to be followed to create the custom role for Snow Migrate:</p>
+          <ul>
+            <li>Download this YAML file, which will be used in later step to create a Custom role</li>
+            <span id="yamlfile">custom_role.yaml
+            <a  class="connect-btn connect-btn1"  href="{{ url_for('static',filename='yml_script/custom_role.yaml') }}" download>
+              Download
+            </a>
+          </span>
+            <li> Go to the <a href="https://console.cloud.google.com/">Google Cloud Console</a>, and then click on the Cloud Shell icon at the top right corner. 
+              This will open a terminal-like interface directly in your browser.</li>
+            <li>Upload the `custom_role.yaml` file to your Cloud Shell environment. You can use the upload button in the Cloud Shell toolbar to upload the file.</li>
+            <li>Use the `gcloud` command-line tool to create the custom role using the uploaded YAML file. Here's the command to run</li>
+            <div class='K2_CBox'>
+              <div class='CB_Heading'>
+                  <span style="color: white">Bash</span>
+                  <button id='copy1' class='C_box_main' onclick="copyC('copy1','code1')">
+                      <i class='CBox_icn'></i>
+                  </button>
+              </div>
+      
+              <!--Add Your Parse HTML code Here-->
+              <div id='code1'>
+  <pre><code>
+  gcloud iam roles create MigrateRole --project=`PROJECT_ID` --file=custom_role.yaml
+  </code></pre>
+                  <div id='toastNotif' class='tNtf'></div>
+              </div>
+          </div>
+            <li>Once the custom role is created, you need to assign it to the service account within your GCP project</li>
+            <div class='K2_CBox'>
+              <div class='CB_Heading'>
+                  <span style="color: white">Bash</span>
+                  <button id='copy1' class='C_box_main' onclick="copyC('copy1','code1')">
+                      <i class='CBox_icn'></i>
+                  </button>
+              </div>
+      
+              <!--Add Your Parse HTML code Here-->
+              <div id='code1'>
+  <pre><code>
+  gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member=serviceAccount:SERVICE_ACCOUNT_EMAIL --role=projects/YOUR_PROJECT_ID/roles/custom.MigrateRole
+  </code></pre>
+                  <div id='toastNotif' class='tNtf'></div>
+              </div>
+          </div>
+          </ul>
+        
     </div>
     <div class="main" >
       <div class="bigquery-form">
         <form id="json-form" name="json-form" action="/upload" method="post" enctype="multipart/form-data">
           <div class="heading_container">
-            <h2><span>Source </span>Connection</h2>
+            <h2 id="form-heading">
+              Source Connection<br>
+                <span> BigQuery </span>
+            </h2>
           </div>
           <br>
           <label for="bucket">Bucket Name</label><br>

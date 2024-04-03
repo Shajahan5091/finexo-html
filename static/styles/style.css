@@ -48,6 +48,11 @@ body {
   font-weight: bold;
   margin-bottom: 0;
 }
+.heading_container h3 {
+  position: relative;
+  font-weight: bold;
+  /* margin-bottom: 0; */
+}
 
 .heading_container h2 span {
   color: #00bbf0;
@@ -1102,6 +1107,9 @@ a:focus {
   overflow: scroll ;
   overscroll-behavior: contain ;
 }
+/* .main,.side::-webkit-scrollbar {
+  display: none;
+} */
 
 .side a {
   text-decoration: none;
@@ -1222,3 +1230,4 @@ a:focus {
 #show-password, #show-pass-label:hover{
   cursor: pointer;
 }
+
