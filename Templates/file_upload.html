@@ -110,7 +110,8 @@
         <h3>Prerequisites</h3>
       </div>
       <ul style="list-style-type: disc;">
-          <li>A Google Cloud Project with BigQuery enabled</li>
+          <li>A Google Cloud Project with BigQuery API enabled</li>
+          <li>A google storage bucket</li>
           <li>A Google Cloud Service Account</li>
           <li>A Service Account Json Key to authenticate into your Service Account</li>
           <li> The "roleAdmin" or "organizationRoleAdmin" roles are required to create the custom role</li>
@@ -168,7 +169,7 @@
             <div class='K2_CBox'>
               <div class='CB_Heading'>
                   <span style="color: white">Bash</span>
-                  <button id='copy1' class='C_box_main' onclick="copyC('copy1','code3')">
+                  <button id='copy3' class='C_box_main' onclick="copyC('copy3','code3')">
                       <i class='CBox_icn'></i>
                   </button>
               </div>
@@ -226,6 +227,20 @@
       }
   });
   });
+  /*<![CDATA[*/ 
+  function copyC(e,t){
+    var o=document.getElementById(e),
+    n=document.getElementById(t),
+    e=getSelection(),
+    t=document.createRange();
+    e.removeAllRanges(),
+    t.selectNodeContents(n),
+    e.addRange(t),
+    document.execCommand("copy"),
+    e.removeAllRanges(),
+    o.classList.add("copied"),
+    document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",
+    setTimeout(()=>{o.classList.remove("copied")},3e3)} /*]]>*/
 </script>
  <!-- jQery -->
  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
