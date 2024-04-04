@@ -16,8 +16,8 @@ def Migration_report(connection,database,schema):
         print('inside migration report')
         connection_cursor=connection.cursor()
         connection_cursor.execute(f"create  stage if not exists {database}.{schema}.Migration_Report;")
-        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
-        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\streamlit.py @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
         connection_cursor.execute("create or replace  STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE =  SNOW_MIGRATE_WAREHOUSE ;".format(database=database,schema=schema))
     except Exception as error:
         print(error)
@@ -69,7 +69,7 @@ def upload():
             global storage_client
             storage_client = storage.Client(credentials=credentials, project=project_id)
             # Fetch schemas from BigQuery and display them            
-            return render_template('test_gcp.html',show_popup=True)
+            return render_template('file_upload.html',show_popup=True)
         except Exception as e:
             return f'Error establishing connection to BigQuery: {str(e)}'
 
@@ -292,7 +292,7 @@ def connect_snowflake():
     )
     self_execute(conn, bucket_name , schema , database )
     # result = create_schemas_and_copy_table(conn,schemas_list)
-    return render_template('test_snowflake_copy.html', show_popup=True)
+    return render_template('snowflake_form_copy.html', show_popup=True)
 
 
 def self_execute(conn, bucket_name , schema , database ):
@@ -1107,7 +1107,7 @@ with tab3:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
+    text_file_path = r'C:\Users\Swetha\Desktop\streamlit\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(stream_script)
 

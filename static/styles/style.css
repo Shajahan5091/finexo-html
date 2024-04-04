@@ -297,9 +297,9 @@ a:focus {
 .connect-btn{
   display: inline-block;
   padding: 10px 40px;
-  background-color: #00bbf0;
+  background-color: #007bff;
   color: #ffffff;
-  border-radius: 0;
+  border-radius: 5px;
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
   border: none;
@@ -1229,4 +1229,26 @@ a:focus {
 #show-password, #show-pass-label:hover{
   cursor: pointer;
 }
+
+.popup {
+  display: none; 
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius : 10px;
+  z-index: 1000;
+  min-width: 400px;
+  box-shadow: 0 0 10pt 1pt #D3D3D3;
+}
+#heading{
+  background:#072A6C ;
+  padding: 15px;
+  color:white;
+  border-radius : 10px 10px 0px 0px;
+}
+#content{
+  padding: 30px;
+} 
 
