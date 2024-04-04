@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snow Migrate</title>
+<style>
+    .loading {
+        display: inline-block;
+    }
+    .success {
+        color: green;
+    }
+    .failure {
+        color: red;
+    }
+    .loading-container{
+      display: none;
+    }
+
+    .loader {
+      width: 250px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-family: helvetica, arial, sans-serif;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: #00204a;
+      letter-spacing: 0.2em;
+      
+      &::before, &::after {
+        content: "";
+        display: block;
+        width: 15px;
+        height: 15px;
+        background: #00204a;
+        position: absolute;
+        animation: load .7s infinite alternate ease-in-out;
+      }
+      
+      &::before {
+        top: 0;
+      }
+      
+      &::after {
+        bottom: 0;
+      }
+    }
+
+    @keyframes load {
+      0% { left: 0; height: 30px; width: 15px }
+      50% { height: 8px; width: 40px }
+      100% { left: 235px; height: 30px; width: 15px}
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 30px;
+      border-radius : 5px;
+      z-index: 1000;
+      min-width: 400px;
+      box-shadow: 0 0 10pt 1pt #D3D3D3;
+    }
+    .loading{
+        margin-left : 100px;
+    }
+</style>
+</head>
+<body>
+    <div id="loading-container" class="loading-container">
+        <div id="loader" class="loader">Migrating...</div>
+    </div>
+    <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+        <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
+        <h2 style="display: inline;"><span>Testing Connection</span></h2><br><br>
+        <div id="Snowflake_User">
+            Testing Snowflake Connection:
+            <span id="SnowflakeUserResult" class="loading">Loading...</span>
+            <span id="Error_1" class="failure"></span>
+        </div>
+        <div id="requiredRoles">
+            Testing if required roles are granted:
+            <ul>
+                <li>Warehouse, DataBase, Role, User: <span id="RoleResult" class="loading">Loading...</span>
+                    <span id="Error_2" class="failure"></span>
+                </li>
+                <li>Access to Create Schema's & Table's: <span id="CreatePermissionsResult" class="loading">Loading...</span>
+                    <span id="Error_3" class="failure"></span>
+                </li>
+                <li>
+                    Testing if Storage Integration Created:  <span id="StorageIntegrationResult" class="loading">Loading...</span>
+                    <span id="Error_4" class="failure"></span>
+                </li>
+                <li>Testing if Storage Integration has Access: <span id="StorageIntegrationAccess" class="loading">Loading...</span>
+                    <span id="Error_5" class="failure"></span>
+                </li>
+                <li>
+                    Testing if File_Format Created:  <span id="FileFormatResult" class="loading">Loading...</span>
+                    <span id="Error_6" class="failure"></span>
+                </li>
+                <li>Testing if File_Format has Access: <span id="FileFormatAccess" class="loading">Loading...</span>
+                    <span id="Error_7" class="failure"></span>
+                </li>
+                <li>
+                    Testing if Stage Created:  <span id="StorageStageResult" class="loading">Loading...</span>
+                    <span id="Error_8" class="failure"></span>
+                </li>
+                <li>Testing if Stage has Access: <span id="StorageStageAccess" class="loading">Loading...</span>
+                    <span id="Error_9" class="failure"></span>
+                </li>
+            </ul>
+        </div>
+        <br>
+        <br>
+        <form action="/migration_result" method="post">
+            <button type="submit" onclick="display_loader()"><b>Proceed</b></button>
+        </form>
+    </div>
+
+    <script>
+        // Function to display tick mark
+        function showSuccess(elementId) {
+            document.getElementById(elementId).textContent = '✔';
+            document.getElementById(elementId).classList.add('success');
+            document.getElementById(elementId).classList.remove('loading');
+        }
+
+        // Function to display cross mark
+        function showFailure(elementId) {
+            document.getElementById(elementId).textContent = '✘';
+            document.getElementById(elementId).classList.add('failure');
+            document.getElementById(elementId).classList.remove('loading');
+        }
+
+
+        // Function to test GCP service account connection
+        async function testConnection() {
+            try {
+                // Show loading symbol
+                document.getElementById('SnowflakeUserResult').classList.add('loading');
+                
+                const response = await fetch('/test_connection', {
+                    method: 'POST', // Explicitly specify the POST method
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('SnowflakeUserResult');
+                } else {
+                    showFailure('SnowflakeUserResult');
+                    document.getElementById('Error_1').textContent = data.error;
+                }
+            } catch (error) {
+                showFailure('SnowflakeUserResult');
+                document.getElementById('Error_1').textContent = error.message;
+            }
+        }
+
+        // Function to test required roles
+        async function GrantAccessCheck() {
+            try {
+                // Show loading symbol
+                document.getElementById('RoleResult').classList.add('loading');
+                
+                const response = await fetch('/GrantAccessCheck', {
+                    method: 'POST', // Explicitly specify the POST method
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('RoleResult');
+                } else {
+                    showFailure('RoleResult');
+                    document.getElementById('Error_2').textContent = data.error;
+                }
+            } catch (error) {
+                showFailure('RoleResult');
+                document.getElementById('Error_2').textContent = error.message;
+            }
+        }
+
+
+       // Function to test creating table and schema permissions
+    async function checkCreatePermissions() {
+        try {
+            // Show loading symbol
+            document.getElementById('CreatePermissionsResult').classList.add('loading');
+
+            const response = await fetch('/CheckCreatePermissions', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('CreatePermissionsResult');
+            } else {
+                showFailure('CreatePermissionsResult');
+                document.getElementById('Error_3').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('CreatePermissionsResult');
+            document.getElementById('Error_3').textContent = error.message;
+        }
+    }
+
+
+     // Function to test Storage Integration Created or not
+     async function Integration_Object_Exist() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageIntegrationResult').classList.add('loading');
+
+            const response = await fetch('/IntegrationObjectExistence', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageIntegrationResult');
+            } else {
+                showFailure('StorageIntegrationResult');
+                document.getElementById('Error_4').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageIntegrationResult');
+            document.getElementById('Error_4').textContent = error.message;
+        }
+    }
+
+    // Function to test Storage Integration Accesible or not
+    async function IntegrationAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageIntegrationAccess').classList.add('loading');
+
+            const response = await fetch('/IntegrationAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageIntegrationAccess');
+            } else {
+                showFailure('StorageIntegrationAccess');
+                document.getElementById('Error_5').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageIntegrationAccess');
+            document.getElementById('Error_5').textContent = error.message;
+        }
+    }
+
+    // Function to test File Format Created or not
+    async function FileFormat_Object_Exist() {
+        try {
+            // Show loading symbol
+            document.getElementById('FileFormatResult').classList.add('loading');
+
+            const response = await fetch('/FileFormatObjectExistence', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('FileFormatResult');
+            } else {
+                showFailure('FileFormatResult');
+                document.getElementById('Error_6').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('FileFormatResult');
+            document.getElementById('Error_6').textContent = error.message;
+        }
+    }
+
+
+    // Function to test Storage Integration Accesible or not
+    async function FormatAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('FileFormatAccess').classList.add('loading');
+
+            const response = await fetch('/FormatAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('FileFormatAccess');
+            } else {
+                showFailure('FileFormatAccess');
+                document.getElementById('Error_7').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('FileFormatAccess');
+            document.getElementById('Error_7').textContent = error.message;
+        }
+    }
+
+
+    // Function to test External Stage Created or not
+    async function Stage_Object_Exist() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageStageResult').classList.add('loading');
+
+            const response = await fetch('/StageObjectExistence', {
+                method: 'POST', // Explicitly specify the POST method
+            });            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageStageResult');
+            } else {
+                showFailure('StorageStageResult');
+                document.getElementById('Error_8').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageStageResult');
+            document.getElementById('Error_8').textContent = error.message;
+        }
+    }
+
+
+    // Function to test Storage Integration Accesible or not
+    async function StageAccess() {
+        try {
+            // Show loading symbol
+            document.getElementById('StorageStageAccess').classList.add('loading');
+
+            const response = await fetch('/StageAccess', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('StorageStageAccess');
+            } else {
+                showFailure('StorageStageAccess');
+                document.getElementById('Error_9').textContent = data.error;
+            }
+        } catch (error) {
+            showFailure('StorageStageAccess');
+            document.getElementById('Error_9').textContent = error.message;
+        }
+    }
+
+        // Run tests when the page is loaded
+        window.onload = function () {
+            testConnection();
+            GrantAccessCheck();
+            checkCreatePermissions();
+            Integration_Object_Exist();
+            IntegrationAccess();
+            FileFormat_Object_Exist();
+            FormatAccess();
+            Stage_Object_Exist();
+            StageAccess();
+        };
+
+        function display_loader(){
+        document.getElementById("loading-container").style.display = "block";
+        document.getElementById("popup").style.display = "none";
+        }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+        window.history.back();
+    }
+    </script>
+</body>
+</html>

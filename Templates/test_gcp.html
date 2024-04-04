@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- bootstrap core css -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}" />
+    <!-- fonts style -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!--owl slider stylesheet -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <!-- font awesome style -->
+    <link href="{{ url_for('static',filename='styles/font-awesome.min.css') }}" rel="stylesheet" />
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
+    <!-- responsive style -->
+    <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
+    <title>GCP Permissions Testing</title>
+<style>
+    .loading {
+        display: inline-block;
+    }
+    .success {
+        color: green;
+    }
+    .failure {
+        color: red;
+    }
+
+    .popup {
+      display: none; 
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 30px;
+      border-radius : 5px;
+      z-index: 1000;
+      min-width: 400px;
+      box-shadow: 0 0 10pt 1pt #D3D3D3;
+    }
+    /* table,tr,td{
+        border: 1px solid black;
+    } */
+    .odd{
+        text-align: left;
+        width:400px;
+        padding: 3px;
+    }
+    #even{
+        text-align: center;
+        width:150px;
+        line-height: 15px;
+        padding: 3px;
+    }
+    .connect-btn{
+        margin-left: 100px;
+    }
+    .loading {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        width: 20px;
+        height: 20px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+     }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+    }
+    .failure{
+        font-size: small;
+        margin: 0;
+        padding: 0;
+        line-height: 0%;
+    }
+</style>
+</head>
+<body>
+    <!-- <h1>GCP Permissions Testing</h1>
+    <div id="serviceAccountConnection">
+        Testing GCP Service Account Connection:
+        <span id="serviceAccountConnectionResult" class="loading">Loading...</span>
+        <span id="Error_1" class="failure"></span>
+    </div>
+    <div id="requiredRoles">
+        Testing if Custom Role is granted:
+        <br>
+        MigrateRole (Display name in GCP- RoleSnowMigrate): 
+        <span id="RoleResult" class="loading">Loading...</span>
+        <span id="Error_2" class="failure"></span>
+    </div>
+    <div id="requiredBucket">
+        Testing if Google Storage Bucket Created or not:
+        <span id="BucketResult" class="loading">Loading...</span>
+        <span id="Error_3" class="failure"></span>
+    </div> -->
+
+    <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+        <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
+        <h2 style="display: inline;"><span>GCP Connection Test</span></h2><br><br>
+        <table>
+            <tr>
+                <td class="odd">
+                    <div id="serviceAccountConnection">
+                        Testing GCP Service Account Connection
+                </td>
+                <td id="even">
+                    <span id="serviceAccountConnectionResult" class="loading"></span>
+                    <span id="Error_1" class="failure"></span>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd">
+                    <div id="requiredRoles">
+                    Custom Role is created and has access
+                </td>
+                <td id="even">
+                    <span id="RoleResult" class="loading"></span>
+                    <span id="Error_2" class="failure"></span>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="odd"> 
+                    <div id="requiredBucket">
+                    Google Storage Bucket is Created
+                </td>
+                <td id="even">
+                    <span id="BucketResult" class="loading"></span>
+                    <span id="Error_3" class="failure"></span>
+                    </div>
+                </td>
+            </tr>
+        </table>    
+        <br>
+        <form action="/fetch_schemas" method="post">
+            <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
+             <button style="margin-left: 200px; border-radius: 5px;"  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
+        </form>
+    </div>
+    <br>
+    <br> 
+    <!-- <form action="/fetch_schemas" method="post">
+        <button type="submit"><b>Proceed</b></button>
+    </form> -->
+
+    <script>
+        // Function to display tick mark
+        function showSuccess(elementId) {
+            document.getElementById(elementId).textContent = '✔';
+            document.getElementById(elementId).classList.add('success');
+            document.getElementById(elementId).classList.remove('loading');
+        }
+
+        // Function to display cross mark
+        function showFailure(elementId) {
+            document.getElementById(elementId).textContent = '✘';
+            document.getElementById(elementId).classList.add('failure');
+            document.getElementById(elementId).classList.remove('loading');
+        }
+
+        // Function to test GCP service account connection
+        async function testServiceAccountConnection() {
+            try {
+                // Show loading symbol
+                document.getElementById('serviceAccountConnectionResult').classList.add('loading');
+                
+                const response = await fetch('/test_service_account_connection', {
+                    method: 'POST', // Explicitly specify the POST method
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess('serviceAccountConnectionResult');
+                } else {
+                    showFailure('serviceAccountConnectionResult');
+                    document.getElementById('Error_1').textContent = data.error;    
+                }
+            } catch (error) {
+                showFailure('serviceAccountConnectionResult');
+                document.getElementById('Error_1').textContent = error.message;
+            }
+        }
+
+        // Function to test required roles
+        async function GrantAccessCheck() {
+            try {
+                // Show loading symbol
+                document.getElementById('RoleResult').classList.add('loading');
+                
+                const response = await fetch('/GrantAccessCheck', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('RoleResult');
+                } else {
+                    showFailure('RoleResult');
+                    document.getElementById('Error_2').textContent = data.error;
+                }
+            } catch (error) {
+                showFailure('RoleResult');
+                document.getElementById('Error_2').textContent = error.message;
+            }
+        }
+
+
+        // Function to test required roles
+        async function CheckBucketExist() {
+            try {
+                // Show loading symbol
+                document.getElementById('BucketResult').classList.add('loading');
+                
+                const response = await fetch('/BucketExistCheck', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('BucketResult');
+                } else {
+                    showFailure('BucketResult');
+                    document.getElementById('Error_3').textContent = data.error;
+                }
+            } catch (error) {
+                showFailure('BucketResult');
+                document.getElementById('Error_3').textContent = error.message;
+            }
+        }
+
+
+// End of functions for testing permissions
+
+        // Define a function to run async functions in a specific order
+        async function runTestsInOrder() {
+            try {
+                // Call the async functions in the desired order
+                await testServiceAccountConnection();
+                await GrantAccessCheck();
+                await CheckBucketExist();
+                // Call functions for testing other subsections here
+                console.log("All tests executed successfully");
+            } catch (error) {
+                console.error("An error occurred:", error);
+            }
+        }
+
+        // Run tests when the page is loaded
+        window.onload = function () {
+            runTestsInOrder();
+        }
+        function closePopup() {
+        document.getElementById("popup").style.display = "none";
+        window.history.back();
+    }
+    </script>
+</body>
+</html>

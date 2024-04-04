@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Open+Sans:wght@300;400;600;700&display=swap");
-
 body {
   font-family: "Open Sans", sans-serif;
   color: #0c0c0c;
@@ -44,13 +43,18 @@ body {
           align-items: flex-start;
 }
 
- h2 {
+.heading_container h2 {
   position: relative;
   font-weight: bold;
   margin-bottom: 0;
 }
+.heading_container h3 {
+  position: relative;
+  font-weight: bold;
+  /* margin-bottom: 0; */
+}
 
- h2 span {
+.heading_container h2 span {
   color: #00bbf0;
 }
 
@@ -1021,20 +1025,19 @@ a:focus {
 #snowflake-login-btn{
   display:  block;
   margin-top: 30px;
-  margin-left: 180px;
-  padding-left: 50px;
-  padding-right: 50px;
+  margin-left: 130px;
+  /* padding-left: 5px;
+  padding-right: 0px;
   padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 10px; */
   background-color: #00bbf0;
   color: #ffffff;
-  border-radius: 0;
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
   border: none;
   border-radius: 5px;
-  width: 200px;
-  text-align: center;
+  /* width: 300px; */
+  /* text-align: left; */
 }
 
 #form-heading{
@@ -1075,20 +1078,20 @@ a:focus {
 
 
 .row2 {  
-  display: flex;
+  display: flex; 
   flex-wrap: wrap;
   width: 100vw;
-  height: 100vh;
-}
+} 
 
 /* Create two unequal columns that sits next to each other */
 /* Sidebar/left column */
 .side {
-  flex: 50%;
+  flex: 50%; 
   padding: 40px; 
   line-height: 30px;
   background-color: #00204a;
   color: #ffffff;
+  height: 90vh ; 
 }
 
 /* Main column */
@@ -1097,7 +1100,16 @@ a:focus {
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
+  height: 90vh; 
 }
+.main,.side {
+  overflow: scroll ;
+  overscroll-behavior: contain ;
+}
+/* .main,.side::-webkit-scrollbar {
+  display: none;
+} */
+
 .side a {
   text-decoration: none;
 }
@@ -1147,47 +1159,74 @@ a:focus {
 }
 
 /*Snowflake Form */
-#snowflake-form{
+/* #snowflake-form{
   position: sticky;
   top: 0;
-}
+} */
 
-#snowflakeForm input{
+#snowflakeForm input[class]{
   margin-left: 80px;
   width: 400px;
-  padding: 12px;
-  padding-right: 150px;
-  padding-bottom: 10px;
+  padding: 10px;
+  /* padding-right: 150px; */
   border-radius: 5px;
   border: solid 1.5px #D3D3D3;
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
+  font-size: medium;
 }
 
-#snowflakeForm input:hover{
+#snowflakeForm input[class]:hover{
   box-shadow: 0 0 5pt 0.5pt #D3D3D3;
 }
-#snowflakeForm input:focus {
+#snowflakeForm input[class]:focus {
   box-shadow: 0 0 5pt 2pt #D3D3D3;
   outline-width: 0px;
 }
 
 #snowflakeForm label{
-  margin-top: 5px;
+  margin: 0;
+  font-weight: 600;
+}
+
+
+.box{
+  box-shadow: 0 0 5pt 2pt #D3D3D3;
+  outline-width: 0px;
+}
+
+.box .connect-btn{
+  border-radius: 3px;
+}
+
+#snowflakeForm label{
+  margin-top: 2px;
   margin-left: 80px;
 }
 
 .side2 {
-  flex: 20%;
+  flex: 22%;
   padding: 40px; 
   line-height: 30px;
   background-color: #00204a;
   color: #ffffff;
+  height: 90vh;
 }
 
 /* Main column */
 .main2 {
-  flex: 80%;
+  flex: 78%;
   background-color: white;
   /* padding: 50px; */
   text-align: justify;
+  height: 90vh;
 }
+.main2,
+.side2 {
+  overflow: auto ;
+  overscroll-behavior: contain ;
+}
+
+#show-password, #show-pass-label:hover{
+  cursor: pointer;
+}
+

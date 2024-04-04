@@ -10,7 +10,7 @@
   <meta name="keywords" content="" />
   <meta name="description" content="" />
   <meta name="author" content="" />
-  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/favicon.png') }}" type="">
+  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/logo.png') }}" type="">
   <title> Snow Migrate </title>
   <!-- bootstrap core css -->
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}" />
@@ -53,7 +53,7 @@
     <header class="header_section">
       <div class="container-fluid" >
         <nav class="navbar navbar-expand-lg custom_nav-container ">
-          <a class="navbar-brand" href="index.html">
+          <a class="navbar-brand" href="{{ url_for('index') }}">
             <span>
               Snow Migrate
             </span>
@@ -64,7 +64,7 @@
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav  ">
               <li class="nav-item ">
-                <a class="nav-link" href="index.html">Home </a>
+                <a class="nav-link" href="{{ url_for('index') }}">Home </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="about.html"> About</a>
@@ -87,14 +87,14 @@
         <div class=" service_container row2" {% if show_popup %}style="display: none;"{% endif %}>
             <div class="side2">
                 <div id="myForm" >
-                    <form action="/snowflake_form"  method="post" name="schema_select">
+                    <form action="/snowflake_form"  method="post" id="schema_select" name="schema_select">
                         <h3 style="text-align: center;"><b>Select Schemas</b></h3><br>
                         {% for schema in schemas %}
-                        <input type="checkbox" id="schema-name" name="schema-name" value="{{ schema }}">
-                        {{ schema }}<br>
+                        <input type="checkbox" id="{{ schema }}" name="schema-name" value="{{ schema }}">
+                        <label for="{{ schema }}">{{ schema }}</label><br>
                         {% endfor %}
                         <br>
-                        <button id="schema-btn" name="schema-btn" value="{{ schema }}" type="submit" class="connect-btn"> Migrate </button><br>
+                        <button onclick="check()" id="schema-btn" name="schema-btn" value="{{ schema }}" type="submit" class="connect-btn"> Next </button><br>
                     </form>
                 </div>
             </div>
@@ -109,12 +109,12 @@
                         <div class="col-md-4 ">
                             <div class="box ">
                                 <div class="img-box">
-                                    <img src="{{ url_for('static',filename='Image/schema.png') }}" alt="bigquery" style="height: 150px; width: 150px;">
+                                    <img src="{{ url_for('static',filename='Image/schema_bg_removed.png') }}" alt="bigquery" style="height: 150px; width: 150px;">
                                 </div>
                                 <div class="detail-box">
                                     <form action="/get_tables" method="post">
-                                        <h5><label for="connect-btn">{{ schema }}</label></h5>
-                                        <button value="{{ schema }}" id="connect-btn" name="connect-btn" class="connect-btn" type="submit">Show Tables</button>
+                                        <h5><label for="connect_btn_{{ schema }}">{{ schema }}</label></h5>
+                                        <button value="{{ schema }}"  id="connect_btn_{{ schema }}" id="connect-btn" name="connect-btn" class="connect-btn" type="submit">Show Tables</button>
                                     </form>
                                 </div>
                             </div>
@@ -158,5 +158,30 @@
         document.getElementById("popup").style.display = "none";
         window.history.back();
     }
-  </script>
+
+    document.getElementById("schema_select").addEventListener("submit", function(event) {
+    // Prevent the default form submission
+    event.preventDefault();
+
+    // Check if at least one checkbox is checked
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    var isChecked = false;
+    for (var i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+            isChecked = true;
+            break;
+        }
+    }
+
+    // If at least one checkbox is checked, submit the form
+    if (isChecked) {
+        this.submit();
+    } else {
+        // If no checkbox is checked, display an alert or perform any other action
+        alert("Please check at least one checkbox before submitting.");
+        // Or do nothing
+    }
+  });
+</script>
 </body>
+</html>
