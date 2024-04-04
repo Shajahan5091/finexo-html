@@ -69,7 +69,7 @@ def upload():
             global storage_client
             storage_client = storage.Client(credentials=credentials, project=project_id)
             # Fetch schemas from BigQuery and display them            
-            return render_template('test_gcp.html',show_popup=True)
+            return render_template('file_upload.html',show_popup=True)
         except Exception as e:
             return f'Error establishing connection to BigQuery: {str(e)}'
 
