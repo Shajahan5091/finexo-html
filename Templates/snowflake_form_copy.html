@@ -106,22 +106,6 @@
       50% { height: 8px; width: 40px }
       100% { left: 235px; height: 30px; width: 15px}
     }
-    .popup {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      padding: 30px;
-      border-radius : 5px;
-      z-index: 1000;
-      min-width: 400px;
-      box-shadow: 0 0 10pt 1pt #D3D3D3;
-    }
-    /* table,tr,td{
-        border: 1px solid black;
-    } */
     .odd{
         text-align: left;
         width:400px;
@@ -135,6 +119,7 @@
     }
     .connect-btn{
         margin-left: 100px;
+        background-color: #007bff;
     }
     .loading {
         border: 5px solid #f3f3f3;
@@ -209,7 +194,7 @@
   <!-- <div id="loading-container" class="loading-container">
     <div id="loader" class="loader">Migrating...</div>
   </div> -->
-  <div class="row2" {% if show_popup %}style="opacity: 0;"{% endif %}>
+  <div class="row2" {% if show_popup %}style="opacity: 0.1;"{% endif %}>
     <div class="side">
       <div class="heading_container">
           <h3>Prerequisites</h3>
@@ -344,8 +329,11 @@
     <div id="loader" class="loader">Migrating...</div>
 </div>
 <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+  <div id="heading">
     <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
-    <h2 style="display: inline;"><span>Testing Connection</span></h2><br><br>
+    <h3 style="display: inline;"><span><b>Testing Connection</b></span></h3>
+  </div>
+  <div id="content">
     <table>
         <tr>
             <td class="odd">
@@ -436,6 +424,7 @@
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
         <button style="margin-left: 200px; border-radius: 5px;"  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Migrate</button>
     </form>
+    </div>
 </div>
 
 <script>

@@ -73,23 +73,6 @@
     .failure {
         color: red;
     }
-
-    .popup {
-      display: none; 
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      padding: 30px;
-      border-radius : 5px;
-      z-index: 1000;
-      min-width: 400px;
-      box-shadow: 0 0 10pt 1pt #D3D3D3;
-    }
-    /* table,tr,td{
-        border: 1px solid black;
-    } */
     .odd{
         text-align: left;
         width:400px;
@@ -285,8 +268,11 @@
 
   <!-- popup code -->
   <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
-    <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
-    <h2 style="display: inline;"><span>GCP Connection Test</span></h2><br><br>
+    <div id="heading">
+    <span onclick="closePopup()" style="cursor: pointer; float: right;" id="cross">&times;</span>
+    <h3 style="display: inline;"><span><b>GCP Connection Test</b></span></h3>
+    </div>
+    <div id="content">
     <table>
         <tr>
             <td class="odd">
@@ -327,9 +313,9 @@
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
          <button style="margin-left: 200px; border-radius: 5px;"  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
     </form>
+  </div>
 </div>
-<br>
-<br> 
+
 <!-- <form action="/fetch_schemas" method="post">
     <button type="submit"><b>Proceed</b></button>
 </form> -->
