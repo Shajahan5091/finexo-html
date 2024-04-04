@@ -25,6 +25,7 @@
   <!-- responsive style -->
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
   <style>
+
     .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:5px;margin:30px 0 30px}
     .K2_CBox .CB_Heading{display:flex;justify-content:space-between;align-items:center;}
     .K2_CBox .CB_Heading span{margin:10px;font-weight:700;font-family:inherit;font-size:1.1rem}
@@ -39,6 +40,7 @@
     @keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
     @-webkit-keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
     .darkMode .tNtf span{box-shadow:0 10px 40px rgba(0,0,0,.2)}
+    
     .connect-btn1{
       float: right;
       padding-left: 5px;
@@ -48,6 +50,7 @@
       border-radius: 3px;
       font-weight: normal;
     }
+
     #yamlfile{
       background:#072A6C;
       /* background: white; */
@@ -61,6 +64,7 @@
       /* color:#072A6C ; */
       font-weight: bold;
     }
+
   </style>
 </head>
 
@@ -169,7 +173,7 @@
             <div class='K2_CBox'>
               <div class='CB_Heading'>
                   <span style="color: white">Bash</span>
-                  <button id='copy3' class='C_box_main' onclick="copyC('copy3','code3')">
+                  <button id='copy2' class='C_box_main' onclick="copyC('copy2','code3')">
                       <i class='CBox_icn'></i>
                   </button>
               </div>
@@ -258,5 +262,6 @@
  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
  </script>
  <!-- End Google Map -->
+ <script>/*<![CDATA[*/ function copyC(e,t){var o=document.getElementById(e),n=document.getElementById(t),e=getSelection(),t=document.createRange();e.removeAllRanges(),t.selectNodeContents(n),e.addRange(t),document.execCommand("copy"),e.removeAllRanges(),o.classList.add("copied"),document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",setTimeout(()=>{o.classList.remove("copied")},3e3)} /*]]>*/</script>
 </body>
 </html>
