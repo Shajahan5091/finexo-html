@@ -95,7 +95,6 @@ def test_service_account_connection():
     except Exception as e:
         print(f"Error connecting to GCP: {e}")
         return False
-    
 
 def Check_role_permissions():
     try:
