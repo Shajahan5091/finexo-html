@@ -24,22 +24,6 @@
   <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
   <!-- responsive style -->
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
-
-  <style>
-    .popup {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      padding: 30px;
-      border-radius : 5px;
-      z-index: 1000;
-      min-width: 400px;
-      box-shadow: 0 0 10pt 1pt #D3D3D3;
-    }
-  </style>
 </head>
 
 <body class="sub_page">
@@ -125,14 +109,18 @@
             </div>
         </div>
         <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+          <div id="heading">
           <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
-          <h2 style="display: inline;"><span>{{ schema }}</span></h2><br><br>
+          <h3 style="display: inline;"><span><b>{{ schema }}</b></span></h3>
+          </div>
+          <div id="content">
           <label for="table-list"><h5><b>Tables</b></h5></label>
           <ul id="table-list">
            {% for table in tables %}
             <li style="margin-top: 5px;">{{table}}</li>    
            {% endfor %}
           </ul>
+          </div>
         </div>
     </section>
  <!-- jQery -->
