@@ -100,40 +100,36 @@
   <div class="row2" id="side">
     <div class="side">
       <div class="heading_container">
-        <h2>Snowflake as Destination:</h2>
+          <h3>Prerequisites</h3>
       </div>
-      <p>Setting up the Snowflake Environment involves setting up Snowflake entities (Warehouse, Database, Schema, User, and Role) in the Snowflake Console and configuring the Snowflake Environment using the UI.</p>
-      <div class="heading_container">
-          <h2>Snowflake Connection Requirements:</h2>
-      </div>
-      <ol style="list-style-type: numbers;">
+      <ul style="list-style-type: circle;">
           <li>A Snowflake account with the ACCOUNTADMIN role enabled.</li>
-      </ol>
+      </ul>
       <br>
       <div class="heading_container">
-        <h2>Setup Guide for Snowflake:</h2>
+        <h3>Setup Guide for Snowflake</h3>
       </div>
       <p>To set up the Snowflake Environment, you first need to create Snow Migrate-specific Snowflake entities (Warehouse, Database, Schema, User, and Role) with the OWNERSHIP permission to write data into Snowflake, track costs pertaining to Snow Migrate, and control permissions at a granular level. Follow these steps:</p>
-      <ol style="font-weight: bold">
-        <li><p style="font-weight: normal">Log into your Snowflake account.</p></li>
+      <ul>
+        <li><p style="font-weight: normal">Log into your Snowflake account</p></li>
         <li><p style="font-weight: normal">Edit the upcoming script to change the password to a more secure password and to change the names of other resources if you desire.</p></li>
-      </ol>
+      </ul>
       <br>
       <h3 style="font-weight: bold" class="text-danger",=""> Note:</h3>
-      <p>Make sure you follow the Snowflake identifier requirements while renaming the resources.<br><br></p>
+      <p>Make sure you follow the Snowflake identifier requirements while renaming the resources.<br></p>
       <p style="font-weight: bold">You can use the following script in a new Snowflake worksheet to create the entities.
-      Run the script using the Worksheet page or Snowsight.<br> <br>Make sure to select the All Queries checkbox while running the Script:<br></p>
+      Run the script using the Worksheet page or Snowsight.<br></p>
     
         <div class='K2_CBox'>
             <div class='CB_Heading'>
                 <span style="color: white">Snowflake Script</span>
-                <button id='copy1' class='C_box_main' onclick="copyC('copy1','code1')">
+                <button id='copy1' class='C_box_main' onclick="copyC('copy2','code2')">
                     <i class='CBox_icn'></i>
                 </button>
             </div>
     
             <!--Add Your Parse HTML code Here-->
-            <div id='code1'>
+            <div id='code2'>
 <pre><code>
   -- set variables (these need to be uppercase)
   set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
@@ -226,7 +222,7 @@
                 <input id="show-password" type="checkbox" onclick="myFunction()" style="margin-left: 80px; padding: 0;">
                 <label id="show-pass-label" for="show-password" style="font-size: medium; display: inline; margin-left: 0; font-weight: normal;"> Show Password</label>
 
-                <button type="submit" id="snowflake-login-btn" onclick="snowflake_form_validation()">Proceed</button>
+                <button type="submit" id="snowflake-login-btn" onclick="snowflake_form_validation()">Test Connection</button>
             </form>
         </div>
     </div>

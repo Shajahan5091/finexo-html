@@ -1025,20 +1025,19 @@ a:focus {
 #snowflake-login-btn{
   display:  block;
   margin-top: 30px;
-  margin-left: 180px;
-  padding-left: 50px;
-  padding-right: 50px;
+  margin-left: 130px;
+  /* padding-left: 5px;
+  padding-right: 0px;
   padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 10px; */
   background-color: #00bbf0;
   color: #ffffff;
-  border-radius: 0;
   -webkit-transition: all 0.3s;
   transition: all 0.3s;
   border: none;
   border-radius: 5px;
-  width: 200px;
-  text-align: center;
+  /* width: 300px; */
+  /* text-align: left; */
 }
 
 #form-heading{
