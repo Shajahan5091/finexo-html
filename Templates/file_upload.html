@@ -311,7 +311,7 @@
     <br>
     <form action="/fetch_schemas" method="post">
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
-         <button style="margin-left: 200px; border-radius: 5px;"  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
+         <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
     </form>
   </div>
 </div>
@@ -349,11 +349,17 @@
                 showSuccess('serviceAccountConnectionResult');
             } else {
                 showFailure('serviceAccountConnectionResult');
-                document.getElementById('Error_1').textContent = data.error;    
+                document.getElementById('Error_1').textContent = data.error;   
+                document.getElementById("connecting-btn").disabled = true; 
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('serviceAccountConnectionResult');
             document.getElementById('Error_1').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -373,10 +379,16 @@
             } else {
                 showFailure('RoleResult');
                 document.getElementById('Error_2').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('RoleResult');
             document.getElementById('Error_2').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -397,10 +409,16 @@
             } else {
                 showFailure('BucketResult');
                 document.getElementById('Error_3').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('BucketResult');
             document.getElementById('Error_3').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
