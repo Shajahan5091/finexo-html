@@ -20,3 +20,4 @@ includedPermissions:
   - storage.objects.delete
   - storage.buckets.get
   - resourcemanager.projects.get
+  - iam.roles.get
