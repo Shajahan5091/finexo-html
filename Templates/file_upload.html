@@ -369,7 +369,7 @@
             // Show loading symbol
             document.getElementById('RoleResult').classList.add('loading');
             
-            const response = await fetch('/GrantAccessCheck', {
+            const response = await fetch('/GrantAccessCheckBigquery', {
                 method: 'POST'
             });
             const data = await response.json();

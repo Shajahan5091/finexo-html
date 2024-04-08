@@ -177,7 +177,7 @@ def Check_Bucket_Existence():
 
 @app.route('/test_service_account_connection', methods=['POST'])
 def test_service_account_connection_route():
-    print("Received request to test service account connection")
+    print("Received request to test bigquery service account connection")
     try:
         success = test_service_account_connection()
         if success:
@@ -189,7 +189,7 @@ def test_service_account_connection_route():
         return jsonify({'success': False, 'error': 'An error occurred while testing the service account connection'}), 500
 
 
-@app.route('/GrantAccessCheck', methods=['POST'])
+@app.route('/GrantAccessCheckBigquery', methods=['POST'])
 def CheckBigqueryDatasetsCreatePermissions():
     print("Checking Permissions in MigrateRole")
     try:
@@ -352,7 +352,7 @@ def self_execute(conn, bucket_name , schema , database ):
 @app.route('/test_connection', methods=['POST'])
 def test_connection():
     # Replace this with your actual testing logic
-    print("Received request to test service account connection")
+    print("Received request to test snowflake service account connection")
     cursor = conn.cursor()
     if isinstance(cursor, str):
         # If cursor is a string, it means an error occurred during Snowflake connection
