@@ -298,7 +298,7 @@ a:focus {
 .connect-btn{
   display: inline-block;
   padding: 10px 40px;
-  background-color: #007bff;
+  background-color:#00bbf0;
   color: #ffffff;
   border-radius: 5px;
   -webkit-transition: all 0.3s;
@@ -1242,6 +1242,9 @@ a:focus {
   z-index: 1000;
   min-width: 400px;
   box-shadow: 0 0 10pt 1pt #D3D3D3;
+}
+.popup .connect-btn{
+  background-color: #007bff;
 }
 #heading{
   background:#072A6C ;
