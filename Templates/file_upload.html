@@ -186,7 +186,7 @@
           <h4><b>Service Account Keys Configuration</b></h4>
           <p style="font-weight: normal">Snow Migrate currently supports JSON Keys only, ensure to create your key in the same. Then, download the key as Google permits viewing its contents only at this stage.
             <br> Here is a detailed guide explaining how to create service account keys
-          <br><a href="https://cloud.google.com/iam/docs/keys-create-delete">Creating and Managing Service Account Keys guide to create a Key</a></p>
+          <br><a href="https://cloud.google.com/iam/docs/keys-create-delete">GCP’s Guide for Creating and Managing Service Account Keys</a></p>
           <br>
           <h4><b>Creating a Custom Role</b></h4>
           <p style="font-weight: normal">Create a Custom role to add necessary permissions for Data Migration.<br>
@@ -250,7 +250,7 @@
           <br>
           <label for="bucket">Bucket Name</label><br>
           <input id="bucket" name="bucket" type="text" placeholder="Enter your bucket name" required/><br>
-          <label>Upload the JSON file</label><br>
+          <label>Upload the JSON key file</label><br>
           <div id="drop-area">
             <div style="text-align: center;">
               <input type="file" id="json-file" name="file" accept=".json" required>
@@ -311,7 +311,7 @@
     <br>
     <form action="/fetch_schemas" method="post">
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
-         <button style="margin-left: 200px; border-radius: 5px;"  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
+         <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
     </form>
   </div>
 </div>
@@ -349,11 +349,17 @@
                 showSuccess('serviceAccountConnectionResult');
             } else {
                 showFailure('serviceAccountConnectionResult');
-                document.getElementById('Error_1').textContent = data.error;    
+                document.getElementById('Error_1').textContent = data.error;   
+                document.getElementById("connecting-btn").disabled = true; 
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('serviceAccountConnectionResult');
             document.getElementById('Error_1').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -363,7 +369,7 @@
             // Show loading symbol
             document.getElementById('RoleResult').classList.add('loading');
             
-            const response = await fetch('/GrantAccessCheck', {
+            const response = await fetch('/GrantAccessCheckBigquery', {
                 method: 'POST'
             });
             const data = await response.json();
@@ -373,10 +379,16 @@
             } else {
                 showFailure('RoleResult');
                 document.getElementById('Error_2').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('RoleResult');
             document.getElementById('Error_2').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -397,10 +409,16 @@
             } else {
                 showFailure('BucketResult');
                 document.getElementById('Error_3').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('BucketResult');
             document.getElementById('Error_3').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 

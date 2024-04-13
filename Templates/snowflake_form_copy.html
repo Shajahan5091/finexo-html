@@ -200,7 +200,7 @@
           <h3>Prerequisites</h3>
       </div>
       <ul style="list-style-type: circle;">
-          <li>A Snowflake account with the ACCOUNTADMIN role enabled.</li>
+          <li>A Snowflake account with access to ACCOUNTADMIN role ( for creating storage integrations on account) and SECURITYADMIN role ( for creating a custom role for migration)</li>
       </ul>
       <br>
       <div class="heading_container">
@@ -209,7 +209,7 @@
       <p>To set up the Snowflake Environment, you first need to create Snow Migrate-specific Snowflake entities (Warehouse, Database, Schema, User, and Role) with the OWNERSHIP permission to write data into Snowflake, track costs pertaining to Snow Migrate, and control permissions at a granular level. Follow these steps:</p>
       <ul>
         <li><p style="font-weight: normal">Log into your Snowflake account</p></li>
-        <li><p style="font-weight: normal">Edit the upcoming script to change the password to a more secure password and to change the names of other resources if you desire.</p></li>
+        <li><p style="font-weight: normal">Edit the upcoming script to change the password to a more secure password and to change the names of other resources if you desire</p></li>
       </ul>
       <br>
       <h3 style="font-weight: bold" class="text-danger"> Note:</h3>
@@ -422,7 +422,7 @@
     <br>
     <form action="/migration_result" method="post">
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
-        <button style="margin-left: 200px; border-radius: 5px;"  id="connect-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Migrate</button>
+        <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Migrate</button>
     </form>
     </div>
 </div>
@@ -458,10 +458,16 @@
             } else {
                 showFailure('SnowflakeUserResult');
                 document.getElementById('Error_1').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('SnowflakeUserResult');
             document.getElementById('Error_1').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -480,10 +486,16 @@
             } else {
                 showFailure('RoleResult');
                 document.getElementById('Error_2').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
             }
         } catch (error) {
             showFailure('RoleResult');
             document.getElementById('Error_2').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -503,10 +515,16 @@ async function checkCreatePermissions() {
         } else {
             showFailure('CreatePermissionsResult');
             document.getElementById('Error_3').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('CreatePermissionsResult');
         document.getElementById('Error_3').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -526,10 +544,16 @@ async function checkCreatePermissions() {
         } else {
             showFailure('StorageIntegrationResult');
             document.getElementById('Error_4').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('StorageIntegrationResult');
         document.getElementById('Error_4').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -548,10 +572,16 @@ async function IntegrationAccess() {
         } else {
             showFailure('StorageIntegrationAccess');
             document.getElementById('Error_5').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('StorageIntegrationAccess');
         document.getElementById('Error_5').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -570,10 +600,16 @@ async function FileFormat_Object_Exist() {
         } else {
             showFailure('FileFormatResult');
             document.getElementById('Error_6').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('FileFormatResult');
         document.getElementById('Error_6').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -593,10 +629,16 @@ async function FormatAccess() {
         } else {
             showFailure('FileFormatAccess');
             document.getElementById('Error_7').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('FileFormatAccess');
         document.getElementById('Error_7').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -615,10 +657,16 @@ async function Stage_Object_Exist() {
         } else {
             showFailure('StorageStageResult');
             document.getElementById('Error_8').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('StorageStageResult');
         document.getElementById('Error_8').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -638,10 +686,16 @@ async function StageAccess() {
         } else {
             showFailure('StorageStageAccess');
             document.getElementById('Error_9').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     } catch (error) {
         showFailure('StorageStageAccess');
         document.getElementById('Error_9').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
