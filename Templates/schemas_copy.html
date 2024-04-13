@@ -24,6 +24,49 @@
   <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
   <!-- responsive style -->
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
+  <style>
+    .popup1 {
+  /* display: none; 
+  position: fixed;*/
+  /* top: 100%;
+  left: 50%; 
+  transform: translate(-50%, -50%); */
+  background-color: white;
+  border-radius : 10px;
+  z-index: 1000;
+  /* min-width: 400px; */
+  box-shadow: 0 0 10pt 1pt #D3D3D3;
+
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  /* -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center; */
+  /* text-align: center; */
+  margin-top: 45px;
+  /* background-color: #f8f8f9; */
+  /* padding: 20px; */
+  /* border-radius: 5px; */
+}
+#heading1{
+  background:#072A6C ;
+  padding: 7px;
+  color:white;
+  border-radius : 10px 10px 0px 0px;
+}
+#content1{
+  padding: 60px;
+  /* height: 300px; */
+}
+ul{
+  margin-top: 5px;
+}
+  </style>
 </head>
 
 <body class="sub_page">
@@ -68,59 +111,41 @@
   </div>
 
     <section class="service_section ">
-        <div class=" service_container row2" {% if show_popup %}style="display: none;"{% endif %}>
-            <div class="side2">
-                <div id="myForm" >
-                    <form action="/snowflake_form"  method="post" id="schema_select" name="schema_select">
-                        <h3 style="text-align: center;"><b>Select Schemas</b></h3><br>
-                        {% for schema in schemas %}
-                        <input type="checkbox" id="{{ schema }}" name="schema-name" value="{{ schema }}">
-                        <label for="{{ schema }}">{{ schema }}</label><br>
-                        {% endfor %}
-                        <br>
-                        <button onclick="check()" id="schema-btn" name="schema-btn" value="{{ schema }}" type="submit" class="connect-btn"> Next </button><br>
-                    </form>
-                </div>
-            </div>
+        <div class=" service_container row2">
             <div class="main2">
                 <div class="container" style="margin-top: 50px;">
                     <div class="heading_container heading_center">
                         <h2>BigQuery <span>Schemas</span></h2>
                         <p>Available schemas in the project</p>
                     </div>
+                    <form id="checkboxForm" action="/snowflake_form" method="post">
                     <div class="row">
-                        {% for schema in schemas %}
+                        {% for schema,tables in schemas.items() %}
                         <div class="col-md-4 ">
-                            <div class="box ">
-                                <div class="img-box">
-                                    <img src="{{ url_for('static',filename='Image/schema_bg_removed.png') }}" alt="bigquery" style="height: 150px; width: 150px;">
+                            <div class="popup1">
+                                <div id="heading1">
+                                  <input type="checkbox" name="schema" id="{{schema}}" value="{{schema}}">
+                                  <label for="{{schema}}">{{ schema }}</label>
                                 </div>
-                                <div class="detail-box">
-                                    <form action="/get_tables" method="post">
-                                        <h5><label for="connect_btn_{{ schema }}">{{ schema }}</label></h5>
-                                        <button value="{{ schema }}"  id="connect_btn_{{ schema }}" id="connect-btn" name="connect-btn" class="connect-btn" type="submit">Show Tables</button>
-                                    </form>
-                                </div>
-                            </div>
+                                <div class="content1">
+                                  <ul style="list-style: none;">
+                                  {% for table in tables %}
+                                  <li>
+                                    <input type="checkbox" name="table" id="{{table}}" value="{{table}}">
+                                    <label for="{{table}}">{{ table }}
+                                    </li>
+                                    {% endfor %}
+                                    </ul>
+                                </div> 
                         </div>
-                        {% endfor %}
-                    </div>
+                      </div>
+                      {% endfor %}
                 </div>
+                <br>
+                <button type="button" onclick="submitForm()" class="connect-btn">Submit</button>
+                </form>
+              </div>
             </div>
-        </div>
-        <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
-          <div id="heading">
-          <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
-          <h3 style="display: inline;"><span><b>{{ schema }}</b></span></h3>
-          </div>
-          <div id="content">
-          <label for="table-list"><h5><b>Tables</b></h5></label>
-          <ul id="table-list">
-           {% for table in tables %}
-            <li style="margin-top: 5px;">{{table}}</li>    
-           {% endfor %}
-          </ul>
-          </div>
         </div>
     </section>
  <!-- jQery -->
@@ -142,34 +167,51 @@
  <!-- End Google Map -->
 
  <script>
-  function closePopup() {
-        document.getElementById("popup").style.display = "none";
-        window.history.back();
-    }
+ 
+  //   document.getElementById("schema_select").addEventListener("submit", function(event) {
+  //   // Prevent the default form submission
+  //   event.preventDefault();
 
-    document.getElementById("schema_select").addEventListener("submit", function(event) {
-    // Prevent the default form submission
-    event.preventDefault();
+  //   // Check if at least one checkbox is checked
+  //   var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  //   var isChecked = false;
+  //   for (var i = 0; i < checkboxes.length; i++) {
+  //       if (checkboxes[i].checked) {
+  //           isChecked = true;
+  //           break;
+  //       }
+  //   }
 
-    // Check if at least one checkbox is checked
-    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    var isChecked = false;
-    for (var i = 0; i < checkboxes.length; i++) {
-        if (checkboxes[i].checked) {
-            isChecked = true;
-            break;
+  //   // If at least one checkbox is checked, submit the form
+  //   if (isChecked) {
+  //       this.submit();
+  //   } else {
+  //       // If no checkbox is checked, display an alert or perform any other action
+  //       alert("Please check at least one checkbox before submitting.");
+  //       // Or do nothing
+  //   }
+  // });
+
+  function submitForm() {
+            const formData = new FormData(document.getElementById('checkboxForm'));
+            const schemaTables = {};
+           
+            formData.forEach(function(value, key) {
+                if (key === 'schema') {
+                 
+                    schemaTables[value] = [];
+                } else if (key === 'table') {
+                    
+                    const lastSchema = Object.keys(schemaTables).pop();
+                    schemaTables[lastSchema].push(value);
+                }
+            });
+ 
+            const jsonData = JSON.stringify(schemaTables);
+           
+ 
+            window.location.href = 'http://127.0.0.1:8000/snowflake_form?'  + new URLSearchParams(jsonData);
         }
-    }
-
-    // If at least one checkbox is checked, submit the form
-    if (isChecked) {
-        this.submit();
-    } else {
-        // If no checkbox is checked, display an alert or perform any other action
-        alert("Please check at least one checkbox before submitting.");
-        // Or do nothing
-    }
-  });
 </script>
 </body>
 </html>
