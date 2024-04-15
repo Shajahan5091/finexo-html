@@ -52,6 +52,7 @@
   /* background-color: #f8f8f9; */
   /* padding: 20px; */
   /* border-radius: 5px; */
+  height: 200px;
 }
 #heading1{
   background:#072A6C ;
@@ -59,12 +60,24 @@
   color:white;
   border-radius : 10px 10px 0px 0px;
 }
+#heading1 input{
+  margin-top: 10px;
+  margin-left: 10px;
+}
+#heading1 label{
+  font-weight: bold;
+}
 #content1{
   padding: 60px;
   /* height: 300px; */
 }
 ul{
   margin-top: 5px;
+}
+.connect-btn{
+  margin-bottom: 50px;
+  margin-top: 10px;
+  margin-left: 50%;
 }
   </style>
 </head>
@@ -124,17 +137,21 @@ ul{
                         <div class="col-md-4 ">
                             <div class="popup1">
                                 <div id="heading1">
-                                  <input type="checkbox" name="schema" id="{{schema}}" value="{{schema}}">
+                                  <input type="checkbox" name="schema" id="{{schema}}" value="{{schema}}" onchange="toggleTables(this)">
                                   <label for="{{schema}}">{{ schema }}</label>
                                 </div>
                                 <div class="content1">
                                   <ul style="list-style: none;">
+                                  {% if tables|length < 1 %}
+                                    <p>No tables available</p>
+                                  {% else %}
                                   {% for table in tables %}
                                   <li>
                                     <input type="checkbox" name="table" id="{{table}}" value="{{table}}">
                                     <label for="{{table}}">{{ table }}
                                     </li>
                                     {% endfor %}
+                                  {% endif %}
                                     </ul>
                                 </div> 
                         </div>
@@ -191,6 +208,12 @@ ul{
   //       // Or do nothing
   //   }
   // });
+  function toggleTables(schemaCheckbox) {
+            const tables = schemaCheckbox.parentNode.querySelector('ul').querySelectorAll('input[type="checkbox"]');
+            tables.forEach(function(table) {
+                table.checked = schemaCheckbox.checked;
+            });
+        }
 
   function submitForm() {
             const formData = new FormData(document.getElementById('checkboxForm'));
