@@ -1021,84 +1021,95 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                 print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
        else :
             print("Done")
+   auditing_log_into_Snowflake(conn,project_id,inner_dict)
+   Migration_report(conn,database,schema)
    return render_template('result.html')           
 
 # Function to create audit log tables in snowflake
-def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_names):
-    print(schema_names)
-    if len(schema_names)<2:
-        schema_name_single=schema_names[0]
-        # print(schema_name)
-        query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema in ('{schema_name_single}');""")
-        print(query_TABLE_DETAILS)
-    else:
-        schema_name_tuple=tuple(schema_names)
-        query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema in {schema_name_tuple};""")
-        print(query_TABLE_DETAILS)
-    query_job = bq_client.query(query_TABLE_DETAILS)
-    results_schema_database_lst = query_job.result()
-    print(results_schema_database_lst)
-    schema_list_name = [field.name for field in results_schema_database_lst.schema]
-    print(schema_list_name)
-    # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
-    dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
-    print(dataframe_schema_table_info)
-    if len(schema_names)<2:
-        query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
-        (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
-        'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
-        '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
-        'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema ='{schema_name_single}' """)
-    else :
-        query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
-        (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
-        'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
-        '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
-        'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema  in {schema_name_tuple} """)
-    print(query_ddl)
-    query_job = bq_client.query(query_ddl)
-    results_ddl_St_db = query_job.result()
-    schema_list_name_2 = [field.name for field in results_ddl_St_db.schema]
-    dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
-    print("1 frame")
-    print(dataframe_ddl_table_info)
-    
-    if len(schema_names)<2:
-        query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name_single}' group by c.table_catalog,
-            c.table_name,c.table_schema,t.ddl;""")
-    else:
-        query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema  in {schema_name_tuple} group by c.table_catalog,
-            c.table_name,c.table_schema,t.ddl;""")
-    
-    query_job = bq_client.query(query_copy_dol)
-    results_copy_dol = query_job.result()
-    schema_3 = [field.name for field in results_copy_dol.schema]
-    # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
-    dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
-    print(dataframe_copy_dol)
+def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_user_input):
 
-    result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["table_catalog","table_schema","table_name"])
-    result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["table_catalog","table_schema","table_name"])
-    write_pandas(snowflake_connection_config,result_ddl_ed_table,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
-    print(result_ddl_ed_table)
-    
-    if len(schema_names)<2:
-        query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema = '{schema_name_single}' ;""")
-    else:
-        query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema in {schema_name_tuple} ;""")
-    
-    query_job = bq_client.query(query)
-    results_column_lst= query_job.result()
-    schema_4 = [field.name for field in results_column_lst.schema]
-    dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
-    write_pandas(snowflake_connection_config,dataframe_column_info,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
- 
+    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_ROWS','DDL','TABLE_COLUMNS']
+    columns_struct_cln=['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','COLUMN_NAME','ORDINAL_POSITION','IS_NULLABLE','DATA_TYPE']
+    table_struct = pd.DataFrame(columns = table_struct_cln)
+    columns_struct= pd.DataFrame(columns=columns_struct_cln)
+    schema_list_user_input=tuple(Dist_user_input.keys())
+    for schema_name in schema_list_user_input:
+        table_tuple=tuple(Dist_user_input[schema_name])
+        if len(table_tuple)<2:
+            table_name_single=table_tuple[0]
+            # print(schema_name)
+            query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema =('{schema_name}') and table_name in ('{table_name_single}') ;""")
+            print(query_TABLE_DETAILS)
+        else:
+            schema_name_tuple=tuple(schema_name)
+            query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema =('{schema_name}') and table_name in ('{table_tuple}');""")
+            print(query_TABLE_DETAILS)
+        query_job = bq_client.query(query_TABLE_DETAILS)
+        results_schema_database_lst = query_job.result()
+        print(results_schema_database_lst)
+        schema_list_name = [field.name for field in results_schema_database_lst.schema]
+        print(schema_list_name)
+        # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
+        dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
+        print(dataframe_schema_table_info)
+        if len(table_tuple)<2:
+            query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+            'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
+            '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+            'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+            'order ','"order" '),'<',', //'),'_"order"','_order') as DDL from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema ='{schema_name}' and table_name in ('{table_name_single}') """)
+        else :
+            query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+            'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
+            '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+            'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+            'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema =' {schema_name}' and table_name in {table_tuple} """)
+        print(query_ddl)
+        query_job = bq_client.query(query_ddl)
+        results_ddl_St_db = query_job.result()
+        schema_list_name_2 = [field.name for field in results_ddl_St_db.schema]
+        dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
+        print("1 frame")
+        print(dataframe_ddl_table_info)
+        
+        if len(table_tuple)<2:
+            query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name}' and C.table_name in ('{table_name_single}') group by c.table_catalog,
+                c.table_name,c.table_schema,t.ddl ;""")
+        else:
+            query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name}' and C.table_name in {table_tuple}  group by c.table_catalog,
+                c.table_name,c.table_schema,t.ddl;""")
+        print(query_copy_dol)
+        query_job = bq_client.query(query_copy_dol)
+        results_copy_dol = query_job.result()
+        schema_3 = [field.name for field in results_copy_dol.schema]
+        # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
+        dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
+        print(dataframe_copy_dol)
+
+        result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["table_catalog","table_schema","table_name"])
+        result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["table_catalog","table_schema","table_name"])
+        table_struct= pd.concat([table_struct,result_ddl_ed_table] , ignore_index=True)
+        print(result_ddl_ed_table)
+        
+        if len(table_tuple)<2:
+            query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema = '{schema_name}'  and table_name in ('{table_name_single}') ;""")
+        else:
+            query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema  ='{schema_name}' and table_name in {table_tuple} ;""")
+        print(query)
+        query_job = bq_client.query(query)
+        results_column_lst= query_job.result()
+        schema_4 = [field.name for field in results_column_lst.schema]
+        dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
+        columns_struct=pd.concat([columns_struct,dataframe_column_info] , ignore_index=True)
+    write_pandas(snowflake_connection_config,columns_struct,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+    write_pandas(snowflake_connection_config,table_struct,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+
 def streamlit(database,schema):
     stream_script=("""
 import streamlit as st
