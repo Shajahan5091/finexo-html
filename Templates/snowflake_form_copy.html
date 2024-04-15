@@ -699,18 +699,42 @@ async function StageAccess() {
     }
 }
 
+async function runTestsInOrdersf() {
+        try {
+            // Call the async functions in the desired order
+            await testConnection();
+            await GrantAccessCheck();
+            await checkCreatePermissions();
+            await Integration_Object_Exist();
+            await IntegrationAccess();
+            await FileFormat_Object_Exist();
+            await FormatAccess();
+            await Stage_Object_Exist();
+            await StageAccess();
+            // Call functions for testing other subsections here
+            console.log("All tests executed successfully");
+        } catch (error) {
+            console.error("An error occurred:", error);
+        }
+    }
+
     // Run tests when the page is loaded
     window.onload = function () {
-        testConnection();
-        GrantAccessCheck();
-        checkCreatePermissions();
-        Integration_Object_Exist();
-        IntegrationAccess();
-        FileFormat_Object_Exist();
-        FormatAccess();
-        Stage_Object_Exist();
-        StageAccess();
-    };
+        runTestsInOrdersf();
+    }
+
+    // Run tests when the page is loaded
+    // window.onload = function () {
+    //     testConnection();
+    //     GrantAccessCheck();
+    //     checkCreatePermissions();
+    //     Integration_Object_Exist();
+    //     IntegrationAccess();
+    //     FileFormat_Object_Exist();
+    //     FormatAccess();
+    //     Stage_Object_Exist();
+    //     StageAccess();
+    // };
 
     function display_loader(){
     document.getElementById("loading-container").style.display = "block";
