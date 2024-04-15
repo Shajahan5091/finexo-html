@@ -16,8 +16,8 @@ def Migration_report(connection,database,schema):
         print('inside migration report')
         connection_cursor=connection.cursor()
         connection_cursor.execute(f"create  stage if not exists {database}.{schema}.Migration_Report;")
-        connection_cursor.execute(r"put file://D:\SNOWFLAKE_TOOL\streamlit\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
-        connection_cursor.execute(r"put file://D:\SNOWFLAKE_TOOL\streamlit\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace  STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE =  SNOW_MIGRATE_WAREHOUSE ;".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace table {database}.{schema}.load_history as(select * from {database}.INFORMATION_SCHEMA.LOAD_HISTORY)")
     except Exception as error:
@@ -30,7 +30,7 @@ app = Flask(__name__)
 @app.route('/')
 # First app route that will render the index.html page
 def index():
-    return render_template('result.html')
+    return render_template('index.html')
 
 @app.route('/biq', methods=['POST'])
 # This app route will render the file_upload.html page after the bigquery option selected from services
@@ -1038,11 +1038,11 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         if len(table_tuple)<2:
             table_name_single=table_tuple[0]
             # print(schema_name)
-            query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema =('{schema_name}') and table_name in ('{table_name_single}') ;""")
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in ('{table_name_single}') ;""")
             print(query_TABLE_DETAILS)
         else:
             schema_name_tuple=tuple(schema_name)
-            query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema =('{schema_name}') and table_name in ('{table_tuple}');""")
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in ('{table_tuple}');""")
             print(query_TABLE_DETAILS)
         query_job = bq_client.query(query_TABLE_DETAILS)
         results_schema_database_lst = query_job.result()
@@ -1053,19 +1053,19 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
         print(dataframe_schema_table_info)
         if len(table_tuple)<2:
-            query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            query_ddl =(f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
             (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
             'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
             '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
             'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-            'order ','"order" '),'<',', //'),'_"order"','_order') as DDL from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema ='{schema_name}' and table_name in ('{table_name_single}') """)
+            'order ','"order" '),'<',', //'),'_"order"','_order') as DDL from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  TABLE_SCHEMA ='{schema_name}' and TABLE_NAME in ('{table_name_single}') """)
         else :
-            query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            query_ddl =(f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
             (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
             'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
             '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
             'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-            'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema =' {schema_name}' and table_name in {table_tuple} """)
+            'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  TABLE_SCHEMA =' {schema_name}' and TABLE_NAME in {table_tuple} """)
         print(query_ddl)
         query_job = bq_client.query(query_ddl)
         results_ddl_St_db = query_job.result()
@@ -1075,15 +1075,15 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         print(dataframe_ddl_table_info)
         
         if len(table_tuple)<2:
-            query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
+            query_copy_dol=(f"""select  c.TABLE_CATALOG, c.TABLE_SCHEMA , c.TABLE_NAME,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
                 `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
-                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name}' and C.table_name in ('{table_name_single}') group by c.table_catalog,
-                c.table_name,c.table_schema,t.ddl ;""")
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.TABLE_NAME = t.TABLE_NAME where c.TABLE_SCHEMA ='{schema_name}' and C.TABLE_NAME in ('{table_name_single}') group by c.TABLE_CATALOG,
+                c.TABLE_NAME,c.TABLE_SCHEMA,t.ddl ;""")
         else:
-            query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
+            query_copy_dol=(f"""select  c.TABLE_CATALOG, c.TABLE_SCHEMA , c.TABLE_NAME,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
                 `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
-                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name}' and C.table_name in {table_tuple}  group by c.table_catalog,
-                c.table_name,c.table_schema,t.ddl;""")
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.TABLE_NAME = t.TABLE_NAME where c.TABLE_SCHEMA ='{schema_name}' and C.TABLE_NAME in {table_tuple}  group by c.TABLE_CATALOG,
+                c.TABLE_NAME,c.TABLE_SCHEMA,t.ddl;""")
         print(query_copy_dol)
         query_job = bq_client.query(query_copy_dol)
         results_copy_dol = query_job.result()
@@ -1092,15 +1092,15 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
         print(dataframe_copy_dol)
 
-        result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["table_catalog","table_schema","table_name"])
-        result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["table_catalog","table_schema","table_name"])
+        result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["TABLE_CATALOG","TABLE_SCHEMA","TABLE_NAME"])
+        result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["TABLE_CATALOG","TABLE_SCHEMA","TABLE_NAME"])
         table_struct= pd.concat([table_struct,result_ddl_ed_table] , ignore_index=True)
         print(result_ddl_ed_table)
         
         if len(table_tuple)<2:
-            query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema = '{schema_name}'  and table_name in ('{table_name_single}') ;""")
+            query = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,IS_NULLABLE,DATA_TYPE from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = '{schema_name}'  and TABLE_NAME in ('{table_name_single}') ;""")
         else:
-            query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema  ='{schema_name}' and table_name in {table_tuple} ;""")
+            query = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,IS_NULLABLE,DATA_TYPE from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA  ='{schema_name}' and TABLE_NAME in {table_tuple} ;""")
         print(query)
         query_job = bq_client.query(query)
         results_column_lst= query_job.result()
@@ -1139,7 +1139,7 @@ with tab1:
             session.write_pandas(df_schema,f'Migration_Report_Schema_/time/',database="{database}",schema="{schema}", auto_create_table=True,overwrite=True,table_type="transient")
         st.write("Schema  Availability:")
         st.button(":inbox_tray:",help="download Schema Report",on_click=Schema_report)
-        dataframe=session.sql('select distinct("table_schema") as "Schema Available in BigQuery"  from {database}.{schema}.META_TABLES_STRUCT_SOURCE')
+        dataframe=session.sql('select distinct(table_schema) as "Schema Available in BigQuery"  from {database}.{schema}.META_TABLES_STRUCT_SOURCE')
         df_schema=dataframe.to_pandas()
         df_schema.insert(1,"Schema Loaded in snowflake",'❌')
         list_schema_target=session.sql("select SCHEMA_NAME,CREATED from {database}.INFORMATION_SCHEMA.SCHEMATA;").collect()
@@ -1185,7 +1185,7 @@ with tab1:
             
     with col2:
         st.write("Table  Availability:")
-        dataframe_table_source=session.sql('select distinct "table_schema"as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;')
+        dataframe_table_source=session.sql('select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;')
         st.button(":inbox_tray:",help="download Table Report",on_click=Table_report)
         df_table_Source=dataframe_table_source.to_pandas()
         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
@@ -1255,7 +1255,7 @@ with tab1:
 
 with tab3:
     def table_overview(schema,table):
-        dataframe_table_source=session.sql(f'''select distinct "table_schema"as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
+        dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
         df_table_Source=dataframe_table_source.to_pandas()
         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
         df_table_Target=dataframe_table_target.to_pandas()
@@ -1290,12 +1290,12 @@ with tab3:
         st.table(df_table_Source)
     table_input_struct=st.form('table Struct')
     
-    schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
     def Table_Struct():
         session.write_pandas(source_table,f'Migration_Report_Table_Struct_/time/',database="{database}",schema="PUBLIC", auto_create_table=True,overwrite=True,table_type="transient")        
-    schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
     schema_name=table_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view',key="schema_name")
-    Table_SQL=('''select distinct "table_name" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "table_schema"='/schema_name/';''').format(schema_name=schema_name)
+    Table_SQL=('''select distinct table_name from {database}.{schema}.META_TABLES_STRUCT_SOURCE where table_schema='/schema_name/';''').format(schema_name=schema_name)
     Table_List =session.sql(Table_SQL).collect()
     table_name=table_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view')
     
@@ -1305,7 +1305,7 @@ with tab3:
         table_overview(schema_name,table_name)
         col1,col2=st.columns([1,0.2])
         
-        source_table_sql=(f'''select "column_name" as  "Column Available In Source","data_type"as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where "table_schema"='/schema_name/' and "table_name"='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
+        source_table_sql=(f'''select column_name as  "Column Available In Source","data_type"as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
         source_table=session.sql(source_table_sql)
         source_table=source_table.to_pandas()
         source_table.insert(2,"Column Available In Snowflake",'❌')
@@ -1387,9 +1387,9 @@ with tab3:
                     st.table(column_list)
 with tab4:
     incremental_input_struct=st.form('incremental Struct')
-    schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
     schema_name=incremental_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view')
-    Table_SQL=('''select distinct "table_name" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "table_schema"='/schema_name/';''').format(schema_name=schema_name)
+    Table_SQL=('''select distinct table_name from {database}.{schema}.META_TABLES_STRUCT_SOURCE where table_schema='/schema_name/';''').format(schema_name=schema_name)
     Table_List =session.sql(Table_SQL).collect()
     table_name=incremental_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view',)
     submit=incremental_input_struct.form_submit_button("Fetch Details")
@@ -1401,7 +1401,7 @@ with tab4:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'D:\SNOWFLAKE_TOOL\streamlit\streamlit.py'
+    text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(stream_script)
 

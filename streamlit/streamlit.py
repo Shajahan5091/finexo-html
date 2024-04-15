@@ -274,7 +274,7 @@ with tab3:
                     st.table(column_list)
 with tab4:
     incremental_input_struct=st.form('incremental Struct')
-    schema_list=session.sql('select distinct "table_schema" from SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.META_TABLES_STRUCT_SOURCE;').collect()
     schema_name=incremental_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view')
     Table_SQL=('''select distinct "table_name" from SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.META_TABLES_STRUCT_SOURCE where "table_schema"='{schema_name}';''').format(schema_name=schema_name)
     Table_List =session.sql(Table_SQL).collect()
