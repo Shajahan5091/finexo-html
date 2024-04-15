@@ -16,8 +16,8 @@ def Migration_report(connection,database,schema):
         print('inside migration report')
         connection_cursor=connection.cursor()
         connection_cursor.execute(f"create  stage if not exists {database}.{schema}.Migration_Report;")
-        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
-        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://D:\SNOWFLAKE_TOOL\streamlit\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://D:\SNOWFLAKE_TOOL\streamlit\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace  STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE =  SNOW_MIGRATE_WAREHOUSE ;".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace table {database}.{schema}.load_history as(select * from {database}.INFORMATION_SCHEMA.LOAD_HISTORY)")
     except Exception as error:
@@ -30,7 +30,7 @@ app = Flask(__name__)
 @app.route('/')
 # First app route that will render the index.html page
 def index():
-    return render_template('index.html')
+    return render_template('result.html')
 
 @app.route('/biq', methods=['POST'])
 # This app route will render the file_upload.html page after the bigquery option selected from services
@@ -690,7 +690,7 @@ def check_grants(cursor, privilege, granted_on, object_name, role_name):
     
 @app.route('/migration_result', methods=['POST'])
 def migration_result():
-    streamlit(database,schema)
+    # streamlit(database,schema)
     result = create_schemas_and_copy_table(conn,inner_dict)
     return result
 
@@ -1390,9 +1390,13 @@ with tab4:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'C:\Users\Swetha\Desktop\streamlit\streamlit.py'
+    text_file_path = r'D:\SNOWFLAKE_TOOL\streamlit\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(stream_script)
+
+@app.route('/increment', methods=['POST'])
+def incremental():
+    return render_template('incremental_form.html')
 
 
 if __name__ == '__main__':
