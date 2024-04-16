@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>  
+<head>
     <!-- Basic -->
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <!-- Mobile Metas -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <!-- Site Metas -->
-  <meta name="keywords" content="" />
-  <meta name="description" content="" />
-  <meta name="author" content="" />
-  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/logo.png') }}" type="">
-  <link href="{{ url_for('static',filename='styles/result.css') }}" rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Mobile Metas -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- Site Metas -->
+    <meta name="keywords" content="" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='Image/logo.png') }}" type="">
+    <link href="{{ url_for('static', filename='styles/result.css') }}" rel="stylesheet" />
 </head>
 <body>
     <div class="container">
@@ -22,7 +22,17 @@
                 <!-- <span> Snowflake </span> -->
             </h2><br>
             <a class="connect-btn" href="{{ url_for('index') }}">Back to Home</a>
+            <!-- Add a button to navigate to the /log route -->
+            <button onclick="navigateToLog()">View Log</button>
         </div>
     </div>
+
+    <!-- JavaScript to navigate to the /log route -->
+    <script>
+        function navigateToLog() {
+            // Navigate to the /log route
+            window.location.href = "{{ url_for('log') }}";
+        }
+    </script>
 </body>
 </html>

@@ -222,20 +222,28 @@ def CheckBucketCreated():
 def fetch_schemas():
     client = bq_client
     datasets = list(client.list_datasets())
-    schemas = []
+    schemas = {}
     for dataset in datasets:
-        schemas.append(dataset.dataset_id)
+        # schemas.append(dataset.dataset_id)
+        sch = dataset.dataset_id
+        tables = fetch_schemas_tables(bq_client, sch)
+        schemas[sch] = tables
+        # print(sch)
+        # print('--------------------------------')
+        # print(tables)
+        # print('------------------------------------')
+        # print(schemas)
     return render_template('schemas_copy.html', schemas = schemas)
 
-@app.route('/get_tables',  methods =["GET", "POST"])
-def get_tables():
-    Client= bq_client
-    schema_name = request.form.get("connect-btn")
-    # Fetch tables for the given schema
-    tables = fetch_schemas_tables(Client, schema_name)
-    print(tables)
-    # return render_template("schemas.html", tables = tables, schema = schema_name,show_popup=True)
-    return render_template('schemas_copy.html', show_popup=True,tables = tables, schema = schema_name)
+# @app.route('/get_tables',  methods =["GET", "POST"])
+# def get_tables():
+#     Client= bq_client
+#     schema_name = request.form.get("connect-btn")
+#     # Fetch tables for the given schema
+#     tables = fetch_schemas_tables(Client, schema_name)
+#     print(tables)
+#     # return render_template("schemas.html", tables = tables, schema = schema_name,show_popup=True)
+#     return render_template('schemas_copy.html', show_popup=True,tables = tables, schema = schema_name)
 
 
 #Function to return the tables in a schema
@@ -257,9 +265,14 @@ def fetch_schemas_tables(client,schema_name):
 
 @app.route('/snowflake_form', methods = ["GET", "POST"])
 def snowflake_form():
-    global schema_list
-    schema_list = request.form.getlist("schema-name")
-    print(schema_list)
+    global inner_dict
+    if(request.method == 'GET'):
+        data = dict(request.args)
+        # input_dict = json.loads(request.args)
+        inner_key = next(iter(data))
+        inner_dict = json.loads(inner_key) 
+        print(inner_dict)
+        print('----------------------')
     return render_template("snowflake_form_copy.html")
 
 @app.route('/connect_snowflake', methods = ["GET", "POST"])
@@ -678,11 +691,156 @@ def check_grants(cursor, privilege, granted_on, object_name, role_name):
 @app.route('/migration_result', methods=['POST'])
 def migration_result():
     streamlit(database,schema)
-    result = create_schemas_and_copy_table(conn,schema_list)
+    result = create_schemas_and_copy_table(conn,inner_dict)
     return result
 
 # Function to create the schemas and the tables from bigquery to snowflake
-def create_schemas_and_copy_table(conn,schema_list):
+# def create_schemas_and_copy_table(conn,Dist_user_input):
+#    query = """
+#    select schema_name from `{}`.INFORMATION_SCHEMA.SCHEMATA
+#    """
+#    project_query = query.format(project_id)
+#    query_job = bq_client.query(project_query)
+#    rows = query_job.result()
+#    Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE']
+#    copy_table = pd.DataFrame(columns = Columns)
+#    schema_list_user_input=tuple(Dist_user_input.keys())
+#    table_ddl = " create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) ".format(database, schema)
+#    conn.cursor().execute(table_ddl) 
+#    print("BQ_COPY_TABLE created succesfully")
+#    for row in rows:
+#        schema_local = row.schema_name
+#        print(schema_local)
+#        print(schema_list_user_input)
+#        if schema_local in schema_list_user_input:
+#            table_tuple=tuple(Dist_user_input[schema_local])
+#            print(table_tuple)
+#            print("Gathering ddl {}".format(schema_local))
+#            query = """
+#             select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns , case when t.ddl like 
+#             '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type, 'N' as copy_done FROM 
+#             `{}`.{}.INFORMATION_SCHEMA.TABLES as t join
+#             `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_name in {} group by c.table_catalog, 
+#             c.table_name,c.table_schema,t.ddl;
+#            """
+#         #    print(ddl_query)
+#            print("Gathering ddl for tables in schema {}".format(schema_local))
+#            table_query = """
+#            SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+#            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+#            'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,", 
+#            '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+#            'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+#            'order ','"order" '),'<',', //'),'_"order"','_order') as ddl
+#            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in {}
+#            """
+           
+#            # FOR SCHEMAS
+#            ddl_query = query.format(project_id,schema_local,project_id,schema_local,table_tuple)
+#            query_job = bq_client.query(ddl_query)
+#            ddl_set = query_job.result()
+           
+#            for row in ddl_set:
+#             df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
+#             copy_table = pd.concat([copy_table,df] , ignore_index=True)
+            
+#             write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
+            
+            
+#             schema_name = row.table_schema
+#             create_schema = "create schema if not exists {}.{}".format(database, schema_name)
+#             conn.cursor().execute(create_schema)
+
+#             print("Schema {} created in {} Database".format(schema_name, database))
+    
+#         #    FOR TABLES
+#            ddl_table_query = table_query.format(project_id,schema_local,table_tuple)
+#            query_table_job = bq_client.query(ddl_table_query)
+#            ddl_table_set = query_table_job.result()
+    
+#            for my_row in ddl_table_set:
+#                table_name = my_row.table_name
+#                ddl = my_row.ddl
+#                ddl2 = ddl.replace(project_id, database)
+#                print(ddl2)
+#                print("Running ddl for table {} in Snowflake".format(table_name))
+#                use_schema = "use schema {}.{}".format(database, schema)
+#                conn.cursor().execute(use_schema)
+#                conn.cursor().execute(ddl2)
+#                print("Table {} created in {}.{} schema".format(table_name, database, schema))
+
+#     # FOR EXPORTING DATA
+#            export_query = """
+#            select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type
+#            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in {}
+#            """
+#            ddl_query = export_query.format(project_id,schema_local,table_tuple)
+#            query_job = bq_client.query(ddl_query)
+#            ddl_export_set = query_job.result()
+
+#            for row in ddl_export_set:
+#                table_name = row.table_name
+#                export_type = row.export_type
+#                print("Exporting data for table {} ...export type is {}".format(table_name,export_type))
+#                destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema_local,table_name,table_name,export_type)
+#                print(destination_uri)
+#                dataset_ref = bigquery.DatasetReference(project_id, schema_local)
+#                table_ref = dataset_ref.table(table_name)
+#                configuration = bigquery.job.ExtractJobConfig()
+#                configuration.destination_format ='PARQUET'
+#                if export_type == 'parquet':
+#                    extract_job = bq_client.extract_table(
+#                        table_ref,
+#                        destination_uri,
+#                        job_config=configuration,
+#                        location="US"
+#                        )
+#                else:
+#                    extract_job = bq_client.extract_table(
+#                        table_ref,
+#                        destination_uri,
+#                        location="US"
+#                        )
+#                extract_job.result()  # Waits for job to complete.
+#                print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema_local, table_name, destination_uri)) 
+
+#            # LOAD DATA
+#            SF_query = "select table_name,table_schema,table_columns,export_type from BQ_COPY_TABLE where copy_done ='N'"
+           
+#            cur = conn.cursor()
+#            cur.execute(SF_query)
+#            result = cur.fetchall()
+#            column_info = cur.description
+#            column_names = [info[0] for info in column_info]
+#            df2 = pd.DataFrame(result , columns=column_names)
+#            counter = 0
+#            i=0
+#            for i in range(0,len(df2)):
+#                 table_name = df2['TABLE_NAME'].iloc[i];
+#                 table_schema  = df2['TABLE_SCHEMA'].iloc[i];
+#                 table_columns = df2['TABLE_COLUMNS'].iloc[i];
+#                 export_type  = df2['EXPORT_TYPE'].iloc[i];
+#                 copy_command = "copy into {db}.{sc}.{tb} from ( select {col_list} from @{db}.{sch}.snow_migrate_stage/{sc}/{tb}/{tb}(file_format => my_parquet_format))"
+#                 print(table_name + export_type)
+
+#                 copy_command = copy_command.replace('{db}', database,2)
+#                 copy_command = copy_command.replace('{sc}', table_schema,2)
+#                 copy_command = copy_command.replace('{sch}', schema)
+#                 copy_command = copy_command.replace('{tb}', table_name,3)
+#                 copy_command = copy_command.replace('{col_list}', table_columns )
+
+#                 conn.cursor().execute(copy_command)
+#                 counter+=1
+#                 i+=1
+#                 print(counter)
+#                 print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
+#        else :
+#             print("Done")
+# #    auditing_log_into_Snowflake(conn,project_id,inner_dict)
+# #    Migration_report(conn,database,schema)   
+#    return render_template('result.html')
+
+def create_schemas_and_copy_table(conn,Dist_user_input):
    query = """
    select schema_name from `{}`.INFORMATION_SCHEMA.SCHEMATA
    """
@@ -691,21 +849,34 @@ def create_schemas_and_copy_table(conn,schema_list):
    rows = query_job.result()
    Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE']
    copy_table = pd.DataFrame(columns = Columns)
+   schema_list_user_input=tuple(Dist_user_input.keys())
+   table_ddl = " create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) ".format(database, schema)
+   conn.cursor().execute(table_ddl) 
+   print("BQ_COPY_TABLE created succesfully")
    for row in rows:
        schema_local = row.schema_name
        print(schema_local)
-       print("-------------------")
-       print(schema_list)
-       if schema_local in schema_list :
+       print(schema_list_user_input)
+       if schema_local in schema_list_user_input:
+           table_tuple=tuple(Dist_user_input[schema_local])
+           print(table_tuple)
            print("Gathering ddl {}".format(schema_local))
+           
            query = """
             select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns , case when t.ddl like 
             '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type, 'N' as copy_done FROM 
             `{}`.{}.INFORMATION_SCHEMA.TABLES as t join
-            `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name group by c.table_catalog, 
+            `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_name in {} group by c.table_catalog, 
             c.table_name,c.table_schema,t.ddl;
            """
-    
+           query_2 = """
+            select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns , case when t.ddl like 
+            '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type, 'N' as copy_done FROM 
+            `{}`.{}.INFORMATION_SCHEMA.TABLES as t join
+            `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_name in ('{}') group by c.table_catalog, 
+            c.table_name,c.table_schema,t.ddl;
+           """
+        #    print(ddl_query)
            print("Gathering ddl for tables in schema {}".format(schema_local))
            table_query = """
            SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
@@ -714,31 +885,52 @@ def create_schemas_and_copy_table(conn,schema_list):
            '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
            'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
            'order ','"order" '),'<',', //'),'_"order"','_order') as ddl
-           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE'
+           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in {}
            """
-           
+           table_query_2 = """
+           SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+           (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+           'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,", 
+           '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+           'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+           'order ','"order" '),'<',', //'),'_"order"','_order') as ddl
+           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in ('{}')
+           """
            # FOR SCHEMAS
-           ddl_query = query.format(project_id,schema_local,project_id,schema_local)
+           if(len(table_tuple)<2):
+                table_tuple_1=table_tuple[0]
+                print(table_tuple)
+                ddl_query = query_2.format(project_id,schema_local,project_id,schema_local,table_tuple_1)
+                print(ddl_query)
+           else:
+               ddl_query = query.format(project_id,schema_local,project_id,schema_local,table_tuple)
            query_job = bq_client.query(ddl_query)
            ddl_set = query_job.result()
            
            for row in ddl_set:
             df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
             copy_table = pd.concat([copy_table,df] , ignore_index=True)
-            table_ddl = " create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) ".format(database, schema)
-
-            conn.cursor().execute(table_ddl)
+            
             write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
-            print("BQ_COPY_TABLE created succesfully")
+            
             
             schema_name = row.table_schema
             create_schema = "create schema if not exists {}.{}".format(database, schema_name)
             conn.cursor().execute(create_schema)
 
             print("Schema {} created in {} Database".format(schema_name, database))
-    
-           #FOR TABLES
-           ddl_table_query = table_query.format(project_id, schema_local)
+            print(len(table_tuple))
+            print(table_tuple)
+        #    FOR TABLES
+           if(len(table_tuple)<2):
+               table_tuple_2=table_tuple[0]
+               ddl_table_query = table_query_2.format(project_id,schema_local,table_tuple_2)
+               print(ddl_table_query)
+               print(table_tuple)
+           else:
+               ddl_table_query = table_query.format(project_id,schema_local,table_tuple)   
+               print('else block')
+               print(ddl_table_query)
            query_table_job = bq_client.query(ddl_table_query)
            ddl_table_set = query_table_job.result()
     
@@ -756,17 +948,26 @@ def create_schemas_and_copy_table(conn,schema_list):
     # FOR EXPORTING DATA
            export_query = """
            select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type
-           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE'
+           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in {}
            """
-           ddl_query = export_query.format(project_id, schema_local)
+           export_query_2 = """
+           select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type
+           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in ('{}')
+           """
+           if(len(table_tuple)<2):
+               table_tuple_3=table_tuple[0]
+               ddl_query = export_query_2.format(project_id,schema_local,table_tuple_3)
+           else:
+               ddl_query = export_query.format(project_id,schema_local,table_tuple) 
+           
            query_job = bq_client.query(ddl_query)
            ddl_export_set = query_job.result()
 
            for row in ddl_export_set:
                table_name = row.table_name
                export_type = row.export_type
-               print("Exporting data for table {} ...export type is {}".format(table_name, export_type))
-               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name, schema_local, table_name, table_name, export_type)
+               print("Exporting data for table {} ...export type is {}".format(table_name,export_type))
+               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name,schema_local,table_name,table_name,export_type)
                print(destination_uri)
                dataset_ref = bigquery.DatasetReference(project_id, schema_local)
                table_ref = dataset_ref.table(table_name)
@@ -819,87 +1020,96 @@ def create_schemas_and_copy_table(conn,schema_list):
                 print(counter)
                 print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
        else :
-            print("D`one")
-   auditing_log_into_Snowflake(conn,project_id,schema_list)
-   Migration_report(conn,database,schema)   
-   return render_template('result.html')
+            print("Done")
+   auditing_log_into_Snowflake(conn,project_id,inner_dict)
+   Migration_report(conn,database,schema)
+   return render_template('result.html')           
 
 # Function to create audit log tables in snowflake
-def auditing_log_into_Snowflake(snowflake_connection_config,project_name,schema_names):
-    print(schema_names)
-    if len(schema_names)<2:
-        schema_name_single=schema_names[0]
-        # print(schema_name)
-        query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema in ('{schema_name_single}');""")
-        print(query_TABLE_DETAILS)
-    else:
-        schema_name_tuple=tuple(schema_names)
-        query_TABLE_DETAILS = (f"""select table_catalog,table_schema,table_name,total_rows from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  table_schema in {schema_name_tuple};""")
-        print(query_TABLE_DETAILS)
-    query_job = bq_client.query(query_TABLE_DETAILS)
-    results_schema_database_lst = query_job.result()
-    print(results_schema_database_lst)
-    schema_list_name = [field.name for field in results_schema_database_lst.schema]
-    print(schema_list_name)
-    # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
-    dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
-    print(dataframe_schema_table_info)
-    if len(schema_names)<2:
-        query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
-        (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
-        'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
-        '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
-        'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema ='{schema_name_single}' """)
-    else :
-        query_ddl =(f"""select table_catalog,table_schema,table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
-        (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
-        'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
-        '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
-        'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-        'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  table_schema  in {schema_name_tuple} """)
-    print(query_ddl)
-    query_job = bq_client.query(query_ddl)
-    results_ddl_St_db = query_job.result()
-    schema_list_name_2 = [field.name for field in results_ddl_St_db.schema]
-    dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
-    print("1 frame")
-    print(dataframe_ddl_table_info)
-    
-    if len(schema_names)<2:
-        query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema ='{schema_name_single}' group by c.table_catalog,
-            c.table_name,c.table_schema,t.ddl;""")
-    else:
-        query_copy_dol=(f"""select  c.table_catalog, c.table_schema , c.table_name,  string_agg('$1:'||c.column_name) as table_columns  FROM
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
-            `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name where c.table_schema  in {schema_name_tuple} group by c.table_catalog,
-            c.table_name,c.table_schema,t.ddl;""")
-    
-    query_job = bq_client.query(query_copy_dol)
-    results_copy_dol = query_job.result()
-    schema_3 = [field.name for field in results_copy_dol.schema]
-    # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
-    dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
-    print(dataframe_copy_dol)
+def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_user_input):
 
-    result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["table_catalog","table_schema","table_name"])
-    result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["table_catalog","table_schema","table_name"])
-    write_pandas(snowflake_connection_config,result_ddl_ed_table,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
-    print(result_ddl_ed_table)
-    
-    if len(schema_names)<2:
-        query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema = '{schema_name_single}' ;""")
-    else:
-        query = (f"""select table_catalog,table_schema,table_name,column_name,ordinal_position,is_nullable,data_type from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where table_schema in {schema_name_tuple} ;""")
-    
-    query_job = bq_client.query(query)
-    results_column_lst= query_job.result()
-    schema_4 = [field.name for field in results_column_lst.schema]
-    dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
-    write_pandas(snowflake_connection_config,dataframe_column_info,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
- 
+    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TOTAL_ROWS','DDL','TABLE_COLUMNS']
+    columns_struct_cln=['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','COLUMN_NAME','ORDINAL_POSITION','IS_NULLABLE','DATA_TYPE']
+    table_struct = pd.DataFrame()
+    columns_struct= pd.DataFrame(columns=columns_struct_cln)
+    schema_list_user_input=tuple(Dist_user_input.keys())
+    for schema_name in schema_list_user_input:
+        table_tuple=tuple(Dist_user_input[schema_name])
+        if len(table_tuple)<2:
+            table_name_single=table_tuple[0]
+            # print(schema_name)
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in ('{table_name_single}') ;""")
+            print(query_TABLE_DETAILS)
+        else:
+            schema_name_tuple=tuple(schema_name)
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in {table_tuple};""")
+            print(query_TABLE_DETAILS)
+        query_job = bq_client.query(query_TABLE_DETAILS)
+        results_schema_database_lst = query_job.result()
+        print(results_schema_database_lst)
+        schema_list_name = [field.name for field in results_schema_database_lst.schema]
+        print(schema_list_name)
+        # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
+        dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
+        print(dataframe_schema_table_info)
+        if len(table_tuple)<2:
+            query_ddl =(f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+            'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
+            '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+            'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+            'order ','"order" '),'<',', //'),'_"order"','_order') as DDL from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  TABLE_SCHEMA ='{schema_name}' and TABLE_NAME in ('{table_name_single}') """)
+        else :
+            query_ddl =(f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+            'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
+            '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+            'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+            'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES where  TABLE_SCHEMA =' {schema_name}' and TABLE_NAME in {table_tuple} """)
+        print(query_ddl)
+        query_job = bq_client.query(query_ddl)
+        results_ddl_St_db = query_job.result()
+        schema_list_name_2 = [field.name for field in results_ddl_St_db.schema]
+        dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
+        print("1 frame")
+        print(dataframe_ddl_table_info)
+        
+        if len(table_tuple)<2:
+            query_copy_dol=(f"""select  c.TABLE_CATALOG, c.TABLE_SCHEMA , c.TABLE_NAME,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.TABLE_NAME = t.TABLE_NAME where c.TABLE_SCHEMA ='{schema_name}' and C.TABLE_NAME in ('{table_name_single}') group by c.TABLE_CATALOG,
+                c.TABLE_NAME,c.TABLE_SCHEMA,t.ddl ;""")
+        else:
+            query_copy_dol=(f"""select  c.TABLE_CATALOG, c.TABLE_SCHEMA , c.TABLE_NAME,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS  FROM
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
+                `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.TABLE_NAME = t.TABLE_NAME where c.TABLE_SCHEMA ='{schema_name}' and C.TABLE_NAME in {table_tuple}  group by c.TABLE_CATALOG,
+                c.TABLE_NAME,c.TABLE_SCHEMA,t.ddl;""")
+        print(query_copy_dol)
+        query_job = bq_client.query(query_copy_dol)
+        results_copy_dol = query_job.result()
+        schema_3 = [field.name for field in results_copy_dol.schema]
+        # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
+        dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
+        print(dataframe_copy_dol)
+
+        result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["TABLE_CATALOG","TABLE_SCHEMA","TABLE_NAME"])
+        result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["TABLE_CATALOG","TABLE_SCHEMA","TABLE_NAME"])
+        table_struct= pd.concat([table_struct,result_ddl_ed_table] , ignore_index=True)
+        print(result_ddl_ed_table)
+        
+        if len(table_tuple)<2:
+            query = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,IS_NULLABLE,DATA_TYPE from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = '{schema_name}'  and TABLE_NAME in ('{table_name_single}') ;""")
+        else:
+            query = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,IS_NULLABLE,DATA_TYPE from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA  ='{schema_name}' and TABLE_NAME in {table_tuple} ;""")
+        print(query)
+        query_job = bq_client.query(query)
+        results_column_lst= query_job.result()
+        schema_4 = [field.name for field in results_column_lst.schema]
+        dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
+        columns_struct=pd.concat([columns_struct,dataframe_column_info] , ignore_index=True)
+    write_pandas(snowflake_connection_config,columns_struct,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+    write_pandas(snowflake_connection_config,table_struct,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+
 def streamlit(database,schema):
     stream_script=("""
 import streamlit as st
@@ -929,7 +1139,7 @@ with tab1:
             session.write_pandas(df_schema,f'Migration_Report_Schema_/time/',database="{database}",schema="{schema}", auto_create_table=True,overwrite=True,table_type="transient")
         st.write("Schema  Availability:")
         st.button(":inbox_tray:",help="download Schema Report",on_click=Schema_report)
-        dataframe=session.sql('select distinct("table_schema") as "Schema Available in BigQuery"  from {database}.{schema}.META_TABLES_STRUCT_SOURCE')
+        dataframe=session.sql('select distinct(table_schema) as "Schema Available in BigQuery"  from {database}.{schema}.META_TABLES_STRUCT_SOURCE')
         df_schema=dataframe.to_pandas()
         df_schema.insert(1,"Schema Loaded in snowflake",'❌')
         list_schema_target=session.sql("select SCHEMA_NAME,CREATED from {database}.INFORMATION_SCHEMA.SCHEMATA;").collect()
@@ -975,7 +1185,7 @@ with tab1:
             
     with col2:
         st.write("Table  Availability:")
-        dataframe_table_source=session.sql('select distinct "table_schema"as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;')
+        dataframe_table_source=session.sql('select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;')
         st.button(":inbox_tray:",help="download Table Report",on_click=Table_report)
         df_table_Source=dataframe_table_source.to_pandas()
         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
@@ -1045,7 +1255,7 @@ with tab1:
 
 with tab3:
     def table_overview(schema,table):
-        dataframe_table_source=session.sql(f'''select distinct "table_schema"as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
+        dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
         df_table_Source=dataframe_table_source.to_pandas()
         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
         df_table_Target=dataframe_table_target.to_pandas()
@@ -1080,12 +1290,12 @@ with tab3:
         st.table(df_table_Source)
     table_input_struct=st.form('table Struct')
     
-    schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
     def Table_Struct():
         session.write_pandas(source_table,f'Migration_Report_Table_Struct_/time/',database="{database}",schema="PUBLIC", auto_create_table=True,overwrite=True,table_type="transient")        
-    schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
     schema_name=table_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view',key="schema_name")
-    Table_SQL=('''select distinct "table_name" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "table_schema"='/schema_name/';''').format(schema_name=schema_name)
+    Table_SQL=('''select distinct table_name from {database}.{schema}.META_TABLES_STRUCT_SOURCE where table_schema='/schema_name/';''').format(schema_name=schema_name)
     Table_List =session.sql(Table_SQL).collect()
     table_name=table_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view')
     
@@ -1095,7 +1305,7 @@ with tab3:
         table_overview(schema_name,table_name)
         col1,col2=st.columns([1,0.2])
         
-        source_table_sql=(f'''select "column_name" as  "Column Available In Source","data_type"as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where "table_schema"='/schema_name/' and "table_name"='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
+        source_table_sql=(f'''select column_name as  "Column Available In Source",data_type as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
         source_table=session.sql(source_table_sql)
         source_table=source_table.to_pandas()
         source_table.insert(2,"Column Available In Snowflake",'❌')
@@ -1169,7 +1379,7 @@ with tab3:
             with col2:
                 st.pyplot(a)
                 if(len_column==Len_column_count_check):
-                    st.success('All Column are Avaiable In Table.', icon="✅")   
+                    st.success('All Column are Available In Table.', icon="✅")   
                 else:
                     st.warning('Column are missing Please verify them.', icon="❌")
                     st.write("unavailable column in table:")
@@ -1177,9 +1387,9 @@ with tab3:
                     st.table(column_list)
 with tab4:
     incremental_input_struct=st.form('incremental Struct')
-    schema_list=session.sql('select distinct "table_schema" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+    schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
     schema_name=incremental_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view')
-    Table_SQL=('''select distinct "table_name" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "table_schema"='/schema_name/';''').format(schema_name=schema_name)
+    Table_SQL=('''select distinct table_name from {database}.{schema}.META_TABLES_STRUCT_SOURCE where table_schema='/schema_name/';''').format(schema_name=schema_name)
     Table_List =session.sql(Table_SQL).collect()
     table_name=incremental_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view',)
     submit=incremental_input_struct.form_submit_button("Fetch Details")
@@ -1193,7 +1403,11 @@ with tab4:
     # print(results)
     text_file_path = r'C:\Users\Swetha\Desktop\streamlit\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
-        text_file.write(stream_script)
+        text_file.write(results)
+
+@app.route('/increment', methods=['POST'])
+def incremental():
+    return render_template('incremental_form.html')
 
 
 if __name__ == '__main__':

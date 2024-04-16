@@ -1,0 +1,13 @@
+2024-04-05 16:52:32 -     INFO -   __main__ >  Connection established successfully
+2024-04-05 16:53:32 -     INFO -   __main__ >  Creating Stage for Streamlit App
+2024-04-05 16:53:32 -     INFO -   __main__ >  create stage if not exists SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.Migration_Report;
+2024-04-05 16:53:32 -     INFO -   __main__ >  Stage named Migration_Report Created Successfully
+2024-04-05 16:53:35 -     INFO -   __main__ >  Creating Streamlit App
+2024-04-05 16:53:35 -     INFO -   __main__ >     create or replace STREAMLIT SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.Migration_Report
+    ROOT_LOCATION='@SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.Migration_Report/
+    REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE =  SNOW_MIGRATE_WAREHOUSE ;
+    
+2024-04-05 16:53:35 -     INFO -   __main__ >  Error ocurred during Streamlit app Creation process
+2024-04-05 16:53:35 -    ERROR -   __main__ > 001003 (42000): SQL compilation error:
+syntax error line 1 at position 87 unexpected 'ROOT_LOCATION'.
+syntax error line 1 at position 174 unexpected 'MAIN_FILE'.
