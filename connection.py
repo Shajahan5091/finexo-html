@@ -16,8 +16,8 @@ def Migration_report(connection,database,schema):
         print('inside migration report')
         connection_cursor=connection.cursor()
         connection_cursor.execute(f"create  stage if not exists {database}.{schema}.Migration_Report;")
-        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
-        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace  STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE =  SNOW_MIGRATE_WAREHOUSE ;".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace table {database}.{schema}.load_history as(select * from {database}.INFORMATION_SCHEMA.LOAD_HISTORY)")
     except Exception as error:
@@ -690,7 +690,7 @@ def check_grants(cursor, privilege, granted_on, object_name, role_name):
     
 @app.route('/migration_result', methods=['POST'])
 def migration_result():
-    # streamlit(database,schema)
+    streamlit(database,schema)
     result = create_schemas_and_copy_table(conn,inner_dict)
     return result
 
@@ -1028,9 +1028,9 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
 # Function to create audit log tables in snowflake
 def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_user_input):
 
-    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_ROWS','DDL','TABLE_COLUMNS']
+    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TOTAL_ROWS','DDL','TABLE_COLUMNS']
     columns_struct_cln=['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','COLUMN_NAME','ORDINAL_POSITION','IS_NULLABLE','DATA_TYPE']
-    table_struct = pd.DataFrame(columns = table_struct_cln)
+    table_struct = pd.DataFrame()
     columns_struct= pd.DataFrame(columns=columns_struct_cln)
     schema_list_user_input=tuple(Dist_user_input.keys())
     for schema_name in schema_list_user_input:
@@ -1255,7 +1255,7 @@ with tab1:
 
 with tab3:
     def table_overview(schema,table):
-        dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
+        dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
         df_table_Source=dataframe_table_source.to_pandas()
         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
         df_table_Target=dataframe_table_target.to_pandas()
@@ -1305,7 +1305,7 @@ with tab3:
         table_overview(schema_name,table_name)
         col1,col2=st.columns([1,0.2])
         
-        source_table_sql=(f'''select column_name as  "Column Available In Source","data_type"as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
+        source_table_sql=(f'''select column_name as  "Column Available In Source",data_type as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
         source_table=session.sql(source_table_sql)
         source_table=source_table.to_pandas()
         source_table.insert(2,"Column Available In Snowflake",'❌')
@@ -1401,9 +1401,9 @@ with tab4:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
+    text_file_path = r'C:\Users\Swetha\Desktop\streamlit\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
-        text_file.write(stream_script)
+        text_file.write(results)
 
 @app.route('/increment', methods=['POST'])
 def incremental():
