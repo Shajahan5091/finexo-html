@@ -1379,7 +1379,7 @@ with tab3:
             with col2:
                 st.pyplot(a)
                 if(len_column==Len_column_count_check):
-                    st.success('All Column are Avaiable In Table.', icon="✅")   
+                    st.success('All Column are Available In Table.', icon="✅")   
                 else:
                     st.warning('Column are missing Please verify them.', icon="❌")
                     st.write("unavailable column in table:")
