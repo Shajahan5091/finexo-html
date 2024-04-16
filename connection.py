@@ -66,9 +66,9 @@ def upload():
         try:
             # Establish connection to BigQuery using the provided credentials
             global bq_client
-            bq_client = bigquery.Client(credentials=credentials, project=project_id)
+            bq_client = bigquery.Client(credentials = credentials, project = project_id)
             global storage_client
-            storage_client = storage.Client(credentials=credentials, project=project_id)
+            storage_client = storage.Client(credentials = credentials, project = project_id)
             # Fetch schemas from BigQuery and display them            
             return render_template('file_upload.html',show_popup=True)
         except Exception as e:
@@ -100,7 +100,7 @@ def test_service_account_connection():
 def Check_role_permissions():
     try:
         # Build the IAM service
-        service = discovery.build('iam', 'v1', credentials=credentials)
+        service = discovery.build('iam', 'v1', credentials = credentials)
 
         # Name of the role to search for
         role_name = 'projects/' + project_id + '/roles/MigrateRole'
@@ -195,7 +195,7 @@ def CheckBigqueryDatasetsCreatePermissions():
     print("Checking Permissions in MigrateRole")
     try:
         status = Check_role_permissions()
-        if(status==""):
+        if(status == ""):
             return jsonify({'success': True})
         else:
             return jsonify({'success': False, 'error':status}), 500
@@ -296,10 +296,10 @@ def connect_snowflake():
     print(schema)
     global conn
     conn = snowflake.connector.connect(
-        user= username,
-        password= password,
-        account= account_name,
-        warehouse= warehouse,
+        user = username,
+        password = password,
+        account = account_name,
+        warehouse = warehouse,
         role = role,
         database = database,
         schema = schema
@@ -387,7 +387,7 @@ def test_connection():
         
 
 # Endpoint to check if required roles are granted
-@app.route('/GrantAccessCheck', methods=['POST'])
+@app.route('/GrantAccessCheck', methods = ['POST'])
 def grant_access_check():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -457,7 +457,7 @@ def check_user_access(cursor):
 
 
 # Endpoint to check if creating table and schema is allowed
-@app.route('/CheckCreatePermissions', methods=['POST'])
+@app.route('/CheckCreatePermissions', methods = ['POST'])
 def check_create_permissions():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -506,7 +506,7 @@ def check_schema_creation_permission(cursor):
 
 
 # Endpoint to check Storage integration, file fromat, stage exist
-@app.route('/IntegrationObjectExistence', methods=['POST'])
+@app.route('/IntegrationObjectExistence', methods = ['POST'])
 def Integration_Object_Exist():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -552,7 +552,7 @@ def FileFormat_Object_Exist():
         
 
 # Endpoint to check Storage integration, file fromat, stage exist
-@app.route('/StageObjectExistence', methods=['POST'])
+@app.route('/StageObjectExistence', methods = ['POST'])
 def Stage_Object_Exist():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -590,7 +590,7 @@ def check_object_exists(cursor, object_type, object_name):
 
 
 # Endpoint to check access for Storage integration, file fromat, stage exist
-@app.route('/IntegrationAccess', methods=['POST'])
+@app.route('/IntegrationAccess', methods = ['POST'])
 def IntegrationAccess():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -618,7 +618,7 @@ def IntegrationAccess():
         
 
 # Endpoint to check access for Storage integration, file fromat, stage exist
-@app.route('/FormatAccess', methods=['POST'])
+@app.route('/FormatAccess', methods = ['POST'])
 def FormatAccess():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -690,7 +690,7 @@ def check_grants(cursor, privilege, granted_on, object_name, role_name):
     
 @app.route('/migration_result', methods=['POST'])
 def migration_result():
-    # streamlit(database,schema)
+    streamlit(database,schema)
     result = create_schemas_and_copy_table(conn,inner_dict)
     return result
 
@@ -849,7 +849,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
    rows = query_job.result()
    Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE']
    copy_table = pd.DataFrame(columns = Columns)
-   schema_list_user_input=tuple(Dist_user_input.keys())
+   schema_list_user_input = tuple(Dist_user_input.keys())
    table_ddl = " create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) ".format(database, schema)
    conn.cursor().execute(table_ddl) 
    print("BQ_COPY_TABLE created succesfully")
@@ -858,7 +858,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
        print(schema_local)
        print(schema_list_user_input)
        if schema_local in schema_list_user_input:
-           table_tuple=tuple(Dist_user_input[schema_local])
+           table_tuple = tuple(Dist_user_input[schema_local])
            print(table_tuple)
            print("Gathering ddl {}".format(schema_local))
            
@@ -898,7 +898,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            """
            # FOR SCHEMAS
            if(len(table_tuple)<2):
-                table_tuple_1=table_tuple[0]
+                table_tuple_1 = table_tuple[0]
                 print(table_tuple)
                 ddl_query = query_2.format(project_id,schema_local,project_id,schema_local,table_tuple_1)
                 print(ddl_query)
@@ -908,7 +908,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            ddl_set = query_job.result()
            
            for row in ddl_set:
-            df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
+            df = pd.DataFrame(data = [list(row.values())],columns = Columns) 
             copy_table = pd.concat([copy_table,df] , ignore_index=True)
             
             write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
@@ -923,7 +923,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
             print(table_tuple)
         #    FOR TABLES
            if(len(table_tuple)<2):
-               table_tuple_2=table_tuple[0]
+               table_tuple_2 = table_tuple[0]
                ddl_table_query = table_query_2.format(project_id,schema_local,table_tuple_2)
                print(ddl_table_query)
                print(table_tuple)
@@ -955,7 +955,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in ('{}')
            """
            if(len(table_tuple)<2):
-               table_tuple_3=table_tuple[0]
+               table_tuple_3 = table_tuple[0]
                ddl_query = export_query_2.format(project_id,schema_local,table_tuple_3)
            else:
                ddl_query = export_query.format(project_id,schema_local,table_tuple) 
@@ -978,13 +978,13 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                        table_ref,
                        destination_uri,
                        job_config=configuration,
-                       location="US"
+                       location = "US"
                        )
                else:
                    extract_job = bq_client.extract_table(
                        table_ref,
                        destination_uri,
-                       location="US"
+                       location = "US"
                        )
                extract_job.result()  # Waits for job to complete.
                print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema_local, table_name, destination_uri)) 
@@ -999,7 +999,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            column_names = [info[0] for info in column_info]
            df2 = pd.DataFrame(result , columns=column_names)
            counter = 0
-           i=0
+           i = 0
            for i in range(0,len(df2)):
                 table_name = df2['TABLE_NAME'].iloc[i];
                 table_schema  = df2['TABLE_SCHEMA'].iloc[i];
@@ -1015,8 +1015,8 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                 copy_command = copy_command.replace('{col_list}', table_columns )
 
                 conn.cursor().execute(copy_command)
-                counter+=1
-                i+=1
+                counter += 1
+                i += 1
                 print(counter)
                 print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
        else :
@@ -1255,7 +1255,7 @@ with tab1:
 
 with tab3:
     def table_overview(schema,table):
-        dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source","table_name" as "Table On Source" ,case when "total_rows" is null then 0 else "total_rows" end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
+        dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
         df_table_Source=dataframe_table_source.to_pandas()
         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
         df_table_Target=dataframe_table_target.to_pandas()
@@ -1305,7 +1305,7 @@ with tab3:
         table_overview(schema_name,table_name)
         col1,col2=st.columns([1,0.2])
         
-        source_table_sql=(f'''select column_name as  "Column Available In Source","data_type"as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
+        source_table_sql=(f'''select column_name as  "Column Available In Source",data_type as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
         source_table=session.sql(source_table_sql)
         source_table=source_table.to_pandas()
         source_table.insert(2,"Column Available In Snowflake",'❌')
@@ -1405,9 +1405,6 @@ with tab4:
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(stream_script)
 
-@app.route('/increment', methods=['POST'])
-def incremental():
-    return render_template('incremental_form.html')
 
 
 if __name__ == '__main__':
