@@ -16,8 +16,8 @@ def Migration_report(connection,database,schema):
         print('inside migration report')
         connection_cursor=connection.cursor()
         connection_cursor.execute(f"create  stage if not exists {database}.{schema}.Migration_Report;")
-        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
-        connection_cursor.execute(r"put file://D:\Stream_lit_code_frame\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\environment.yml  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\streamlit.py  @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace  STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE =  SNOW_MIGRATE_WAREHOUSE ;".format(database=database,schema=schema))
         connection_cursor.execute(f"create or replace table {database}.{schema}.load_history as(select * from {database}.INFORMATION_SCHEMA.LOAD_HISTORY)")
     except Exception as error:
@@ -1028,9 +1028,9 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
 # Function to create audit log tables in snowflake
 def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_user_input):
 
-    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_ROWS','DDL','TABLE_COLUMNS']
+    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TOTAL_ROWS','DDL','TABLE_COLUMNS']
     columns_struct_cln=['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','COLUMN_NAME','ORDINAL_POSITION','IS_NULLABLE','DATA_TYPE']
-    table_struct = pd.DataFrame(columns = table_struct_cln)
+    table_struct = pd.DataFrame()
     columns_struct= pd.DataFrame(columns=columns_struct_cln)
     schema_list_user_input=tuple(Dist_user_input.keys())
     for schema_name in schema_list_user_input:
@@ -1401,9 +1401,9 @@ with tab4:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
+    text_file_path = r'C:\Users\Swetha\Desktop\streamlit\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
-        text_file.write(stream_script)
+        text_file.write(results)
 
 
 
