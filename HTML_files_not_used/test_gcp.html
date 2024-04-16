@@ -106,7 +106,7 @@
     </div> -->
 
     <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
-        <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
+        <span onclick="closePopup()" style="cursor: pointer; float: right; font-size: xx-large;">&times;</span>
         <h2 style="display: inline;"><span>GCP Connection Test</span></h2><br><br>
         <table>
             <tr>
@@ -185,10 +185,12 @@
                 } else {
                     showFailure('serviceAccountConnectionResult');
                     document.getElementById('Error_1').textContent = data.error;    
+                    document.getElementById("connect-btn").disabled = true;
                 }
             } catch (error) {
                 showFailure('serviceAccountConnectionResult');
                 document.getElementById('Error_1').textContent = error.message;
+                document.getElementById("connect-btn").disabled = true;
             }
         }
 
@@ -208,10 +210,12 @@
                 } else {
                     showFailure('RoleResult');
                     document.getElementById('Error_2').textContent = data.error;
+                    document.getElementById("connect-btn").disabled = true;
                 }
             } catch (error) {
                 showFailure('RoleResult');
                 document.getElementById('Error_2').textContent = error.message;
+                document.getElementById("connect-btn").disabled = true;
             }
         }
 
@@ -232,10 +236,12 @@
                 } else {
                     showFailure('BucketResult');
                     document.getElementById('Error_3').textContent = data.error;
+                    document.getElementById("connect-btn").disabled = true;
                 }
             } catch (error) {
                 showFailure('BucketResult');
                 document.getElementById('Error_3').textContent = error.message;
+                document.getElementById("connect-btn").disabled = true;
             }
         }
 

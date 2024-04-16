@@ -140,7 +140,7 @@
         <div id="loader" class="loader">Migrating...</div>
     </div>
     <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
-        <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
+        <span onclick="closePopup()" style="cursor: pointer; float: right;font-size: x-large">&times;</span>
         <h2 style="display: inline;"><span>Testing Connection</span></h2><br><br>
         <table>
             <tr>
@@ -265,10 +265,12 @@
                 } else {
                     showFailure('SnowflakeUserResult');
                     document.getElementById('Error_1').textContent = data.error;
+                    document.getElementById("connect-btn").disabled = true;
                 }
             } catch (error) {
                 showFailure('SnowflakeUserResult');
                 document.getElementById('Error_1').textContent = error.message;
+                document.getElementById("connect-btn").disabled = true;
             }
         }
 
@@ -287,10 +289,12 @@
                 } else {
                     showFailure('RoleResult');
                     document.getElementById('Error_2').textContent = data.error;
+                    document.getElementById("connect-btn").disabled = true;
                 }
             } catch (error) {
                 showFailure('RoleResult');
                 document.getElementById('Error_2').textContent = error.message;
+                document.getElementById("connect-btn").disabled = true;
             }
         }
 
@@ -310,10 +314,12 @@
             } else {
                 showFailure('CreatePermissionsResult');
                 document.getElementById('Error_3').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('CreatePermissionsResult');
             document.getElementById('Error_3').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 
@@ -333,10 +339,12 @@
             } else {
                 showFailure('StorageIntegrationResult');
                 document.getElementById('Error_4').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('StorageIntegrationResult');
             document.getElementById('Error_4').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 
@@ -355,10 +363,12 @@
             } else {
                 showFailure('StorageIntegrationAccess');
                 document.getElementById('Error_5').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('StorageIntegrationAccess');
             document.getElementById('Error_5').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 
@@ -377,10 +387,12 @@
             } else {
                 showFailure('FileFormatResult');
                 document.getElementById('Error_6').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('FileFormatResult');
             document.getElementById('Error_6').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 
@@ -400,10 +412,12 @@
             } else {
                 showFailure('FileFormatAccess');
                 document.getElementById('Error_7').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('FileFormatAccess');
             document.getElementById('Error_7').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 
@@ -422,10 +436,12 @@
             } else {
                 showFailure('StorageStageResult');
                 document.getElementById('Error_8').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('StorageStageResult');
             document.getElementById('Error_8').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 
@@ -445,10 +461,12 @@
             } else {
                 showFailure('StorageStageAccess');
                 document.getElementById('Error_9').textContent = data.error;
+                document.getElementById("connect-btn").disabled = true;
             }
         } catch (error) {
             showFailure('StorageStageAccess');
             document.getElementById('Error_9').textContent = error.message;
+            document.getElementById("connect-btn").disabled = true;
         }
     }
 

@@ -25,6 +25,7 @@
   <!-- responsive style -->
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
   <style>
+
     .K2_CBox{/*position:relative;*/background:#072A6C;/*width:100%;*/border-radius:6px;box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;padding:5px;margin:30px 0 30px}
     .K2_CBox .CB_Heading{display:flex;justify-content:space-between;align-items:center;}
     .K2_CBox .CB_Heading span{margin:10px;font-weight:700;font-family:inherit;font-size:1.1rem}
@@ -39,6 +40,7 @@
     @keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
     @-webkit-keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
     .darkMode .tNtf span{box-shadow:0 10px 40px rgba(0,0,0,.2)}
+    
     .connect-btn1{
       float: right;
       padding-left: 5px;
@@ -48,6 +50,7 @@
       border-radius: 3px;
       font-weight: normal;
     }
+
     #yamlfile{
       background:#072A6C;
       /* background: white; */
@@ -61,6 +64,56 @@
       /* color:#072A6C ; */
       font-weight: bold;
     }
+    .loading {
+        display: inline-block;
+    }
+    .success {
+        color: green;
+    }
+    .failure {
+        color: red;
+    }
+    .odd{
+        text-align: left;
+        width:400px;
+        padding: 3px;
+    }
+    #even{
+        text-align: center;
+        width:150px;
+        line-height: 15px;
+        padding: 3px;
+    }
+    .connect-btn{
+        margin-left: 100px;
+    }
+    .loading {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        width: 20px;
+        height: 20px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+     }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+    }
+    .failure{
+        font-size: small;
+        margin: 0;
+        padding: 0;
+        line-height: 0%;
+    }
+
   </style>
 </head>
 
@@ -104,13 +157,14 @@
     </header>
     <!-- end header section -->
   </div>
-  <div class="row2">
+  <div class="row2" {% if show_popup %}style="opacity : 0.1"{% endif %}>
     <div class="side" style="font-size: medium;">
       <div class="heading_container">
         <h3>Prerequisites</h3>
       </div>
       <ul style="list-style-type: disc;">
-          <li>A Google Cloud Project with BigQuery enabled</li>
+          <li>A Google Cloud Project with BigQuery API enabled</li>
+          <li>A google storage bucket</li>
           <li>A Google Cloud Service Account</li>
           <li>A Service Account Json Key to authenticate into your Service Account</li>
           <li> The "roleAdmin" or "organizationRoleAdmin" roles are required to create the custom role</li>
@@ -132,7 +186,7 @@
           <h4><b>Service Account Keys Configuration</b></h4>
           <p style="font-weight: normal">Snow Migrate currently supports JSON Keys only, ensure to create your key in the same. Then, download the key as Google permits viewing its contents only at this stage.
             <br> Here is a detailed guide explaining how to create service account keys
-          <br><a href="https://cloud.google.com/iam/docs/keys-create-delete">Creating and Managing Service Account Keys guide to create a Key</a></p>
+          <br><a href="https://cloud.google.com/iam/docs/keys-create-delete">GCP’s Guide for Creating and Managing Service Account Keys</a></p>
           <br>
           <h4><b>Creating a Custom Role</b></h4>
           <p style="font-weight: normal">Create a Custom role to add necessary permissions for Data Migration.<br>
@@ -168,7 +222,7 @@
             <div class='K2_CBox'>
               <div class='CB_Heading'>
                   <span style="color: white">Bash</span>
-                  <button id='copy1' class='C_box_main' onclick="copyC('copy1','code3')">
+                  <button id='copy2' class='C_box_main' onclick="copyC('copy2','code3')">
                       <i class='CBox_icn'></i>
                   </button>
               </div>
@@ -196,7 +250,7 @@
           <br>
           <label for="bucket">Bucket Name</label><br>
           <input id="bucket" name="bucket" type="text" placeholder="Enter your bucket name" required/><br>
-          <label>Upload the JSON file</label><br>
+          <label>Upload the JSON key file</label><br>
           <div id="drop-area">
             <div style="text-align: center;">
               <input type="file" id="json-file" name="file" accept=".json" required>
@@ -210,7 +264,190 @@
     </div>
   </div>
 
+
+
+  <!-- popup code -->
+  <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+    <div id="heading">
+    <span onclick="closePopup()" style="cursor: pointer; float: right; font-size: x-large;" id="cross">&times;</span>
+    <h3 style="display: inline;"><span><b>GCP Connection Test</b></span></h3>
+    </div>
+    <div id="content">
+    <table>
+        <tr>
+            <td class="odd">
+                <div id="serviceAccountConnection">
+                    Testing GCP Service Account Connection
+            </td>
+            <td id="even">
+                <span id="serviceAccountConnectionResult" class="loading"></span>
+                <span id="Error_1" class="failure"></span>
+            </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                <div id="requiredRoles">
+                Custom Role is created and has access
+            </td>
+            <td id="even">
+                <span id="RoleResult" class="loading"></span>
+                <span id="Error_2" class="failure"></span>
+            </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd"> 
+                <div id="requiredBucket">
+                Google Storage Bucket is Created
+            </td>
+            <td id="even">
+                <span id="BucketResult" class="loading"></span>
+                <span id="Error_3" class="failure"></span>
+                </div>
+            </td>
+        </tr>
+    </table>    
+    <br>
+    <form action="/fetch_schemas" method="post">
+        <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
+         <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
+    </form>
+  </div>
+</div>
+
+<!-- <form action="/fetch_schemas" method="post">
+    <button type="submit"><b>Proceed</b></button>
+</form> -->
+
 <script>
+    // Function to display tick mark
+    function showSuccess(elementId) {
+        document.getElementById(elementId).textContent = '✔';
+        document.getElementById(elementId).classList.add('success');
+        document.getElementById(elementId).classList.remove('loading');
+    }
+
+    // Function to display cross mark
+    function showFailure(elementId) {
+        document.getElementById(elementId).textContent = '✘';
+        document.getElementById(elementId).classList.add('failure');
+        document.getElementById(elementId).classList.remove('loading');
+    }
+
+    // Function to test GCP service account connection
+    async function testServiceAccountConnection() {
+        try {
+            // Show loading symbol
+            document.getElementById('serviceAccountConnectionResult').classList.add('loading');
+            
+            const response = await fetch('/test_service_account_connection', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('serviceAccountConnectionResult');
+            } else {
+                showFailure('serviceAccountConnectionResult');
+                document.getElementById('Error_1').textContent = data.error;   
+                document.getElementById("connecting-btn").disabled = true; 
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            }
+        } catch (error) {
+            showFailure('serviceAccountConnectionResult');
+            document.getElementById('Error_1').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+        }
+    }
+
+    // Function to test required roles
+    async function GrantAccessCheck() {
+        try {
+            // Show loading symbol
+            document.getElementById('RoleResult').classList.add('loading');
+            
+            const response = await fetch('/GrantAccessCheckBigquery', {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccess('RoleResult');
+            } else {
+                showFailure('RoleResult');
+                document.getElementById('Error_2').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            }
+        } catch (error) {
+            showFailure('RoleResult');
+            document.getElementById('Error_2').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+        }
+    }
+
+
+    // Function to test required roles
+    async function CheckBucketExist() {
+        try {
+            // Show loading symbol
+            document.getElementById('BucketResult').classList.add('loading');
+            
+            const response = await fetch('/BucketExistCheck', {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccess('BucketResult');
+            } else {
+                showFailure('BucketResult');
+                document.getElementById('Error_3').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            }
+        } catch (error) {
+            showFailure('BucketResult');
+            document.getElementById('Error_3').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+        }
+    }
+
+
+// End of functions for testing permissions
+
+    // Define a function to run async functions in a specific order
+    async function runTestsInOrder() {
+        try {
+            // Call the async functions in the desired order
+            await testServiceAccountConnection();
+            await GrantAccessCheck();
+            await CheckBucketExist();
+            // Call functions for testing other subsections here
+            console.log("All tests executed successfully");
+        } catch (error) {
+            console.error("An error occurred:", error);
+        }
+    }
+
+    // Run tests when the page is loaded
+    window.onload = function () {
+        runTestsInOrder();
+    }
+    function closePopup() {
+    document.getElementById("popup").style.display = "none";
+    window.history.back();
+}
+
   document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("json-form");
   const fileInput = document.getElementById("json-file");
@@ -226,6 +463,20 @@
       }
   });
   });
+  /*<![CDATA[*/ 
+  function copyC(e,t){
+    var o=document.getElementById(e),
+    n=document.getElementById(t),
+    e=getSelection(),
+    t=document.createRange();
+    e.removeAllRanges(),
+    t.selectNodeContents(n),
+    e.addRange(t),
+    document.execCommand("copy"),
+    e.removeAllRanges(),
+    o.classList.add("copied"),
+    document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",
+    setTimeout(()=>{o.classList.remove("copied")},3e3)} /*]]>*/
 </script>
  <!-- jQery -->
  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
@@ -243,5 +494,6 @@
  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
  </script>
  <!-- End Google Map -->
+ <script>/*<![CDATA[*/ function copyC(e,t){var o=document.getElementById(e),n=document.getElementById(t),e=getSelection(),t=document.createRange();e.removeAllRanges(),t.selectNodeContents(n),e.addRange(t),document.execCommand("copy"),e.removeAllRanges(),o.classList.add("copied"),document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",setTimeout(()=>{o.classList.remove("copied")},3e3)} /*]]>*/</script>
 </body>
 </html>
