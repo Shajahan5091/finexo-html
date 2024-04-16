@@ -1042,7 +1042,7 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
             print(query_TABLE_DETAILS)
         else:
             schema_name_tuple=tuple(schema_name)
-            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in ('{table_tuple}');""")
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in {table_tuple};""")
             print(query_TABLE_DETAILS)
         query_job = bq_client.query(query_TABLE_DETAILS)
         results_schema_database_lst = query_job.result()
