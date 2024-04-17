@@ -30,11 +30,35 @@
             overflow-x: auto;
             color: #fff; /* Set text color to white */
         }
+
+        .debug { color: cyan; }    /* Cyan for DEBUG */
+        .info { color: rgb(3, 250, 11); }    /* Green for INFO */
+        .warn { color: yellow; }   /* Yellow for WARNING */
+        .error { color: red; }     /* Red for ERROR */
+        .critical { color: red; font-weight: bold; } 
     </style>
 </head>
 <body>
     <h1>Log File Content</h1>
     <button onclick="window.location.href='/download-log'">Download Log</button>
-    <pre>{{ log_content_html | safe }}</pre>
+    <pre id="log-content">{{ log_content_html | safe }}</pre>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const pre = document.getElementById('log-content');
+            const lines = pre.innerHTML.split('\n');
+            pre.innerHTML = ''; // Clear existing content
+
+            lines.forEach(line => {
+                // Regex to find log levels specifically formatted in the log output
+                const regex = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} - )(\s*INFO\s*|\s*ERROR\s*|\s*WARN\s*|\s*DEBUG\s*)/g;
+                let lineContent = line.replace(regex, function(match, p1, p2) {
+                    let logLevel = p2.trim(); // Trim to remove any extra spaces around the log level
+                    return `${p1}<span class="${logLevel.toLowerCase()}">${logLevel}</span>`;
+                });
+
+                pre.innerHTML += lineContent + '\n';
+            });
+        });
+    </script>
 </body>
 </html>
