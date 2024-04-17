@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Log File</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #000; /* Set text color to black */
+            background-color: #fff; /* Set background color to white */
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #555; /* Set heading color */
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            background-color: #000; /* Set background color to black */
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            overflow-x: auto;
+            color: #fff; /* Set text color to white */
+        }
+
+        .debug { color: cyan; }    /* Cyan for DEBUG */
+        .info { color: rgb(3, 250, 11); }    /* Green for INFO */
+        .warn { color: yellow; }   /* Yellow for WARNING */
+        .error { color: red; }     /* Red for ERROR */
+        .critical { color: red; font-weight: bold; }
+
+    </style>
+
+</head>
+
+<body>
+    <h1>Log File Content</h1>
+
+    <button onclick="window.location.href='/download-log'">Download Log</button>
+    <pre id="log-content">{{ log_content_html | safe }}</pre>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const pre = document.getElementById('log-content');
+            const lines = pre.innerHTML.split('\n');
+            pre.innerHTML = ''; // Clear existing content
+            lines.forEach(line => {
+                // Regex to find log levels specifically formatted in the log output
+                const regex = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} - )(\s*INFO\s*|\s*ERROR\s*|\s*WARN\s*|\s*DEBUG\s*)/g;
+                let lineContent = line.replace(regex, function(match, p1, p2) {
+                    let logLevel = p2.trim(); // Trim to remove any extra spaces around the log level
+                    return `${p1}<span class="${logLevel.toLowerCase()}">${logLevel}</span>`;
+                });
+                pre.innerHTML += lineContent + '\n';
+            });
+        });
+    </script>
+
+</body>
+</html>
