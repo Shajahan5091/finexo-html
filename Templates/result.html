@@ -24,11 +24,13 @@
     }
     button{
         height: 42px;
+        width: 190px;
         font-weight: bold;
         font-family: 'Times New Roman', Times, serif;
         font-size: large;
         cursor: pointer;
         border-radius: 5px;
+        margin-left: 110px;
     }
   </style>
 </head>
@@ -41,9 +43,7 @@
                 <!-- <span> Snowflake </span> -->
             </h2><br>
             <div id="button">
-                <form action="" method="post" style="margin-top: 10px;">
-                    <button type="submit" class="connect-btn" onclick="navigateToLog()">View Log</button>
-                </form>
+                <button class="connect-btn" onclick="navigateToLog()">View Log</button>
                 <a class="connect-btn" href="{{ url_for('index') }}" style="margin-right: 120px; margin-top: 10px;">Back to Home</a>
             </div>
         </div>

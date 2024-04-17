@@ -53,12 +53,12 @@ def Migration_report(connection, database, schema):
         connection_cursor.execute(f"put file://D:\Stream_lit_code_frame\streamlit.py @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
         logger.info('Creating Streamlit App')
         msg = f"""create or replace STREAMLIT {database}.{schema}.Migration_Report
-            ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD'
+            ROOT_LOCATION = '@{database}.{schema}.Migration_Report/REPORT_FLD'
             MAIN_FILE = '/streamlit.py',
             QUERY_WAREHOUSE = SNOW_MIGRATE_WAREHOUSE;"""
         log_multiline_message(logger, msg)
         print(msg)
-        connection_cursor.execute(f"create or replace STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION='@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE = SNOW_MIGRATE_WAREHOUSE;")
+        connection_cursor.execute(f"create or replace STREAMLIT {database}.{schema}.Migration_Report ROOT_LOCATION = '@{database}.{schema}.Migration_Report/REPORT_FLD' MAIN_FILE = '/streamlit.py', QUERY_WAREHOUSE = SNOW_MIGRATE_WAREHOUSE;")
         logger.info('Streamlit App \'Migration_Report\' Created Successfully')
         log_multiline_message(logger, """create or replace table {}.{}.load_history as
                               (select * from {}.INFORMATION_SCHEMA.LOAD_HISTORY)""".format(database, schema, database))
@@ -115,12 +115,12 @@ def upload():
         try:
             # Establish connection to BigQuery using the provided credentials
             global bq_client
-            bq_client = bigquery.Client(credentials=credentials, project=project_id)
+            bq_client = bigquery.Client(credentials = credentials, project = project_id)
             global storage_client
-            storage_client = storage.Client(credentials=credentials, project=project_id)
+            storage_client = storage.Client(credentials = credentials, project = project_id)
             # Fetch schemas from BigQuery and display them
             logger.info(' Connection established successfully')
-            return render_template('file_upload.html', show_popup=True)
+            return render_template('file_upload.html', show_popup = True)
         except Exception as e:
             log_system_message(logger, """Error establishing connection to BigQuery:
                             {}""".format(str(e)))
@@ -140,7 +140,7 @@ def test_service_account_connection():
         service_account_email = client.get_service_account_email()
 
         if service_account_email:
-            log_multiline_message(logger,"""Successfully connected to GCP. Service account email:
+            log_multiline_message(logger, """Successfully connected to GCP. Service account email:
                             {}""".format(service_account_email))
             return True
         else:
@@ -156,13 +156,13 @@ def test_service_account_connection():
 def Check_role_permissions():
     try:
         # Build the IAM service
-        service = discovery.build('iam', 'v1', credentials=credentials)
+        service = discovery.build('iam', 'v1', credentials = credentials)
 
         # Name of the role to search for
         role_name = 'projects/' + project_id + '/roles/MigrateRole'
 
         # Make a request to get details of the specific role
-        role_details = service.projects().roles().get(name=role_name).execute()
+        role_details = service.projects().roles().get(name = role_name).execute()
 
         permissions = role_details.get('includedPermissions', [])
 
@@ -216,7 +216,7 @@ def Check_role_permissions():
         # Log failure message if any
         if failure_message:
             logger.error("Failure:")
-            failure_message = failure_message+"\nFollow steps in GCP Setup page to create Custom Role"
+            failure_message = failure_message + "\nFollow steps in GCP Setup page to create Custom Role"
             log_system_message(logger, failure_message)
             return failure_message
         
@@ -245,7 +245,7 @@ def Check_Bucket_Existence():
             return False
 
 
-@app.route('/test_service_account_connection', methods=['POST'])
+@app.route('/test_service_account_connection', methods = ['POST'])
 def test_service_account_connection_route():
     logger.info("Received request to test service account connection")
     print("Received request to test bigquery service account connection")
@@ -265,13 +265,13 @@ def test_service_account_connection_route():
 
 ####
 
-@app.route('/GrantAccessCheckBigquery', methods=['POST'])
+@app.route('/GrantAccessCheckBigquery', methods = ['POST'])
 def CheckBigqueryDatasetsCreatePermissions():
     print("Checking Permissions in MigrateRole")
     logger.info("Checking Permissions in MigrateRole")
     try:
         status = Check_role_permissions()
-        if(status==""):
+        if(status == ""):
             logger.info("Permissions checked successfully.")
             return jsonify({'success': True})
         else:
@@ -286,7 +286,7 @@ def CheckBigqueryDatasetsCreatePermissions():
         return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
 
 
-@app.route('/BucketExistCheck', methods=['POST'])
+@app.route('/BucketExistCheck', methods = ['POST'])
 def CheckBucketCreated():
     print("Checking whether GCS Bucket Exist or not")
     logger.info("Checking whether GCS Bucket Exists or not")
@@ -307,7 +307,7 @@ def CheckBucketCreated():
 
 
 
-@app.route('/fetch_schemas', methods=['POST'])    
+@app.route('/fetch_schemas', methods = ['POST'])    
 def fetch_schemas():
     logger.info("Fetching schemas from BigQuery")
     try:
@@ -338,7 +338,7 @@ def fetch_schemas():
 
 
 #Function to return the tables in a schema
-def fetch_schemas_tables(client,schema_name):
+def fetch_schemas_tables(client, schema_name):
     print(schema_name)
     logger.info(f"Fetching tables for schema '{schema_name}'")
     try:
@@ -414,17 +414,17 @@ def connect_snowflake():
 
         global conn
         conn = snowflake.connector.connect(
-            user= username,
-            password= password,
-            account= account_name,
-            warehouse= warehouse,
+            user = username,
+            password = password,
+            account = account_name,
+            warehouse = warehouse,
             role = role,
             database = database,
             schema = schema
         )
         self_execute(conn, bucket_name , schema , database )
         # result = create_schemas_and_copy_table(conn,schemas_list)
-        return render_template('snowflake_form_copy.html', show_popup=True)
+        return render_template('snowflake_form_copy.html', show_popup = True)
     except Exception as e:
         log_system_message(logger, """An error occurred
                             {}""".format(str(e)))
@@ -511,7 +511,7 @@ def self_execute(conn, bucket_name , schema , database ):
     
 
 # Endpoint to test GCP service account connection
-@app.route('/test_connection', methods=['POST'])
+@app.route('/test_connection', methods = ['POST'])
 def test_connection():
     # Replace this with your actual testing logic
     print("Received request to test snowflake service account connection")
@@ -541,7 +541,7 @@ def test_connection():
     
 
 # Endpoint to check if required roles are granted
-@app.route('/GrantAccessCheck', methods=['POST'])
+@app.route('/GrantAccessCheck', methods = ['POST'])
 def grant_access_check():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -652,7 +652,7 @@ def check_user_access(cursor):
         return jsonify({"success": False})
 
 
-@app.route('/CheckCreatePermissions', methods=['POST'])
+@app.route('/CheckCreatePermissions', methods = ['POST'])
 def check_create_permissions():
     try:
         logger.info("Checking if creating table and schema is allowed")
@@ -716,7 +716,7 @@ def check_schema_creation_permission(cursor):
 
 
 # Endpoint to check Storage integration, file fromat, stage exist
-@app.route('/IntegrationObjectExistence', methods=['POST'])
+@app.route('/IntegrationObjectExistence', methods = ['POST'])
 def Integration_Object_Exist():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -739,7 +739,7 @@ def Integration_Object_Exist():
     
 
 # Endpoint to check Storage integration, file fromat, stage exist
-@app.route('/FileFormatObjectExistence', methods=['POST'])
+@app.route('/FileFormatObjectExistence', methods = ['POST'])
 def FileFormat_Object_Exist():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -799,7 +799,7 @@ def check_object_exists(cursor, object_type, object_name):
 
 
 # Endpoint to check access for Storage integration, file fromat, stage exist
-@app.route('/IntegrationAccess', methods=['POST'])
+@app.route('/IntegrationAccess', methods = ['POST'])
 def IntegrationAccess():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -827,7 +827,7 @@ def IntegrationAccess():
         
 
 # Endpoint to check access for Storage integration, file fromat, stage exist
-@app.route('/FormatAccess', methods=['POST'])
+@app.route('/FormatAccess', methods = ['POST'])
 def FormatAccess():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -854,7 +854,7 @@ def FormatAccess():
  
 
 # Endpoint to check access for Storage integration, file fromat, stage exist
-@app.route('/StageAccess', methods=['POST'])
+@app.route('/StageAccess', methods = ['POST'])
 def StageAccess():
     cursor = conn.cursor()
     if isinstance(cursor, str):
@@ -907,7 +907,7 @@ def migration_result():
 @app.route('/log')
 def log():
     # Path to the log file
-    log_file_path = "C:/MY/ELAIT/SNOWFLAKE/POC/MIGRATION/LOG_DATA/migration.log"
+    log_file_path = "D:/Log/migration.log"
     
     # Read log content from the file
     if os.path.exists(log_file_path):
@@ -915,17 +915,17 @@ def log():
             log_content = log_file.read()
     else:
         log_content = "Log file not found"
-    return render_template('log.html', log_content_html=log_content)
+    return render_template('Log.html', log_content_html = log_content)
 
 
 
 @app.route('/download-log')
 def download_log():
-    log_file_path = "C:/MY/ELAIT/SNOWFLAKE/POC/MIGRATION/LOG_DATA/migration.log"
+    log_file_path = "D:/Log/migration.log"
     if os.path.exists(log_file_path):
-        return send_file(log_file_path, as_attachment=True, download_name='migration.log')
+        return send_file(log_file_path, as_attachment = True, download_name = 'migration.log')
     else:
-        abort(404, description="Log file not found")
+        abort(404, description = "Log file not found")
 
 
 
@@ -937,7 +937,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
    project_query = query.format(project_id)
    query_job = bq_client.query(project_query)
    rows = query_job.result()
-   Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE']
+   Columns = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME', 'TABLE_COLUMNS', 'EXPORT_TYPE', 'COPY_DONE']
    copy_table = pd.DataFrame(columns = Columns)
 #    Preparing a formatted string with column names for logging
    columns_formatted = '\n'.join(['    - ' + column for column in Columns])
@@ -968,7 +968,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
        logger.info("Target schema list: %s", schema_list_user_input)
 
        if schema_local in schema_list_user_input:
-           table_tuple=tuple(Dist_user_input[schema_local])
+           table_tuple = tuple(Dist_user_input[schema_local])
            print(table_tuple)
            print("Gathering ddl {}".format(schema_local))
            logger.info("Gathering DDL for schema:{}".format(schema_local))
@@ -1022,16 +1022,16 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            
            # FOR SCHEMAS
            logger.info("Execution related to Schemas")
-           if(len(table_tuple)<2):
-                table_tuple_1=table_tuple[0]
+           if(len(table_tuple) < 2):
+                table_tuple_1 = table_tuple[0]
                 print(table_tuple)
                 logger.info("Schema named '{}' has only {} Table available".format(schema_local, len(table_tuple)))
                 log_multiline_message(logger, """Listing Tables in the Schema '{}':
                             {}""".format(schema_local, table_tuple))
-                ddl_query = query_2.format(project_id,schema_local,project_id,schema_local,table_tuple_1)
+                ddl_query = query_2.format(project_id, schema_local, project_id, schema_local, table_tuple_1)
                 print(ddl_query)
            else:
-               ddl_query = query.format(project_id,schema_local,project_id,schema_local,table_tuple)
+               ddl_query = query.format(project_id, schema_local, project_id, schema_local, table_tuple)
                logger.info("Schema named '{}' has {} Table available".format(schema_local, len(table_tuple)))
                log_multiline_message(logger, """Listing Tables in the Schema '{}':
                             {}""".format(schema_local, table_tuple))
@@ -1040,7 +1040,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            
            for row in ddl_set:
             df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
-            copy_table = pd.concat([copy_table,df] , ignore_index=True)
+            copy_table = pd.concat([copy_table,df] , ignore_index = True)
 
             write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
             schema_name = row.table_schema
@@ -1056,15 +1056,15 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
             
            #FOR TABLES
            logger.info("Execution related to Tables")
-           if(len(table_tuple)<2):
-               table_tuple_2=table_tuple[0]
-               ddl_table_query = table_query_2.format(project_id,schema_local,table_tuple_2)
+           if(len(table_tuple) < 2):
+               table_tuple_2 = table_tuple[0]
+               ddl_table_query = table_query_2.format(project_id, schema_local, table_tuple_2)
                print(ddl_table_query)
                print(table_tuple)
                log_multiline_message(logger, """Executing query to gather required columns from INFORMATION_SCHEMA.TABLES:
                         {}""".format(ddl_table_query))
            else:
-               ddl_table_query = table_query.format(project_id,schema_local,table_tuple)   
+               ddl_table_query = table_query.format(project_id, schema_local, table_tuple)   
                print('else block')
                print(ddl_table_query)
                log_multiline_message(logger, """Executing query to gather required columns from INFORMATION_SCHEMA.TABLES:
@@ -1098,22 +1098,22 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                 export_query = """
                 select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then
                 'parquet' else 'parquet' end as export_type
-                FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in {}
+                FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type = 'BASE TABLE' and table_name in {}
                 """.strip()
 
                 export_query_2 = """
                 select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then
                 'parquet' else 'parquet' end as export_type
-                FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in ('{}')
+                FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type = 'BASE TABLE' and table_name in ('{}')
                 """.strip()
                 # log_multiline_message(logger, """Executing query to Export data: 
                 #             {}""".format(export_query))
                 
                 if(len(table_tuple)<2):
-                    table_tuple_3=table_tuple[0]
-                    ddl_query = export_query_2.format(project_id,schema_local,table_tuple_3)
+                    table_tuple_3 = table_tuple[0]
+                    ddl_query = export_query_2.format(project_id, schema_local, table_tuple_3)
                 else:
-                    ddl_query = export_query.format(project_id,schema_local,table_tuple) 
+                    ddl_query = export_query.format(project_id, schema_local, table_tuple) 
                 query_job = bq_client.query(ddl_query)
                 ddl_export_set = query_job.result()
            except Exception as e:
@@ -1145,8 +1145,8 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                         extract_job = bq_client.extract_table(
                             table_ref,
                             destination_uri,
-                            job_config=configuration,
-                            location="US"
+                            job_config = configuration,
+                            location = "US"
                             )
                     else:
                         log_multiline_message(logger, """Initiating extract job for table: 
@@ -1154,7 +1154,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                         extract_job = bq_client.extract_table(
                             table_ref,
                             destination_uri,
-                            location="US"
+                            location = "US"
                             )
                     extract_job.result()  # Waits for job to complete.
                     log_multiline_message(logger, """Exported successfully.. {}:{}.{} to 
@@ -1165,7 +1165,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                                 {}""".format(table_name, str(e)))
                     return e
            # LOAD DATA
-           SF_query = "select table_name,table_schema,table_columns,export_type from BQ_COPY_TABLE where copy_done ='N'"
+           SF_query = "select table_name, table_schema, table_columns, export_type from BQ_COPY_TABLE where copy_done ='N'"
            cur = conn.cursor()
            cur.execute(SF_query)
            log_multiline_message(logger, """Executing query in Snowflake: 
@@ -1173,11 +1173,11 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
            result = cur.fetchall()
            column_info = cur.description
            column_names = [info[0] for info in column_info]
-           df2 = pd.DataFrame(result , columns=column_names)
+           df2 = pd.DataFrame(result , columns = column_names)
            counter = 0
-           i=0
+           i = 0
 
-           for i in range(0,len(df2)):
+           for i in range(0, len(df2)):
                 table_name = df2['TABLE_NAME'].iloc[i];
                 table_schema  = df2['TABLE_SCHEMA'].iloc[i];
                 table_columns = df2['TABLE_COLUMNS'].iloc[i];
@@ -1202,16 +1202,16 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                 copy_command = copy_command.replace('{sc}', table_schema,2)
                 copy_command = copy_command.replace('{sch}', schema)
                 copy_command = copy_command.replace('{tb}', table_name,3)
-                copy_command = copy_command.replace('{col_list}', formatted_columns_list)
+                copy_command = copy_command.replace('{col_list}', table_columns)
 
                 try:
                     conn.cursor().execute(copy_command)
                     log_multiline_message(logger, """Executing COPY command (Moving data from snow_migrate_stage to respective table): 
                                     {}""".format(copy_command))
-                    counter+=1
-                    i+=1
+                    counter += 1
+                    i += 1
                     print(counter)
-                    print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
+                    print("{} Data Loaded succesfully with {}".format(table_name, copy_command))
                     log_multiline_message(logger, """{}: Data Loaded successfully for {} using command: 
                                 {}""".format(counter, table_name, copy_command))
                 except Exception as e:
@@ -1220,8 +1220,8 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
                     return e
        else :
             print("Done")
-   auditing_log_into_Snowflake(conn,project_id,inner_dict)
-   Migration_report(conn,database,schema)  
+   auditing_log_into_Snowflake(conn, project_id, inner_dict)
+   Migration_report(conn, database, schema)  
    return render_template('result.html')
 
 
@@ -1233,27 +1233,27 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
     #              {} and schema_names: {}""".format(project_name, schema_names))
     logger.info("Executing Auditing Log into Snowflake")
     
-    table_struct_cln = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_ROWS','DDL','TABLE_COLUMNS']
-    columns_struct_cln=['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','COLUMN_NAME','ORDINAL_POSITION','IS_NULLABLE','DATA_TYPE']
+    table_struct_cln = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME', 'TABLE_ROWS', 'DDL', 'TABLE_COLUMNS']
+    columns_struct_cln = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME', 'COLUMN_NAME', 'ORDINAL_POSITION', 'IS_NULLABLE', 'DATA_TYPE']
     table_struct = pd.DataFrame(columns = table_struct_cln)
-    columns_struct= pd.DataFrame(columns=columns_struct_cln)
-    schema_list_user_input=tuple(Dist_user_input.keys())
+    columns_struct= pd.DataFrame(columns = columns_struct_cln)
+    schema_list_user_input = tuple(Dist_user_input.keys())
     for schema_name in schema_list_user_input:
-        table_tuple=tuple(Dist_user_input[schema_name])
-        if len(table_tuple)<2:
+        table_tuple = tuple(Dist_user_input[schema_name])
+        if len(table_tuple) < 2:
             table_name_single=table_tuple[0]
             # print(schema_name)
-            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from 
-                                   `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE'
-                                   and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in ('{table_name_single}') ;""")
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TOTAL_ROWS from 
+                                   `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type = 'BASE TABLE'
+                                   and deleted = false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in ('{table_name_single}') ;""")
             print(query_TABLE_DETAILS)
             log_multiline_message(logger, """Executing query for a single schema:
                          {}""".format(query_TABLE_DETAILS))
         else:
             schema_name_tuple=tuple(schema_name)
-            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from
-                                   `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' 
-                                   and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in {table_tuple};""")
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TOTAL_ROWS from
+                                   `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type = 'BASE TABLE' 
+                                   and deleted = false and  TABLE_SCHEMA = ('{schema_name}') and TABLE_NAME in {table_tuple};""")
             print(query_TABLE_DETAILS)
             log_multiline_message(logger, """Executing query for a multiple schemas:
                          {}""".format(query_TABLE_DETAILS))
@@ -1267,13 +1267,13 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         print(schema_list_name)
     
         # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
-        dataframe_schema_table_info = pd.DataFrame(data=[list(row.values()) for row in results_schema_database_lst], columns=schema_list_name)
+        dataframe_schema_table_info = pd.DataFrame(data = [list(row.values()) for row in results_schema_database_lst], columns = schema_list_name)
         print(dataframe_schema_table_info)
         log_multiline_message(logger, """DataFrame created successfully with the following columns: 
                         {}""".format(schema_list_name))
 
         if len(table_tuple)<2:
-            query_ddl =(f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            query_ddl = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
                 (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
                 'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
                 '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
@@ -1281,8 +1281,8 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                 'order ','"order" '),'<',', //'),'_"order"','_order') as DDL from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES 
                 where  TABLE_SCHEMA ='{schema_name}' and TABLE_NAME in ('{table_name_single}') """)
             
-            query_ddl_log =(f"""
-            select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace
+            query_ddl_log = (f"""
+            select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, replace(replace(replace(replace(replace(replace(replace
             (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
             (replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),'BOOL','BOOLEAN'),'STRUCT',
             'VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '),
@@ -1296,16 +1296,16 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                             {}""".format(query_ddl_log))
             
         else :
-            query_ddl =(f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+            query_ddl = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
                     (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
                     'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
                     '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
                     'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
                     'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES 
-                    where  TABLE_SCHEMA =' {schema_name}' and TABLE_NAME in {table_tuple} """)
+                    where  TABLE_SCHEMA = ' {schema_name}' and TABLE_NAME in {table_tuple} """)
             
-            query_ddl_log =(f"""
-                    select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,replace(replace(replace(replace(replace(replace
+            query_ddl_log = (f"""
+                    select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, replace(replace(replace(replace(replace(replace
                     (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
                     (replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),'BOOL',
                     'BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ',
@@ -1314,7 +1314,7 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                     'date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"',
                     '_start'),'order ','"order" '),'<',', //'),'_"order"','_order') as ddl 
                     from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES 
-                    where  TABLE_SCHEMA =' {schema_name}' and TABLE_NAME in {table_tuple} """)
+                    where  TABLE_SCHEMA = ' {schema_name}' and TABLE_NAME in {table_tuple} """)
         
         log_multiline_message(logger, """Query for multiple schemas prepared:
                             {}""".format(query_ddl_log))
@@ -1329,19 +1329,19 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         log_multiline_message(logger, """Column names retrieved from results: 
                         {}""".format(schema_list_name_2))
         
-        dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns=schema_list_name_2)
+        dataframe_ddl_table_info = pd.DataFrame(data=[list(row.values()) for row in results_ddl_St_db ], columns = schema_list_name_2)
         logger.info("DataFrame created from query results.")
         print("1 frame")
         print(dataframe_ddl_table_info)
         
 
-        if len(table_tuple)<2:
+        if len(table_tuple) < 2:
             query_copy_dol=(f"""
                     select  c.TABLE_CATALOG, c.TABLE_SCHEMA , c.TABLE_NAME,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS
                     FROM `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
                     `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.TABLE_NAME = t.TABLE_NAME
-                    where c.TABLE_SCHEMA ='{schema_name}' and C.TABLE_NAME in ('{table_name_single}') group by c.TABLE_CATALOG,
-                    c.TABLE_NAME,c.TABLE_SCHEMA,t.ddl ;""").strip()
+                    where c.TABLE_SCHEMA = '{schema_name}' and C.TABLE_NAME in ('{table_name_single}') group by c.TABLE_CATALOG,
+                    c.TABLE_NAME, c.TABLE_SCHEMA, t.ddl ;""").strip()
             
             log_multiline_message(logger, """Query for single schema prepared: 
                         {}""".format(query_copy_dol))
@@ -1350,8 +1350,8 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                     select  c.TABLE_CATALOG, c.TABLE_SCHEMA , c.TABLE_NAME,  string_agg('$1:'||c.column_name) as TABLE_COLUMNS
                     FROM `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES as t join
                     `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS as c on c.TABLE_NAME = t.TABLE_NAME
-                    where c.TABLE_SCHEMA ='{schema_name}' and C.TABLE_NAME in {table_tuple}  group by c.TABLE_CATALOG,
-                    c.TABLE_NAME,c.TABLE_SCHEMA,t.ddl;""")
+                    where c.TABLE_SCHEMA = '{schema_name}' and C.TABLE_NAME in {table_tuple}  group by c.TABLE_CATALOG,
+                    c.TABLE_NAME, c.TABLE_SCHEMA, t.ddl;""")
             log_multiline_message(logger, """Query for multiple schemas prepared:
                         {}""".format(query_copy_dol))
         
@@ -1370,15 +1370,15 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                         {}""".format(schema_3))
 
         # ----------------------------------------Create DataFrame with both column names and data-----------------------------------------------------------
-        dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns=schema_3)
+        dataframe_copy_dol = pd.DataFrame(data=[list(row.values()) for row in results_copy_dol], columns = schema_3)
         print(dataframe_copy_dol)
 
 
         try:
             logger.info("Merging dataframes...")
-            result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how="outer", on=["TABLE_CATALOG","TABLE_SCHEMA","TABLE_NAME"])
-            result_ddl_ed_table = pd.merge(result_ddl_ed_table,dataframe_copy_dol, how="outer", on=["TABLE_CATALOG","TABLE_SCHEMA","TABLE_NAME"])
-            table_struct= pd.concat([table_struct,result_ddl_ed_table] , ignore_index=True)
+            result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how = "outer", on = ["TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"])
+            result_ddl_ed_table = pd.merge(result_ddl_ed_table, dataframe_copy_dol, how = "outer", on=["TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"])
+            table_struct = pd.concat([table_struct, result_ddl_ed_table] , ignore_index = True)
             print(result_ddl_ed_table)
             
             logger.info("Dataframes merged successfully.")
@@ -1392,26 +1392,26 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
             return e
             
         if len(table_tuple)<2:
-            query = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,IS_NULLABLE,DATA_TYPE
+            query = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, IS_NULLABLE, DATA_TYPE
                     from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS
                     where TABLE_SCHEMA = '{schema_name}' and TABLE_NAME in ('{table_name_single}') ;""").strip()
         else:
-            query = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,IS_NULLABLE,DATA_TYPE
+            query = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, IS_NULLABLE, DATA_TYPE
                     from `{project_name}`.`region-US`.INFORMATION_SCHEMA.COLUMNS
-                    where TABLE_SCHEMA  ='{schema_name}' and TABLE_NAME in {table_tuple} ;""").strip()
+                    where TABLE_SCHEMA = '{schema_name}' and TABLE_NAME in {table_tuple} ;""").strip()
 
         query_job = bq_client.query(query)
-        results_column_lst= query_job.result()
+        results_column_lst = query_job.result()
         log_multiline_message(logger, """Executing query to retrieve column list: 
                             {}""".format(query))
         schema_4 = [field.name for field in results_column_lst.schema]
-        dataframe_column_info = pd.DataFrame(data=[list(row.values()) for row in results_column_lst], columns=schema_4)
-        columns_struct=pd.concat([columns_struct,dataframe_column_info] , ignore_index=True)
+        dataframe_column_info = pd.DataFrame(data = [list(row.values()) for row in results_column_lst], columns = schema_4)
+        columns_struct = pd.concat([columns_struct, dataframe_column_info] , ignore_index = True)
         
     try:
         logger.info("Writing column information to Snowflake...")
-        write_pandas(snowflake_connection_config,columns_struct,'META_COLUMNS_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
-        write_pandas(snowflake_connection_config,table_struct,'META_TABLES_STRUCT_SOURCE',database=database,schema=schema, auto_create_table=True,overwrite=True,table_type="transient")
+        write_pandas(snowflake_connection_config,columns_struct, 'META_COLUMNS_STRUCT_SOURCE', database = database, schema = schema, auto_create_table = True, overwrite = True, table_type = "transient")
+        write_pandas(snowflake_connection_config,table_struct, 'META_TABLES_STRUCT_SOURCE', database = database, schema = schema, auto_create_table = True, overwrite = True, table_type = "transient")
         logger.info("Column information written to Snowflake successfully.")
     except Exception as e:
         log_system_message(logger, """An error occurred while executing or processing the query:
@@ -1419,8 +1419,8 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         return e
 
 
-def streamlit(database,schema):
-    stream_script=("""
+def streamlit(database, schema):
+    stream_script = ("""
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -1702,7 +1702,7 @@ with tab4:
     Table_List =session.sql(Table_SQL).collect()
     table_name=incremental_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view',)
     submit=incremental_input_struct.form_submit_button("Fetch Details")
-""".format(database=database,schema=schema))
+""".format(database=database, schema=schema))
     stream_script=stream_script.replace("/count_table_source/","{count_table_source}")
     stream_script=stream_script.replace("Migration_Report_Schema_/time/","Migration_Report_Schema_{time[0][0]}")
     stream_script=stream_script.replace("/count_Schema/","{count_Schema}")
