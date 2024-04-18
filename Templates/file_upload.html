@@ -114,6 +114,38 @@
         line-height: 0%;
     }
 
+    #loader_Proceed{
+      display: none;
+      margin-left: 270px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .loader_Proceed {
+        --d:20px;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        /* color: #25b09b; */
+        color: #00bbf0;
+        box-shadow: 
+          calc(1*var(--d))      calc(0*var(--d))     0 0,
+          calc(0.707*var(--d))  calc(0.707*var(--d)) 0 1px,
+          calc(0*var(--d))      calc(1*var(--d))     0 2px,
+          calc(-0.707*var(--d)) calc(0.707*var(--d)) 0 3px,
+          calc(-1*var(--d))     calc(0*var(--d))     0 4px,
+          calc(-0.707*var(--d)) calc(-0.707*var(--d))0 5px,
+          calc(0*var(--d))      calc(-1*var(--d))    0 6px;
+        animation: l27 1s infinite steps(8);
+      }
+      @keyframes l27 {
+        100% {transform: rotate(1turn)}
+      }
+
+      #connecting-btn{
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
   </style>
 </head>
 
@@ -311,7 +343,8 @@
     <br>
     <form action="/fetch_schemas" method="post">
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
-         <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Proceed</button>
+         <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_load_proceed()" disabled>Proceed</button>
+         <div class="loader_Proceed" id="loader_Proceed"></div> 
     </form>
   </div>
 </div>
@@ -321,6 +354,7 @@
 </form> -->
 
 <script>
+  var count=0;
     // Function to display tick mark
     function showSuccess(elementId) {
         document.getElementById(elementId).textContent = '✔';
@@ -350,16 +384,11 @@
             } else {
                 showFailure('serviceAccountConnectionResult');
                 document.getElementById('Error_1').textContent = data.error;   
-                document.getElementById("connecting-btn").disabled = true; 
-                document.getElementById("connecting-btn").style.opacity = "0.5";
-                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+                count = count + 1;
             }
         } catch (error) {
             showFailure('serviceAccountConnectionResult');
             document.getElementById('Error_1').textContent = error.message;
-            document.getElementById("connecting-btn").disabled = true;
-            document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -379,16 +408,11 @@
             } else {
                 showFailure('RoleResult');
                 document.getElementById('Error_2').textContent = data.error;
-                document.getElementById("connecting-btn").disabled = true;
-                document.getElementById("connecting-btn").style.opacity = "0.5";
-                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+                count = count + 1;
             }
         } catch (error) {
             showFailure('RoleResult');
             document.getElementById('Error_2').textContent = error.message;
-            document.getElementById("connecting-btn").disabled = true;
-            document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
@@ -409,19 +433,23 @@
             } else {
                 showFailure('BucketResult');
                 document.getElementById('Error_3').textContent = data.error;
-                document.getElementById("connecting-btn").disabled = true;
-                document.getElementById("connecting-btn").style.opacity = "0.5";
-                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+                count = count + 1;
             }
         } catch (error) {
             showFailure('BucketResult');
             document.getElementById('Error_3').textContent = error.message;
-            document.getElementById("connecting-btn").disabled = true;
-            document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
         }
     }
 
+    function button_enable(){
+      console.log(count);
+      if(count == 0){
+        console.log(count);
+          document.getElementById("connecting-btn").disabled = false;
+          document.getElementById("connecting-btn").style.opacity = "1";
+          document.getElementById("connecting-btn").style.cursor = "pointer";
+        }
+    }
 
 // End of functions for testing permissions
 
@@ -432,6 +460,7 @@
             await testServiceAccountConnection();
             await GrantAccessCheck();
             await CheckBucketExist();
+            button_enable();
             // Call functions for testing other subsections here
             console.log("All tests executed successfully");
         } catch (error) {
@@ -444,9 +473,14 @@
         runTestsInOrder();
     }
     function closePopup() {
-    document.getElementById("popup").style.display = "none";
-    window.history.back();
-}
+      document.getElementById("popup").style.display = "none";
+      window.history.back();
+    }
+
+    function display_load_proceed() {
+      document.getElementById("connecting-btn").style.display = "none";
+      document.getElementById("loader_Proceed").style.display = "block";
+    }
 
   document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("json-form");

@@ -121,6 +121,10 @@
         margin-left: 100px;
         background-color: #007bff;
     }
+    #connecting-btn{
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     .loading {
         border: 5px solid #f3f3f3;
         border-radius: 50%;
@@ -422,12 +426,13 @@
     <br>
     <form action="/migration_result" method="post">
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
-        <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()">Migrate</button>
+        <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()" disabled>Migrate</button>
     </form>
     </div>
 </div>
 
 <script>
+    var count=0;
     // Function to display tick mark
     function showSuccess(elementId) {
         document.getElementById(elementId).textContent = '✔';
@@ -460,7 +465,8 @@
                 document.getElementById('Error_1').textContent = data.error;
                 document.getElementById("connecting-btn").disabled = true;
                 document.getElementById("connecting-btn").style.opacity = "0.5";
-                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+                document.getElementById("connecting-btn").style.cursor = "not-allowed";
+                count = count + 1;
             }
         } catch (error) {
             showFailure('SnowflakeUserResult');
@@ -488,7 +494,8 @@
                 document.getElementById('Error_2').textContent = data.error;
                 document.getElementById("connecting-btn").disabled = true;
                 document.getElementById("connecting-btn").style.opacity = "0.5";
-                document.getElementById("connecting-btn").style.cursor = "not-allowed"
+                document.getElementById("connecting-btn").style.cursor = "not-allowed";
+                count = count + 1;
             }
         } catch (error) {
             showFailure('RoleResult');
@@ -517,14 +524,12 @@ async function checkCreatePermissions() {
             document.getElementById('Error_3').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('CreatePermissionsResult');
         document.getElementById('Error_3').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -546,14 +551,12 @@ async function checkCreatePermissions() {
             document.getElementById('Error_4').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('StorageIntegrationResult');
         document.getElementById('Error_4').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -574,14 +577,12 @@ async function IntegrationAccess() {
             document.getElementById('Error_5').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('StorageIntegrationAccess');
         document.getElementById('Error_5').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -602,14 +603,12 @@ async function FileFormat_Object_Exist() {
             document.getElementById('Error_6').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('FileFormatResult');
         document.getElementById('Error_6').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -631,14 +630,12 @@ async function FormatAccess() {
             document.getElementById('Error_7').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('FileFormatAccess');
         document.getElementById('Error_7').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -659,14 +656,12 @@ async function Stage_Object_Exist() {
             document.getElementById('Error_8').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('StorageStageResult');
         document.getElementById('Error_8').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
 
@@ -688,16 +683,24 @@ async function StageAccess() {
             document.getElementById('Error_9').textContent = data.error;
             document.getElementById("connecting-btn").disabled = true;
             document.getElementById("connecting-btn").style.opacity = "0.5";
-            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
         }
     } catch (error) {
         showFailure('StorageStageAccess');
         document.getElementById('Error_9').textContent = error.message;
-        document.getElementById("connecting-btn").disabled = true;
-        document.getElementById("connecting-btn").style.opacity = "0.5";
-        document.getElementById("connecting-btn").style.cursor = "not-allowed"
     }
 }
+
+function button_enable(){
+      console.log(count);
+      if(count == 0){
+        console.log(count);
+          document.getElementById("connecting-btn").disabled = false;
+          document.getElementById("connecting-btn").style.opacity = "1";
+          document.getElementById("connecting-btn").style.cursor = "pointer";
+        }
+    }
 
 async function runTestsInOrdersf() {
         try {
@@ -711,6 +714,7 @@ async function runTestsInOrdersf() {
             await FormatAccess();
             await Stage_Object_Exist();
             await StageAccess();
+            button_enable();
             // Call functions for testing other subsections here
             console.log("All tests executed successfully");
         } catch (error) {
