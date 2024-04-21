@@ -469,9 +469,16 @@
     }
 
     // Run tests when the page is loaded
-    window.onload = function () {
-        runTestsInOrder();
+   
+    function checkUrlAndRunTests() {
+      const path = window.location.pathname;
+      // Assume '/upload' is the path that should trigger the tests
+      if (path === '/upload') {
+          runTestsInOrder();
+      }
     }
+    window.onload = checkUrlAndRunTests;
+    
     function closePopup() {
       document.getElementById("popup").style.display = "none";
       window.history.back();

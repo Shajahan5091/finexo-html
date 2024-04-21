@@ -75,9 +75,14 @@ ul{
   margin-top: 5px;
 }
 .connect-btn{
+  margin-bottom: 0;
+  margin-top: 10px;
+}
+
+#submit-btn{
+  margin-left: 50%;
   margin-bottom: 50px;
   margin-top: 10px;
-  margin-left: 50%;
 }
   </style>
 </head>
@@ -131,42 +136,60 @@ ul{
                         <h2>BigQuery <span>Schemas</span></h2>
                         <p>Available schemas in the project</p>
                     </div>
+                    <form action="/incremental" method="post">
+                      <button type="submit" class="connect-btn" style="margin-left: 10px;">Incremental</button>
+                    </form>
                     <form id="checkboxForm" action="/snowflake_form" method="post">
-                    <div class="row">
+                      <div class="row">
                         {% for schema,tables in schemas.items() %}
                         <div class="col-md-4 ">
-                            <div class="popup1">
-                                <div id="heading1">
-                                  <input type="checkbox" name="schema" id="{{schema}}" value="{{schema}}" onchange="toggleTables(this)">
-                                  <label for="{{schema}}">{{ schema }}</label>
-                                </div>
-                                <div class="content1">
-                                  <ul style="list-style: none;">
-                                  {% if tables|length < 1 %}
-                                    <p>No tables available</p>
-                                  {% else %}
-                                  {% for table in tables %}
-                                  <li>
-                                    <input type="checkbox" name="table" id="{{table}}" value="{{table}}">
-                                    <label for="{{table}}">{{ table }}
-                                    </li>
-                                    {% endfor %}
-                                  {% endif %}
-                                    </ul>
-                                </div> 
+                          <div class="popup1">
+                            <div id="heading1">
+                              <input type="checkbox" name="schema" id="schema-{{schema}}" value="{{schema}}">
+                              <label for="schema-{{schema}}">{{ schema }}</label>
+                            </div>
+                            <div class="content1">
+                              <ul style="list-style: none;">
+                                {% if tables|length < 1 %}
+                                <p>No tables available</p>
+                                {% else %}
+                                {% for table in tables %}
+                                <li>
+                                  <input type="checkbox" name="table" id="table-{{table}}" value="{{table}}" class="table-checkbox">
+                                  <label for="table-{{table}}">{{ table }}
+                                  </li>
+                                {% endfor %}
+                                {% endif %}
+                              </ul>
+                            </div> 
+                          </div>
                         </div>
+                        {% endfor %}
                       </div>
-                      {% endfor %}
                 </div>
                 <br>
-                <button type="button" onclick="submitForm()" class="connect-btn">Submit</button>
+                <button type="button" id="submit-btn" onclick="submitForm()" class="connect-btn">Submit</button>
                 </form>
               </div>
             </div>
         </div>
     </section>
+
  <!-- jQery -->
- <script>/*<![CDATA[*/ function copyC(e,t){var o=document.getElementById(e),n=document.getElementById(t),e=getSelection(),t=document.createRange();e.removeAllRanges(),t.selectNodeContents(n),e.addRange(t),document.execCommand("copy"),e.removeAllRanges(),o.classList.add("copied"),document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",setTimeout(()=>{o.classList.remove("copied")},3e3)} /*]]>*/</script>
+ <script>/*<![CDATA[*/ 
+    function copyC(e,t){
+      var o=document.getElementById(e),
+      n=document.getElementById(t),
+      e=getSelection(),
+      t=document.createRange();
+      e.removeAllRanges(),
+      t.selectNodeContents(n),
+      e.addRange(t),document.execCommand("copy"),
+      e.removeAllRanges(),o.classList.add("copied"),
+      document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",
+      setTimeout(()=>{o.classList.remove("copied")},3e3)
+    } /*]]>*/
+</script>
  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
  <!-- popper js -->
  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
@@ -208,12 +231,13 @@ ul{
   //       // Or do nothing
   //   }
   // });
-  function toggleTables(schemaCheckbox) {
-            const tables = schemaCheckbox.parentNode.querySelector('ul').querySelectorAll('input[type="checkbox"]');
-            tables.forEach(function(table) {
-                table.checked = schemaCheckbox.checked;
-            });
-        }
+
+  // function toggleTables(schemaCheckbox) {
+  //           const tables = schemaCheckbox.parentNode.querySelector('ul').querySelectorAll('input[type="checkbox"]');
+  //           tables.forEach(function(table) {
+  //               table.checked = schemaCheckbox.checked;
+  //           });
+  //       }
 
   function submitForm() {
             const formData = new FormData(document.getElementById('checkboxForm'));
@@ -231,8 +255,7 @@ ul{
             });
  
             const jsonData = JSON.stringify(schemaTables);
-           
- 
+            
             window.location.href = 'http://127.0.0.1:8000/snowflake_form?'  + new URLSearchParams(jsonData);
         }
 </script>

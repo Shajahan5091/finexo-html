@@ -361,6 +361,11 @@ def fetch_schemas_tables(client, schema_name):
         return []
 
 
+@app.route('/incremental', methods = ['POST'])
+def incremental():
+    return render_template('incremental.html')
+
+
 @app.route('/snowflake_form', methods = ["GET", "POST"])
 def snowflake_form():
     try:
