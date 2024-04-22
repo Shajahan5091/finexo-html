@@ -363,7 +363,8 @@ def fetch_schemas_tables(client, schema_name):
 
 def get_tables(schema_name):
     cursor = conn.cursor()
-    abc='SELECT TABLE_NAME FROM {}.{}.BQ_WM_TABLE WHERE lower(TABLE_SCHEMA)=lower(\'{}\')'.format(database,schema,schema_name)
+    schema_name = "'"+schema_name+"'"
+    abc="SELECT TABLE_NAME FROM {}.{}.BQ_WM_TABLE WHERE lower(TABLE_SCHEMA)=lower({})".format(database,schema,schema_name)
     cursor.execute(abc)
     tables= cursor.fetchall()
     print(tables)
@@ -375,6 +376,21 @@ def fetch_cities():
     tables = get_tables(schema_name)
     print(tables)
     return jsonify(tables)
+
+@app.route('/incremental', methods = ['POST'])
+def incremental():
+    cur = conn.cursor()
+    tables =[]
+    cur.execute(f"SELECT DISTINCT TABLE_SCHEMA FROM {database}.{schema}.BQ_WM_TABLE")
+    schemas = cur.fetchall()
+    print(schemas)
+    data=list(sum(schemas, ()))
+    # if request.method == ['GET','POST']:
+    schema_name= request.form.get('schema_name')
+    data2 = get_tables(schema_name)
+    tables=list(sum(data2, ()))
+    # return redirect(url_for('submit_incremental'))
+    return render_template('incremental.html',data=data,tables=tables)
 
 @app.route('/submit_incremental', methods=(['POST','GET']))
 def submit_incremental():
@@ -388,23 +404,6 @@ def submit_incremental():
     print(type(form_data))
 
     return render_template('submit.html')
-
-@app.route('/incremental', methods = ['POST'])
-def incremental():
-    cur = conn.cursor()
-    tables =[]
-    cur.execute(f"SELECT DISTINCT TABLE_SCHEMA FROM {database}.{schema}.BQ_WM_TABLE")
-    schemas = cur.fetchall()
-    print(schemas)
-    data=list(sum(schemas, ()))
-    if request.method == ['GET','POST']:
-        schema_name= request.form.get('schema_name')
-        data2 = get_tables(schema_name)
-        tables=list(sum(data2, ()))
-        return redirect(url_for('submit_incremental'))
-    
-    return render_template('incremental.html',data=data,tables=tables)
-
 
 @app.route('/snowflake_form', methods = ["GET", "POST"])
 def snowflake_form():

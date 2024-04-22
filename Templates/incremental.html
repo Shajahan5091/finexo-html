@@ -89,36 +89,9 @@ ul{
     </header>
     <!-- end header section -->
   </div>
-  <!-- <form id="checkboxForm" action="/load_incremental" method="post">
-    <div class="row">
-      {% for schema, tables in data.items() %}
-          <div class="col-md-4 ">
-            <div class="popup1">
-              <div id="heading1">
-                <input type="checkbox" name="schema" id="{{ schema }}" value="{{ schema }}">
-                <label for="{{ schema }}">{{ schema }}</label>
-              </div>
-              {% for table in tables %}
-              <div class="content1">
-                <ul style="list-style: none;">
-                  <li>
-                    <input type="radio" name="table" id="{{ table }}" value="{{ table }}" class="table-checkbox">
-                    <label for="{{ table }}">{{ table }}
-                    </li>
-                </ul>
-              </div> 
-              {% endfor %}
-            </div>
-          </div>
-    </div>
-    {% endfor %}
-    </div>
-    <br>
-    <button type="button" id="submit-btn" onclick="submitForm()" class="connect-btn">Submit</button>
-  </form>  -->
 
 
-  <form action="/submit_incremental" method="post" name="myForm">
+  <form action="/incremental" method="post" name="myForm">
     <label for="schema_name">SCHEMA NAME:</label><br>
     <select id="schema_name" name="schema_name" required><br>
     {% for schema in data %}
@@ -127,8 +100,8 @@ ul{
     </select><br><br>
     <label for="table_name">TABLE NAME:</label><br>
     <select id="table_name" name="table_name" required>
-    {% for table in tables %}
-    <option value="{{ table }}">{{ table }}</option>
+    {% for city in tables %}
+    <option value="{{ city }}">{{ city }}</option>
     {% endfor %}
     </select><br><br>
     <input type="submit" value="Submit" onclick="handleFormSubmit(event)">
