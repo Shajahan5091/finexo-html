@@ -136,9 +136,6 @@ ul{
                         <h2>BigQuery <span>Schemas</span></h2>
                         <p>Available schemas in the project</p>
                     </div>
-                    <form action="/incremental" method="post">
-                      <button type="submit" class="connect-btn" style="margin-left: 10px;">Incremental</button>
-                    </form>
                     <form id="checkboxForm" action="/snowflake_form" method="post">
                       <div class="row">
                         {% for schema,tables in schemas.items() %}

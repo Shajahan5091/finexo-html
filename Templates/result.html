@@ -44,6 +44,10 @@
             </h2><br>
             <div id="button">
                 <button class="connect-btn" onclick="navigateToLog()">View Log</button>
+                <form action="/incremental" method="post">
+                    <button type="submit" class="connect-btn">Incremental</button>
+                </form>
+                
                 <a class="connect-btn" href="{{ url_for('index') }}" style="margin-right: 120px; margin-top: 10px;">Back to Home</a>
             </div>
         </div>
@@ -53,6 +57,9 @@
         function navigateToLog() {
             // Navigate to the /log route
             window.location.href = "{{ url_for('log') }}";
+        }
+        function navigatetoincremental() {
+            window.location.href = "{{ url_for('incremental') }}";
         }
     </script>
 </body>

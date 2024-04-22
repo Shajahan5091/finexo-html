@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, abort, send_file
+from flask import url_for, redirect
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import json
@@ -360,10 +361,49 @@ def fetch_schemas_tables(client, schema_name):
                             {}""".format(schema_name, str(e)))
         return []
 
+def get_tables(schema_name):
+    cursor = conn.cursor()
+    abc='SELECT TABLE_NAME FROM {}.{}.BQ_WM_TABLE WHERE lower(TABLE_SCHEMA)=lower(\'{}\')'.format(database,schema,schema_name)
+    cursor.execute(abc)
+    tables= cursor.fetchall()
+    print(tables)
+    return tables
+
+@app.route('/tables')
+def fetch_cities():
+    schema_name = request.args.get('schema_name')
+    tables = get_tables(schema_name)
+    print(tables)
+    return jsonify(tables)
+
+@app.route('/submit_incremental', methods=(['POST','GET']))
+def submit_incremental():
+    if request.method == 'GET':
+        # Get the JSON data from the query string
+        form_data = dict(request.args)
+    elif request.method == 'POST':
+        # Get the JSON data from the request body
+        form_data = request.json
+    print(form_data)
+    print(type(form_data))
+
+    return render_template('submit.html')
 
 @app.route('/incremental', methods = ['POST'])
 def incremental():
-    return render_template('incremental.html')
+    cur = conn.cursor()
+    tables =[]
+    cur.execute(f"SELECT DISTINCT TABLE_SCHEMA FROM {database}.{schema}.BQ_WM_TABLE")
+    schemas = cur.fetchall()
+    print(schemas)
+    data=list(sum(schemas, ()))
+    if request.method == ['GET','POST']:
+        schema_name= request.form.get('schema_name')
+        data2 = get_tables(schema_name)
+        tables=list(sum(data2, ()))
+        return redirect(url_for('submit_incremental'))
+    
+    return render_template('incremental.html',data=data,tables=tables)
 
 
 @app.route('/snowflake_form', methods = ["GET", "POST"])
@@ -936,34 +976,132 @@ def download_log():
 
 # Function to create the schemas and the tables from bigquery to snowflake
 def create_schemas_and_copy_table(conn,Dist_user_input):
-   query = """select schema_name from `{}`.INFORMATION_SCHEMA.SCHEMATA"""
-   log_multiline_message(logger, """Executing query to fetch schema names: 
+    client = bq_client
+    log_multiline_message(logger, """ Creating a schema META in bigquery""")
+
+    # CREATING A SCHEMA CALLED META FOR THE WATERMARK TABLE
+    query_schema = """ CREATE SCHEMA IF NOT EXISTS META ; """ 
+    query_job = bq_client.query(query_schema)
+    rows = query_job.result()
+    print(rows)
+    
+    # CREATING A WATERMARK TABLE IN BIGQUERY
+    query_table = """ Create or REPLACE table META.BQ_TABLE_WM (TABLE_CATALOG string , TABLE_SCHEMA string , TABLE_NAME string , 
+    LAST_EXPORT_DATE DATETIME DEFAULT '1970-01-01 00:00:00', TS_COLUMN STRING , KEY_COLUMN STRING ); """ 
+    query_job = bq_client.query(query_table)
+    rows = query_job.result()
+    log_multiline_message(logger, """ Creating a watermark table in schema META in bigquery as {}""".format(query_table))
+    print(rows)
+    print('WM TABLE CREATED SUCCESSFULLY')
+    data = Dist_user_input
+    schema_list_user_input=list(data.keys())
+    
+    for schema_l in schema_list_user_input:
+        list_tables = data[schema_l]
+
+        for table in list_tables:
+
+            query_insert = """ 
+                IF EXISTS (SELECT t.constraint_name,c.column_name from {proj}.{schema}.INFORMATION_SCHEMA.TABLE_CONSTRAINTS as t 
+                join {proj}.{schema}.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name WHERE t.constraint_type = 'PRIMARY KEY' and c.data_type = 'TIMESTAMP' and c.table_name = '{table}' limit 1)
+                then
+                    INSERT INTO `{proj}`.META.BQ_TABLE_WM (TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TS_COLUMN,KEY_COLUMN)
+                    WITH source1 as (
+                    SELECT i.table_catalog , i.table_schema , i.table_name,l.column_name,c.column_name FROM `{proj}`.
+                    {schema}.INFORMATION_SCHEMA.TABLES as i join `{proj}`.{schema}.INFORMATION_SCHEMA.
+                    CONSTRAINT_COLUMN_USAGE as c on c.table_name = i.table_name join `{proj}`.{schema}.
+                    INFORMATION_SCHEMA.COLUMNS as l on l.table_name = i.table_name join `{proj}`.{schema}.
+                    INFORMATION_SCHEMA.TABLE_CONSTRAINTS as t on t.constraint_name = c.constraint_name where t.
+                    constraint_type = 'PRIMARY KEY' and l.data_type = 'TIMESTAMP' and c.table_name = '{table}' LIMIT 1 )
+                    SELECT * FROM source1;
+                  
+                else
+                    INSERT INTO META.BQ_TABLE_WM (TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TS_COLUMN,KEY_COLUMN)
+                    WITH source1 as (
+                    SELECT table_catalog , table_schema , table_name,'','' FROM `{proj}`.{schema}.INFORMATION_SCHEMA.
+                    TABLES  where table_name = '{table}')
+                    SELECT * FROM source1;
+                end if;                
+            """ 
+
+            insert_query = query_insert.replace('{schema}',schema_l)
+            format_query = insert_query.replace('{table}',table)
+            create_query = format_query.replace('{proj}',project_id)
+            query_job = bq_client.query(create_query)
+            rows = query_job.result()
+            log_multiline_message(logger, """ Succesfully loaded data into the watermark table""")
+    print('DATA LOADED INTO WM TABLE SUCCESFULLY')
+            
+    
+     # CREATING A WATERMARK TABLE IN SNOWFLAKE
+    
+    query = """
+    select DISTINCT table_schema from `{}`.META.BQ_TABLE_WM
+    """.format(project_id)
+    query_job = bq_client.query(query)
+    rows = query_job.result()
+
+    log_multiline_message(logger, """Executing query to fetch schema names: 
                           {}""".format(query))
-   project_query = query.format(project_id)
-   query_job = bq_client.query(project_query)
-   rows = query_job.result()
-   Columns = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME', 'TABLE_COLUMNS', 'EXPORT_TYPE', 'COPY_DONE']
-   copy_table = pd.DataFrame(columns = Columns)
-#    Preparing a formatted string with column names for logging
-   columns_formatted = '\n'.join(['    - ' + column for column in Columns])
+    Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE','LAST_EXPORT_DATE','TS_COLUMN','KEY_COLUMN','INCREMENTAL'] 
+    copy_table = pd.DataFrame(columns = Columns)
+    for row in rows:
+       schema_new = row.table_schema
+       query = """
+        select  c.table_catalog, c.table_schema, c.table_name,  string_agg(c.column_name) as table_columns , case when t.ddl like 
+        '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type, 'N' as copy_done ,cast( w.LAST_EXPORT_DATE as STRING ), w.TS_COLUMN, w.KEY_COLUMN,
+        case when NULLIF(w.TS_COLUMN,'') is NULL and NULLIF(w.KEY_COLUMN,'') is NULL then false else true end as INCREMENTAL FROM
+        `{}`.{}.INFORMATION_SCHEMA.TABLES as t join
+        `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on c.table_name = t.table_name 
+        join  `{}`.META.BQ_TABLE_WM as w on w.table_name = t.table_name group by c.table_catalog, 
+        c.table_name,c.table_schema,t.ddl , w.LAST_EXPORT_DATE , w.TS_COLUMN, w.KEY_COLUMN ;
+       """
+       
+       ddl_query = query.format(project_id,schema_new,project_id,schema_new,project_id)
+       query_job = bq_client.query(ddl_query)
+       ddl_set = query_job.result()
+       df = pd.DataFrame(data=[list(row.values()) for row in ddl_set],columns = Columns) 
+       
+       copy_table = pd.concat([copy_table,df] , ignore_index=True)
+       print(copy_table)
+       table_ddl = """ create or replace TABLE {}.{}.BQ_WM_TABLE ( TABLE_CATALOG VARCHAR(16777216), TABLE_SCHEMA VARCHAR(16777216), 
+       TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR, LAST_EXPORT_DATE TIMESTAMP_NTZ 
+       DEFAULT to_timestamp_ntz('1970-01-01 00:00:00') , TS_COLUMN VARCHAR, KEY_COLUMN VARCHAR , INCREMENTAL varchar )  """.format(database,schema)
+        
+    log_multiline_message(logger, """ Creating a watermark table in snowflake as {}""".format(table_ddl))
+    
+    # LOAD DATA INTO WM TABLE IN SF
+    conn.cursor().execute(table_ddl)
+    print("BQ_WM_TABLE created succesfully")
+    use = 'USE SCHEMA {}.{}'.format(database,schema)
+    conn.cursor().execute(use)
+    write_pandas(conn, copy_table , 'BQ_WM_TABLE', database,schema )
 
-   # Logging using the log_multiline_message function
-   log_multiline_message(logger, """DataFrame 'copy_table' created with columns:
-                    {}""".format(columns_formatted))
-  
-   schema_list_user_input=tuple(Dist_user_input.keys())
-   table_ddl = """create or replace TABLE {}.{}.BQ_COPY_TABLE ( TABLE_CATALOG VARCHAR(16777216),
-            TABLE_SCHEMA VARCHAR(16777216), TABLE_NAME VARCHAR(16777216),TABLE_COLUMNS VARCHAR(16777216), 
-            EXPORT_TYPE VARCHAR(16777216), COPY_DONE VARCHAR) """.format(database, schema)
-   log_multiline_message(logger, """Executing query to create BQ_COPY_TABLE: 
-                        {}""".format(table_ddl))
-   conn.cursor().execute(table_ddl) 
-   print("BQ_COPY_TABLE created succesfully")
-   logger.info("BQ_COPY_TABLE created successfully in {}.{}".format(database, schema))
+    print('Watermark table created in snowflake ')
+    log_multiline_message(logger, """ Succesfully loaded data into the SF watermark table""")
 
+    # CREATING A LOAD TABLE IN SNOWFLAKE TO LOG BIGQUERY LOAD HISTORY
+    load_table = "CREATE TABLE if not exists {}.{}.BIGQUERY_LOAD_HISTORY(DATABASE varchar , SCHEMA varchar, TABLE_NAME varchar,TYPE_OF_LOAD VARCHAR, FILE_NAME varchar , NO_OF_ROWS varchar, NO_OF_UPDATES varchar, NO_OF_INSERT varchar, TIMESTAMP varchar)".format(database,schema)
+    conn.cursor().execute(load_table) 
+    log_multiline_message(logger, """Creating a load table to log load history in snowflake as {}""".format(load_table))
 
-   for row in rows:
-       schema_local = row.schema_name
+    table_query_2 = """
+           SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
+           (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),'INT64','INT'),'FLOAT64','FLOAT'),
+           'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,", 
+           '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
+           'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
+           'order ','"order" '),'<',', //'),'_"order"','_order') as ddl
+           FROM {}.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name ='{}' """.strip()
+
+    query = """select DISTINCT table_schema from {}.META.BQ_TABLE_WM"""
+    
+    project_query = query.format(project_id)
+    query_job = bq_client.query(project_query)
+    new_rows = query_job.result()
+    
+    for row in new_rows:
+       schema_local = row.table_schema
        print(schema_local)
        print("-------------------")
        print(schema_list_user_input)
@@ -973,261 +1111,225 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
        logger.info("Target schema list: %s", schema_list_user_input)
 
        if schema_local in schema_list_user_input:
-           table_tuple = tuple(Dist_user_input[schema_local])
-           print(table_tuple)
-           print("Gathering ddl {}".format(schema_local))
-           logger.info("Gathering DDL for schema:{}".format(schema_local))
 
-           query = """
-            select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns ,
-            case when t.ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type,
-            'N' as copy_done 
-            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES as t join 
-            `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on
-            c.table_name = t.table_name where c.table_name in {} group by c.table_catalog, c.table_name,c.table_schema,t.ddl;
-           """.strip()
-           log_multiline_message(logger, """Executing query to gather DDLs:
-                        {}""".format(query))
-           
-           query_2 = """
-            select  c.table_catalog, c.table_schema, c.table_name,  string_agg('$1:'||c.column_name) as table_columns , 
-            case when t.ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type,
-            'N' as copy_done 
-            FROM `{}`.{}.INFORMATION_SCHEMA.TABLES as t join
-            `{}`.{}.INFORMATION_SCHEMA.COLUMNS as c on 
-            c.table_name = t.table_name where c.table_name in ('{}') group by c.table_catalog,c.table_name,c.table_schema,t.ddl;
-           """.strip()
-    
-           print("Gathering ddl for tables in schema {}".format(schema_local))
+             # CREATE SCHEMAS
+            create_schema = "create schema if not exists {}.{}".format(database, schema_local)
+            logger.info(f"Schema {schema_local} created in {database} Database")
 
-           table_query = """
-           SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
-           (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),
-           'INT64','INT'),'FLOAT64','FLOAT'),'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),
-           'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,", '"table" INT,'),'_"table" INT,','_table INT,'),
-           'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),'DATE(_PARTITIONTIME)',
-           'date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-           'order ','"order" '),'<',', //'),'_"order"','_order') as ddl
-           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in {}
-           """.strip()
-
-           table_query_2 = """
-           SELECT table_name,replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace
-           (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(ddl,'`',''),
-           'INT64','INT'),'FLOAT64','FLOAT'),'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),
-           'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,", '"table" INT,'),'_"table" INT,','_table INT,'),
-           'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),'DATE(_PARTITIONTIME)',
-           'date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-           'order ','"order" '),'<',', //'),'_"order"','_order') as ddl
-           FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type='BASE TABLE' and table_name in ('{}')
-           """.strip()
-
-           log_multiline_message(logger, """Executing query to gather DDLs for tables in schema:
-                        {}""".format(table_query))
-           
-           # FOR SCHEMAS
-           logger.info("Execution related to Schemas")
-           if(len(table_tuple) < 2):
-                table_tuple_1 = table_tuple[0]
-                print(table_tuple)
-                logger.info("Schema named '{}' has only {} Table available".format(schema_local, len(table_tuple)))
-                log_multiline_message(logger, """Listing Tables in the Schema '{}':
-                            {}""".format(schema_local, table_tuple))
-                ddl_query = query_2.format(project_id, schema_local, project_id, schema_local, table_tuple_1)
-                print(ddl_query)
-           else:
-               ddl_query = query.format(project_id, schema_local, project_id, schema_local, table_tuple)
-               logger.info("Schema named '{}' has {} Table available".format(schema_local, len(table_tuple)))
-               log_multiline_message(logger, """Listing Tables in the Schema '{}':
-                            {}""".format(schema_local, table_tuple))
-           query_job = bq_client.query(ddl_query)
-           ddl_set = query_job.result()
-           
-           for row in ddl_set:
-            df = pd.DataFrame(data=[list(row.values())],columns = Columns) 
-            copy_table = pd.concat([copy_table,df] , ignore_index = True)
-
-            write_pandas(conn, copy_table , 'BQ_COPY_TABLE', database, schema )
-            schema_name = row.table_schema
-            create_schema = "create schema if not exists {}.{}".format(database, schema_name)
-            log_multiline_message(logger, """Creating schema with command: 
-                        {}""".format(create_schema))
             conn.cursor().execute(create_schema)
-            print("Schema {} created in {} Database".format(schema_name, database))
-            logger.info(f"Schema {schema_name} created in {database} Database")
-            print(len(table_tuple))
-            print(table_tuple)
+            print("Schema {} created in {} Database".format(schema_local, database))
+            list_tables = data[schema_local]
+           
+            for table in list_tables:
+        
+                   #FOR TABLES
+                  
+                   ddl_table_query = table_query_2.format(project_id,schema_local,table)
+                   log_multiline_message(logger, """Executing query to gather DDLs for Tables in {}:
+                        """.format(schema))
+                   query_table_job = bq_client.query(ddl_table_query)
+                   ddl_table_set = query_table_job.result()
+        
+                   for my_row in ddl_table_set:
+                       table_name = my_row.table_name
+                       ddl = my_row.ddl
+                       ddl2 = ddl.replace(project_id, database)
+        
+                       print(ddl2)
+                       print("Running ddl for table {} in Snowflake".format(table_name))
+                       use_schema = "use schema {}.{}".format(database, schema)
+                       conn.cursor().execute(use_schema)
+                       conn.cursor().execute(ddl2)
+                       print("Table {} created in {}.{} schema".format(table_name, database, schema))
+                           
+    # FOR EXPORTING DATA
+    logger.info("Execution related to Exporting Data")
+    
+    query = """ select table_schema,table_name from `{}`.META.BQ_TABLE_WM """.format(project_id)
+    query_job = client.query(query)
+    rows = query_job.result()
 
+    for row in rows:
+        schema_lo = row.table_schema
+        table = row.table_name
+
+        export_query_2 = """
+        select t.table_name as table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then 'parquet' else 'parquet' end as export_type,
+        case when ddl like '%DATETIME%' or ddl like '%TIMESTAMP%' then 'YES' else 'NO' end as TS_PRESENT,w.LAST_EXPORT_DATE,TS_COLUMN 
+        FROM `{}`.{}.INFORMATION_SCHEMA.TABLES as t inner join `{}`.META.BQ_TABLE_WM as w on w.TABLE_NAME = T.table_name   
+        where table_type='BASE TABLE' and t.table_name = '{}' """.strip()
+    
+    
+    
+        ddl_query = export_query_2.format(project_id,schema_lo,project_id,table)
+        query_job = client.query(ddl_query)
+        ddl_export_set = query_job.result()
+        log_multiline_message(logger, """Executing query to Export data: {}""".format(export_query_2))
+        for row in ddl_export_set:
+            table_name = row.table_name
+            ts_present = row.TS_PRESENT
+            if (ts_present == 'YES'): 
+                ts_col = row.TS_COLUMN
+                export_wm = """ UPDATE `{}`.META.BQ_TABLE_WM
+                                SET LAST_EXPORT_DATE = OtherTable.TS
+                                FROM (
+                                SELECT cast(max({}) as DATETIME) as TS FROM `{}`.{}.{} LIMIT 1) AS OtherTable
+                                WHERE 
+                                TABLE_NAME = '{}' """
+                run_wm = export_wm.format(project_id,ts_col,project_id, schema_lo,table_name,table_name)
+                run_job = client.query(run_wm)
+                run_set = run_job.result()
+            export_type = row.export_type
+
+            logger.info("Exporting data to snowflake...")
+            logger.info("Exporting data for table {} ...export type is {}".format(table_name, export_type)) 
+            print("Exporting data for table {} ...export type is {}".format(table_name, export_type))
+            destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name, schema_lo, table_name, table_name, export_type)
+            print(destination_uri)
             
-           #FOR TABLES
-           logger.info("Execution related to Tables")
-           if(len(table_tuple) < 2):
-               table_tuple_2 = table_tuple[0]
-               ddl_table_query = table_query_2.format(project_id, schema_local, table_tuple_2)
-               print(ddl_table_query)
-               print(table_tuple)
-               log_multiline_message(logger, """Executing query to gather required columns from INFORMATION_SCHEMA.TABLES:
-                        {}""".format(ddl_table_query))
-           else:
-               ddl_table_query = table_query.format(project_id, schema_local, table_tuple)   
-               print('else block')
-               print(ddl_table_query)
-               log_multiline_message(logger, """Executing query to gather required columns from INFORMATION_SCHEMA.TABLES:
-                        {}""".format(ddl_table_query))
-           query_table_job = bq_client.query(ddl_table_query)
-           ddl_table_set = query_table_job.result()
+            dataset_ref = bigquery.DatasetReference(project_id, schema_lo)
+            table_ref = dataset_ref.table(table_name)
 
-           for my_row in ddl_table_set:
-               table_name = my_row.table_name
-               ddl = my_row.ddl
-               ddl2 = ddl.replace(project_id, database)
-               log_multiline_message(logger, ddl2)
-               logger.info("Running ddl for table {} in Snowflake".format(table_name))
+            logger.info("Dataset Reference: {}".format(dataset_ref))
+            logger.info("Table Reference: {}".format(table_ref)) 
+            configuration = bigquery.job.ExtractJobConfig()
+            configuration.destination_format ='PARQUET'
 
-               print(ddl2)
-               print("Running ddl for table {} in Snowflake".format(table_name))
-               use_schema = "use schema {}.{}".format(database, schema)
-               try:
-                    conn.cursor().execute(use_schema)
-                    conn.cursor().execute(ddl2)
-                    logger.info("Table {} created in {}.{} schema".format(table_name, database, schema))           
-               except Exception as e:
-                    log_system_message(logger, """Error creating table {}: 
-                            {}""".format(table_name, str(e)))
-                    print("Table {} created in {}.{} schema".format(table_name, database, schema))
-                    return e
+            if export_type == 'parquet':
+                log_multiline_message(logger, """Initiating extract job for table:
+                                        {} to {} with format PARQUET.""".format(table_name, destination_uri)) 
+                extract_job = client.extract_table(
+                    table_ref,
+                    destination_uri,
+                    job_config = configuration,
+                    location = "US"
+                    )
+            else:
+                log_multiline_message(logger, """Initiating extract job for table:
+                                        {} to {} with default format (NON-PARQUET).""".format(table_name, destination_uri))
+                extract_job = client.extract_table(
+                    table_ref,
+                    destination_uri,
+                    location="US"
+                    )
+            extract_job.result()  # Waits for job to complete.
+            print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema_lo, table_name, destination_uri)) 
+            log_multiline_message(logger, """Exported successfully.. {}:{}.{} to 
+                                {}""".format(project_id, schema_lo, table_name, destination_uri))
+    
+           
+    # LOAD DATA
+    SF_query = """ select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TABLE_COLUMNS, EXPORT_TYPE, COPY_DONE, LAST_EXPORT_DATE, 
+                   IFNULL(NULLIF(TS_COLUMN,''),'N') as TS_COLUMN, IFNULL(NULLIF(KEY_COLUMN,''),'N') 
+                   as KEY_COLUMN, INCREMENTAL from {}.{}.BQ_WM_TABLE where copy_done ='N'  """.format(database,schema)
+    
+    cur = conn.cursor()
+    cur.execute(SF_query)
+    
+    result = cur.fetchall()
+    column_info = cur.description
+    column_names = [info[0] for info in column_info]
+    df2 = pd.DataFrame(result , columns=column_names)
+    counter = 0
+    i=0
+    
+    for i in range(0,len(df2)):
+        table_catalog = df2['TABLE_CATALOG'].iloc[i];
+        table_name = df2['TABLE_NAME'].iloc[i];
+        table_schema  = df2['TABLE_SCHEMA'].iloc[i];
+        table_columns = df2['TABLE_COLUMNS'].iloc[i];
+        export_type  = df2['EXPORT_TYPE'].iloc[i];
+        ts_col = df2['TS_COLUMN'].iloc[i];
 
-       # FOR EXPORTING DATA
-           logger.info("Execution related to Exporting Data")
-           try:
-                export_query = """
-                select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then
-                'parquet' else 'parquet' end as export_type
-                FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type = 'BASE TABLE' and table_name in {}
-                """.strip()
+        logger.info("Preparing to load data for table {table_name} with export type {export_type}")
+        
+        # Splitting the column list string into individual columns
+        columns_list = table_columns.split(',')
+        a=[]
+        for data in columns_list:
+            if ( data == ts_col) :
+                col = "$1:"+data+"::varchar::timestamp_ntz as " + data
+                a.append(col)
+    
+            else:
+                col = "$1:"+data+" as data"
+                a.append(col)
+    
+        result_columns = ",".join(a) 
+    
+        copy_command = """copy into {db}.{sc}.{tb} from ( select
+        {col_list}
+        from @{db}.{sch}.snow_migrate_stage/{sc}/{tb}/{tb}
+        (file_format => my_parquet_format))"""
+        
+        print(table_name + export_type)
+    
+        copy_command = copy_command.replace('{sch}', schema)
+        copy_command = copy_command.replace('{sc}', table_schema)
+        copy_command = copy_command.replace('{db}', database)
+        copy_command = copy_command.replace('{tb}', table_name)
+        copy_command = copy_command.replace('{col_list}', result_columns)
+        log_multiline_message(logger, """Executing COPY command (Moving data from snow_migrate_stage to respective table): {}""".format(copy_command))
+        
+        curb = conn.cursor()
+        curb.execute(copy_command)
+        query= curb.sfqid
+        print(query)
+        counter+=1
+        i+=1
+        print(counter)
+        print("{} Data Loaded succesfully with {}".format(table_name,copy_command))
+        log_multiline_message(logger, """{}: Data Loaded successfully for {} using command: 
+                            {}""".format(counter, table_name, copy_command))
+        
+        print(query)
 
-                export_query_2 = """
-                select table_name,case when ddl like '%STRUCT%' or ddl like '%ARRAY%' then
-                'parquet' else 'parquet' end as export_type
-                FROM `{}`.{}.INFORMATION_SCHEMA.TABLES where table_type = 'BASE TABLE' and table_name in ('{}')
-                """.strip()
-                # log_multiline_message(logger, """Executing query to Export data: 
-                #             {}""".format(export_query))
-                
-                if(len(table_tuple)<2):
-                    table_tuple_3 = table_tuple[0]
-                    ddl_query = export_query_2.format(project_id, schema_local, table_tuple_3)
-                else:
-                    ddl_query = export_query.format(project_id, schema_local, table_tuple) 
-                query_job = bq_client.query(ddl_query)
-                ddl_export_set = query_job.result()
-           except Exception as e:
-                log_system_message(logger, """Failed to execute export query or fetch results. Error: 
-                            {}""".format(str(e)))
-                return e
+        files = """(SELECT "file","rows_parsed","rows_loaded","errors_seen" FROM TABLE(RESULT_SCAN('{}')));""".format(query)
+        curc=conn.cursor()
+        curc.execute(files)
+        data2 = curc.fetchall()
+        df_files = pd.DataFrame(data2,columns = ['FILE','ROWS_PARSED','ROWS_LOADED','ERRORS_SEEN'])
+        i=0
+        for i in range(0,len(df_files)):
+            file = df_files['FILE'].iloc[i];
+            rows_parsed = df_files['ROWS_PARSED'].iloc[i];
+            rows_loaded  = df_files['ROWS_LOADED'].iloc[i];
+            errors_seen = df_files['ERRORS_SEEN'].iloc[i];
 
-           for row in ddl_export_set:
-               table_name = row.table_name
-               export_type = row.export_type
-               logger.info("Exporting data to snowflake...")
-               logger.info("Exporting data for table {} ...export type is {}".format(table_name, export_type))
-               print("Exporting data for table {} ...export type is {}".format(table_name, export_type))
-               destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name, schema_local, table_name, table_name, export_type)
-               print(destination_uri)
-               log_multiline_message(logger, """Destination URI: 
-                        {}""".format(destination_uri))
+            load = """INSERT INTO {}.{}.BIGQUERY_LOAD_HISTORY(DATABASE, SCHEMA, TABLE_NAME, TYPE_OF_LOAD, 
+        FILE_NAME, NO_OF_ROWS, NO_OF_UPDATES, NO_OF_INSERT, TIMESTAMP) 
+        VALUES ('{}'::varchar , '{}'::varchar , '{}'::varchar , 'INITIAL' , '{}'::varchar , '{}'::integer, '{}'::integer,'{}'::integer , current_timestamp); """
+    
+            load = load.format(database,schema,table_catalog,table_schema,table_name,file,rows_parsed,rows_loaded,errors_seen)
 
-               dataset_ref = bigquery.DatasetReference(project_id, schema_local)
-               table_ref = dataset_ref.table(table_name)
-               logger.info("Dataset Reference: {}".format(dataset_ref))
-               logger.info("Table Reference: {}".format(table_ref))
-               configuration = bigquery.job.ExtractJobConfig()
-               configuration.destination_format ='PARQUET'
-               try:
-                    if export_type == 'parquet':
-                        log_multiline_message(logger, """Initiating extract job for table:
-                                     {} to {} with format PARQUET.""".format(table_name, destination_uri))
-                        extract_job = bq_client.extract_table(
-                            table_ref,
-                            destination_uri,
-                            job_config = configuration,
-                            location = "US"
-                            )
-                    else:
-                        log_multiline_message(logger, """Initiating extract job for table: 
-                                        {} to {} with default format (non-PARQUET).""".format(table_name, destination_uri))
-                        extract_job = bq_client.extract_table(
-                            table_ref,
-                            destination_uri,
-                            location = "US"
-                            )
-                    extract_job.result()  # Waits for job to complete.
-                    log_multiline_message(logger, """Exported successfully.. {}:{}.{} to 
-                                    {}""".format(project_id, schema_local, table_name, destination_uri))
-                    print("Exported successfully.. {}:{}.{} to {}".format(project_id, schema_local, table_name, destination_uri)) 
-               except Exception as e:
-                    log_system_message(logger, """Failed to export table {}: 
-                                {}""".format(table_name, str(e)))
-                    return e
-           # LOAD DATA
-           SF_query = "select table_name, table_schema, table_columns, export_type from BQ_COPY_TABLE where copy_done ='N'"
-           cur = conn.cursor()
-           cur.execute(SF_query)
-           log_multiline_message(logger, """Executing query in Snowflake: 
-                            {}""".format(SF_query))
-           result = cur.fetchall()
-           column_info = cur.description
-           column_names = [info[0] for info in column_info]
-           df2 = pd.DataFrame(result , columns = column_names)
-           counter = 0
-           i = 0
-
-           for i in range(0, len(df2)):
-                table_name = df2['TABLE_NAME'].iloc[i];
-                table_schema  = df2['TABLE_SCHEMA'].iloc[i];
-                table_columns = df2['TABLE_COLUMNS'].iloc[i];
-                export_type  = df2['EXPORT_TYPE'].iloc[i];
-
-                logger.info("Preparing to load data for table {table_name} with export type {export_type}")
-                
-                # Splitting the column list string into individual columns
-                columns_list = table_columns.split(',')
-
-                # Creating a multi-line string with each column on its own line
-                formatted_columns_list = "\n".join(columns_list)
-
-                copy_command = """copy into {db}.{sc}.{tb} from ( select
-                {col_list}
-                from @{db}.{sch}.snow_migrate_stage/{sc}/{tb}/{tb}
-                (file_format => my_parquet_format))"""
-                
-                print(table_name + export_type)
+            curc.execute(load)
+            print(load)
+            log_multiline_message(logger, """Log Data Loaded successfully for table {} into BIGQUERY LOAD HISTORY TABLE in SNOWFLAKE: 
+                            """.format (table_name))
+    
+        if (len(ts_col) == 1):
+            update_query= """UPDATE {}.{}.BQ_WM_TABLE SET COPY_DONE = 'Y'  where TABLE_NAME = '{}'; """.format(database,schema,table_name)
+            curc.execute(update_query)
+            result=curc.fetchall()
+            log_multiline_message(logger, """Updated the copy done status for table {} in SNOWFLAKE Watermark table 
+                            """.format (table_name))
+        else:
+            export_date = """SELECT MAX(to_timestamp_ntz({})) as TS_COL FROM {}.{}.{}""".format(ts_col,database,table_schema,table_name)
+            curc.execute(export_date)
+            result=curc.fetchone()
+            last_export_date = result[0]
+            log_multiline_message(logger, """Fetching the last export date for table {} in SNOWFLAKE
+                            """.format (table_name))
             
-                copy_command = copy_command.replace('{db}', database,2)
-                copy_command = copy_command.replace('{sc}', table_schema,2)
-                copy_command = copy_command.replace('{sch}', schema)
-                copy_command = copy_command.replace('{tb}', table_name,3)
-                copy_command = copy_command.replace('{col_list}', table_columns)
-
-                try:
-                    conn.cursor().execute(copy_command)
-                    log_multiline_message(logger, """Executing COPY command (Moving data from snow_migrate_stage to respective table): 
-                                    {}""".format(copy_command))
-                    counter += 1
-                    i += 1
-                    print(counter)
-                    print("{} Data Loaded succesfully with {}".format(table_name, copy_command))
-                    log_multiline_message(logger, """{}: Data Loaded successfully for {} using command: 
-                                {}""".format(counter, table_name, copy_command))
-                except Exception as e:
-                    log_system_message(logger, """Failed to load data for table {} : 
-                            {}""".format(table_name, e))
-                    return e
-       else :
-            print("Done")
-   auditing_log_into_Snowflake(conn, project_id, inner_dict)
-   Migration_report(conn, database, schema)  
-   return render_template('result.html')
+            update_query = """ UPDATE {}.{}.BQ_WM_TABLE
+            SET LAST_EXPORT_DATE = '{}'::varchar::timestamp_ntz , COPY_DONE = 'Y' where TABLE_NAME = '{}'; """.format(database,schema,last_export_date,table_name)
+            curc.execute(update_query)
+            result = curc.fetchall()
+            log_multiline_message(logger, """Updated the copy done status and the Last export date for table {} in SNOWFLAKE Watermark table """.format (table_name))
+    
+    auditing_log_into_Snowflake(conn, project_id, inner_dict)
+    Migration_report(conn, database, schema)  
+    return render_template('result.html')
 
 
            
@@ -1718,10 +1820,6 @@ with tab4:
     text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(results)
-
-@app.route('/increment', methods=['POST'])
-def incremental():
-    return render_template('incremental_form.html')
 
 
 if __name__ == '__main__':

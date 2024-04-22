@@ -24,6 +24,29 @@
   <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
   <!-- responsive style -->
   <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
+
+  <style>
+    #heading1{
+  background:#072A6C ;
+  padding: 7px;
+  color:white;
+  border-radius : 10px 10px 0px 0px;
+}
+#heading1 input{
+  margin-top: 10px;
+  margin-left: 10px;
+}
+#heading1 label{
+  font-weight: bold;
+}
+#content1{
+  padding: 60px;
+  /* height: 300px; */
+}
+ul{
+  margin-top: 5px;
+}
+  </style>
 </head>
 
 <body class="sub_page">
@@ -66,6 +89,51 @@
     </header>
     <!-- end header section -->
   </div>
+  <!-- <form id="checkboxForm" action="/load_incremental" method="post">
+    <div class="row">
+      {% for schema, tables in data.items() %}
+          <div class="col-md-4 ">
+            <div class="popup1">
+              <div id="heading1">
+                <input type="checkbox" name="schema" id="{{ schema }}" value="{{ schema }}">
+                <label for="{{ schema }}">{{ schema }}</label>
+              </div>
+              {% for table in tables %}
+              <div class="content1">
+                <ul style="list-style: none;">
+                  <li>
+                    <input type="radio" name="table" id="{{ table }}" value="{{ table }}" class="table-checkbox">
+                    <label for="{{ table }}">{{ table }}
+                    </li>
+                </ul>
+              </div> 
+              {% endfor %}
+            </div>
+          </div>
+    </div>
+    {% endfor %}
+    </div>
+    <br>
+    <button type="button" id="submit-btn" onclick="submitForm()" class="connect-btn">Submit</button>
+  </form>  -->
+
+
+  <form action="/submit_incremental" method="post" name="myForm">
+    <label for="schema_name">SCHEMA NAME:</label><br>
+    <select id="schema_name" name="schema_name" required><br>
+    {% for schema in data %}
+    <option value="{{ schema }}">{{schema}}</option>
+    {% endfor %}
+    </select><br><br>
+    <label for="table_name">TABLE NAME:</label><br>
+    <select id="table_name" name="table_name" required>
+    {% for table in tables %}
+    <option value="{{ table }}">{{ table }}</option>
+    {% endfor %}
+    </select><br><br>
+    <input type="submit" value="Submit" onclick="handleFormSubmit(event)">
+  </form>
+
 
   <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
  <!-- popper js -->
@@ -82,6 +150,43 @@
  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
  </script>
  <!-- End Google Map -->
+</script>
+<script>
+  document.getElementById('my_secret').value = new Date().toLocaleString(); 
+
+    // Function to fetch cities based on the selected country
+    function fetchCities() {
+        var schema_name = document.getElementById('schema_name').value;
+        fetch('/tables?schema_name=' + schema_name)
+            .then(response => response.json())
+            .then(data => {
+                var table_name = document.getElementById('table_name');
+                table_name.innerHTML = ''; // Clear previous options
+                data.forEach(function(city) {
+                    var option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    table_name.appendChild(option);
+                });
+            });
+    }
+
+    // Fetch cities on page load
+    window.addEventListener('load', fetchCities);
+
+    // Fetch cities on country selection change
+    document.getElementById('schema_name').addEventListener('change', fetchCities);
+
+  function handleFormSubmit(event) {
+  event.preventDefault();
+  
+  const form = event.target.closest('form'); // Find the closest form element
+  const data = new FormData(form);
+  
+  const formJSON = Object.fromEntries(data.entries());
+  
+  window.location.href = 'http://127.0.0.1:8000/submit_incremental?' + new URLSearchParams(formJSON); // Redirect to submit route with query string
+}
 </script>
 </body>
 </html>
