@@ -21,7 +21,7 @@ def setup_logger(log_filename):
     # Set up logging configuration for the logger
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(levelname)8s - %(name)10s > %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    file_handler = logging.FileHandler('D:/Log/migration.log')
+    file_handler = logging.FileHandler(r"C:\Users\Swetha\Desktop\Log/migration.log")
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
     
@@ -37,7 +37,7 @@ def log_system_message(logger, err_message):
     # Log the entire multiline message as a single entry with proper indentation and formatting
     logger.error('\n'.join([' ' * 4 + line.strip() for line in err_message.split('\n')]) + '\n')
 
-logger = setup_logger('D:/Log/migration.log')
+logger = setup_logger(r"C:\Users\Swetha\Desktop\Log/migration.log")
 
 def Migration_report(connection, database, schema):
     try:
@@ -49,8 +49,8 @@ def Migration_report(connection, database, schema):
         connection_cursor = connection.cursor()
         connection_cursor.execute(f"create stage if not exists {database}.{schema}.Migration_Report;")
         logger.info('Stage named Migration_Report Created Successfully')
-        connection_cursor.execute(f"put file://D:\Stream_lit_code_frame\environment.yml @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
-        connection_cursor.execute(f"put file://D:\Stream_lit_code_frame\streamlit.py @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\environment.yml @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
+        connection_cursor.execute(r"put file://C:\Users\Swetha\Desktop\streamlit\streamlit.py @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
         logger.info('Creating Streamlit App')
         msg = f"""create or replace STREAMLIT {database}.{schema}.Migration_Report
             ROOT_LOCATION = '@{database}.{schema}.Migration_Report/REPORT_FLD'
@@ -907,7 +907,7 @@ def migration_result():
 @app.route('/log')
 def log():
     # Path to the log file
-    log_file_path = "D:/Log/migration.log"
+    log_file_path = "C:\Users\Swetha\Desktop\Log/migration.log"
     
     # Read log content from the file
     if os.path.exists(log_file_path):
@@ -921,7 +921,7 @@ def log():
 
 @app.route('/download-log')
 def download_log():
-    log_file_path = "D:/Log/migration.log"
+    log_file_path = "C:\Users\Swetha\Desktop\Log/migration.log"
     if os.path.exists(log_file_path):
         return send_file(log_file_path, as_attachment = True, download_name = 'migration.log')
     else:
@@ -1708,7 +1708,7 @@ with tab4:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
+    text_file_path = r'C:\Users\Swetha\Desktop\streamlit\streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(results)
 
