@@ -1,0 +1,23 @@
+title: RoleSnowMigrate
+description: Custom role with permissions for BigQuery & Cloud Storage.
+stage: GA
+includedPermissions:
+  - bigquery.datasets.create
+  - bigquery.tables.get
+  - bigquery.tables.export
+  - bigquery.tables.getData
+  - bigquery.tables.list
+  - bigquery.tables.replicateData
+  - bigquery.tables.updateData
+  - bigquery.jobs.create
+  - bigquery.datasets.update
+  - bigquery.datasets.get
+  - bigquery.transfers.update
+  - bigquery.transfers.get
+  - bigquery.routines.get
+  - bigquery.routines.list
+  - storage.objects.create
+  - storage.objects.delete
+  - storage.buckets.get
+  - resourcemanager.projects.get
+  - iam.roles.get

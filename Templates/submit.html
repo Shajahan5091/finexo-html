@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>  
+    <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/logo.png') }}" type="">
+  <link href="{{ url_for('static',filename='styles/result.css') }}" rel="stylesheet" />
+  <style>
+    body{
+        background-color: #072A6C;
+    }
+    #button{
+        display: grid;
+        background-color: white;
+        margin-left: 0;
+        text-align: center;
+    }
+    button{
+        height: 42px;
+        width: 190px;
+        font-weight: bold;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: large;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-left: 110px;
+    }
+  </style>
+</head>
+<body>
+    <div class="container">
+        <div class="popup success-animation form-container heading_container">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"><circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" /><path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" /></svg>
+            <h2 id="form-heading">
+                Incrementation load is successful<br>
+                <!-- <span> Snowflake </span> -->
+            </h2><br>
+            <div id="button">
+                <button class="connect-btn" onclick="navigateToLog()">View Log</button>
+                <a class="connect-btn" href="{{ url_for('index') }}" style="margin-right: 120px; margin-top: 10px;">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateToLog() {
+            // Navigate to the /log route
+            window.location.href = "{{ url_for('log') }}";
+        }
+        function navigatetoincremental() {
+            window.location.href = "{{ url_for('incremental') }}";
+        }
+    </script>
+</body>
+</html>

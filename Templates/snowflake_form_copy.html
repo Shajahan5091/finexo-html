@@ -10,7 +10,7 @@
   <meta name="keywords" content="" />
   <meta name="description" content="" />
   <meta name="author" content="" />
-  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/favicon.png') }}" type="">
+  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/logo.png') }}" type="">
   <title> Snow Migrate </title>
   <!-- bootstrap core css -->
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}" />
@@ -43,14 +43,158 @@
     .K2_CBox .C_box_main{cursor:pointer;display:inline-flex;align-items:center;padding:12px;outline:0;border:0;border-radius:50%;background:#004cbd;transition:all .3s ease;-webkit-transition:all .3s ease}.K2_CBox .C_box_main:hover{opacity:.8}.K2_CBox .C_box_main .CBox_icn{flex-shrink:0;display:inline-block;width:18px;height:18px;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fefefe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24'><rect x='5.54615' y='5.54615' width='16.45385' height='16.45385' rx='4'/><path d='M171.33311,181.3216v-8.45385a4,4,0,0,1,4-4H183.787' transform='translate(-169.33311 -166.86775)'/></svg>");background-size:cover;background-repeat:no-repeat;background-position:center}
     .K2_CBox .C_box_main.copied{background:#2dcda7}
     .K2_CBox .C_box_main.copied .CBox_icn{background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fefefe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24'><path d='M22 11.07V12a10 10 0 1 1-5.93-9.14'/><polyline points='23 3 12 14 9 11'/></svg>")}
-    .K2_CBox pre{margin:0;background:#f6f6f6;padding:15px;border-radius:5px;color:#08102b;font-size:.8rem;font-family:monospace;overflow:scroll;scroll-behavior:smooth;scroll-snap-type:x mandatory;-ms-overflow-style:none;-webkit-overflow-scrolling:touch; white-space: pre-wrap;}
-    .K2_CBox pre::before, .K2_CBox pre::after{content:''}
+    .K2_CBox pre{margin:0;background:#f6f6f6;padding:5px;border-radius:5px;color:#08102b;font-size:.8rem;font-family:monospace;overflow:scroll;scroll-behavior:smooth;scroll-snap-type:x mandatory;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}
+    .K2_CBox pre::before, .K2_CBox p::after{content:''}
     .dark-Mode .K2_CBox{background:#2d2d30}.dark-Mode .K2_CBox pre{background:#252526;color:#fffdfc}
     .tNtf span{position:fixed;left:24px;bottom:-70px;display:inline-flex;align-items:center;text-align:center;justify-content:center;margin-bottom:20px;z-index:99981;background:#323232;color:rgba(255,255,255,.8);font-size:14px;font-family:inherit;border-radius:3px;padding:13px 24px; box-shadow:0 5px 35px rgba(149,157,165,.3);opacity:0;transition:all .1s ease;animation:slideinwards 2s ease forwards;-webkit-animation:slideinwards 2s ease forwards}
     @media screen and (max-width:500px){.tNtf span{margin-bottom:20px;left:20px;right:20px;font-size:13px}}
     @keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
     @-webkit-keyframes slideinwards{0%{opacity:0}20%{opacity:1;bottom:0}50%{opacity:1;bottom:0}80%{opacity:1;bottom:0}100%{opacity:0;bottom:-70px;visibility:hidden}}
     .darkMode .tNtf span{box-shadow:0 10px 40px rgba(0,0,0,.2)}
+
+
+
+    .loading {
+        display: inline-block;
+    }
+    .success {
+        color: green;
+    }
+    .failure {
+        color: red;
+    }
+    .loading-container{
+      display: none;
+    }
+
+    .loader {
+      width: 250px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-family: helvetica, arial, sans-serif;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: #00204a;
+      letter-spacing: 0.2em;
+      
+      &::before, &::after {
+        content: "";
+        display: block;
+        width: 15px;
+        height: 15px;
+        background: #00204a;
+        position: absolute;
+        animation: load .7s infinite alternate ease-in-out;
+      }
+      
+      &::before {
+        top: 0;
+      }
+      
+      &::after {
+        bottom: 0;
+      }
+    }
+
+    @keyframes load {
+      0% { left: 0; height: 30px; width: 15px }
+      50% { height: 8px; width: 40px }
+      100% { left: 235px; height: 30px; width: 15px}
+    }
+    .odd{
+        text-align: left;
+        width:400px;
+        padding: 3px;
+    }
+    #even{
+        text-align: center;
+        width:150px;
+        line-height: 15px;
+        padding: 3px;
+    }
+    .connect-btn{
+        margin-left: 100px;
+        background-color: #007bff;
+    }
+    #connecting-btn{
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    .loading {
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #3498db;
+        width: 20px;
+        height: 20px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+     }
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.failure{
+    font-size: small;
+    margin: 0;
+    padding: 0;
+    line-height: 0%;
+}
+
+.popup_error {
+  display: none; 
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius : 10px;
+  z-index: 1000;
+  min-width: 400px;
+  box-shadow: 0 0 10pt 1pt #D3D3D3;
+}
+ 
+/* Pop-up box content */
+.popup-content-error {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+}
+ 
+/* Close button */
+.close {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+ 
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
   </style>
 </head>
 
@@ -97,100 +241,98 @@
   <!-- <div id="loading-container" class="loading-container">
     <div id="loader" class="loader">Migrating...</div>
   </div> -->
-  <div class="row2" id="side">
+  <div class="row2" {% if show_popup %}style="opacity: 0.1;"{% endif %}>
     <div class="side">
       <div class="heading_container">
-        <h2>Snowflake as Destination:</h2>
+          <h3>Prerequisites</h3>
       </div>
-      <p>Setting up the Snowflake Environment involves setting up Snowflake entities (Warehouse, Database, Schema, User, and Role) in the Snowflake Console and configuring the Snowflake Environment using the UI.</p>
-      <div class="heading_container">
-          <h2>Snowflake Connection Requirements:</h2>
-      </div>
-      <ol style="list-style-type: numbers;">
-          <li>A Snowflake account with the ACCOUNTADMIN role enabled.</li>
-      </ol>
+      <ul style="list-style-type: circle;">
+          <li>A Snowflake account with access to ACCOUNTADMIN role ( for creating storage integrations on account) and SECURITYADMIN role ( for creating a custom role for migration)</li>
+      </ul>
       <br>
       <div class="heading_container">
-        <h2>Setup Guide for Snowflake:</h2>
+        <h3>Setup Guide for Snowflake</h3>
       </div>
       <p>To set up the Snowflake Environment, you first need to create Snow Migrate-specific Snowflake entities (Warehouse, Database, Schema, User, and Role) with the OWNERSHIP permission to write data into Snowflake, track costs pertaining to Snow Migrate, and control permissions at a granular level. Follow these steps:</p>
-      <ol style="font-weight: bold">
-        <li><p style="font-weight: normal">Log into your Snowflake account.</p></li>
-        <li><p style="font-weight: normal">Edit the upcoming script to change the password to a more secure password and to change the names of other resources if you desire.</p></li>
-      </ol>
+      <ul>
+        <li><p style="font-weight: normal">Log into your Snowflake account</p></li>
+        <li><p style="font-weight: normal">Edit the upcoming script to change the password to a more secure password and to change the names of other resources if you desire</p></li>
+      </ul>
       <br>
-      <h3 style="font-weight: bold" class="text-danger",=""> Note:</h3>
-      <p>Make sure you follow the Snowflake identifier requirements while renaming the resources.<br><br></p>
+      <h3 style="font-weight: bold" class="text-danger"> Note:</h3>
+      <p>Make sure you follow the Snowflake identifier requirements while renaming the resources.<br></p>
       <p style="font-weight: bold">You can use the following script in a new Snowflake worksheet to create the entities.
-      Run the script using the Worksheet page or Snowsight.<br> <br>Make sure to select the All Queries checkbox while running the Script:<br></p>
+      Run the script using the Worksheet page or Snowsight.<br></p>
     
         <div class='K2_CBox'>
             <div class='CB_Heading'>
                 <span style="color: white">Snowflake Script</span>
-                <button id='copy1' class='C_box_main' onclick="copyC('copy1','code1')">
+                <button id='copy1' class='C_box_main' onclick="copyC('copy1','code2')">
                     <i class='CBox_icn'></i>
                 </button>
             </div>
     
             <!--Add Your Parse HTML code Here-->
-            <div id='code1'>
-                <pre>-- set variables (these need to be uppercase)
-                  set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
-                  set snow_migrate_username = 'SNOW_MIGRATE_USER';
-                  set snow_migrate_warehouse = 'SNOW_MIGRATE_WAREHOUSE';
-                  set snow_migrate_database = 'SNOW_MIGRATE_DATABASE';
-                  set snow_migrate_schema = 'SNOW_MIGRATE_SCHEMA';
-                  
-                  -- set user password
-                  set snow_migrate_password = 'password';
-                  
-                  begin;
-                  
-                  -- create SNOW_MIGRATE_ROLE
-                  use role securityadmin;
-                  create role if not exists identifier($snow_migrate_role);
-                  grant role identifier($snow_migrate_role) to role SYSADMIN;
-                  
-                  -- create SNOW_MIGRATE_USER
-                  create user if not exists identifier($snow_migrate_username)
-                  password = $snow_migrate_password
-                  default_role = $snow_migrate_role
-                  default_warehouse = $snow_migrate_warehouse;
-                  
-                  
-                  grant role identifier($snow_migrate_role) to user identifier($snow_migrate_username);
-                  
-                  -- change role to sysadmin for warehouse / database steps
-                  use role sysadmin;
-                  
-                  -- create SNOW_MIGRATE_WAREHOUSE
-                  create warehouse if not exists identifier($snow_migrate_warehouse)
-                  warehouse_size = xsmall
-                  warehouse_type = standard
-                  auto_suspend = 60
-                  auto_resume = true
-                  initially_suspended = true;
-                  
-                  -- create SNOW_MIGRATE_DATABASE
-                  create database if not exists identifier($snow_migrate_database);
-                  
-                  -- grant Airbyte wSNOW_MIGRATE_DATABASE.INFORMATION_SCHEMAarehouse access
-                  grant USAGE
-                  on warehouse identifier($snow_migrate_warehouse)
-                  to role identifier($snow_migrate_role);
-                  
-                  -- grant Airbyte database access
-                  grant OWNERSHIP
-                  on database identifier($snow_migrate_database)
-                  to role identifier($snow_migrate_role);
-                  
-                  GRANT CREATE SCHEMA ON DATABASE SNOW_MIGRATE_DATABASE TO ROLE SNOW_MIGRATE_ROLE;
-                  
-                  USE ROLE ACCOUNTADMIN;
-                  
-                  GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SNOW_MIGRATE_ROLE;
-                  
-                  commit;</pre>
+            <div id='code2'>
+<pre><code>
+  -- set variables (these need to be uppercase)
+  set snow_migrate_role = 'SNOW_MIGRATE_ROLE';
+  set snow_migrate_username = 'SNOW_MIGRATE_USER';
+  set snow_migrate_warehouse = 'SNOW_MIGRATE_WAREHOUSE';
+  set snow_migrate_database = 'SNOW_MIGRATE_DATABASE';
+    
+  -- set user password
+  set snow_migrate_password = 'password';
+    
+  begin;
+    
+  -- create SNOW_MIGRATE_ROLE
+  use role securityadmin;
+  create role if not exists identifier($snow_migrate_role);
+  grant role identifier($snow_migrate_role) to role SYSADMIN;
+    
+  -- create SNOW_MIGRATE_USER
+  create user if not exists identifier($snow_migrate_username)
+  password = $snow_migrate_password
+  default_role = $snow_migrate_role
+  default_warehouse = $snow_migrate_warehouse;
+    
+    
+  grant role identifier($snow_migrate_role) to user 
+  identifier($snow_migrate_username);
+    
+  -- change role to sysadmin for warehouse / database steps
+  use role sysadmin;
+    
+  -- create SNOW_MIGRATE_WAREHOUSE
+  create warehouse if not exists identifier($snow_migrate_warehouse)
+  warehouse_size = xsmall
+  warehouse_type = standard
+  auto_suspend = 60
+  auto_resume = true
+  initially_suspended = true;
+  
+  -- create SNOW_MIGRATE_DATABASE
+  create database if not exists identifier($snow_migrate_database);
+  
+  -- grant warehouse access
+  grant USAGE
+  on warehouse identifier($snow_migrate_warehouse)
+  to role identifier($snow_migrate_role);
+  
+  -- grant database access
+  grant OWNERSHIP
+  on database identifier($snow_migrate_database)
+  to role identifier($snow_migrate_role);
+  
+  GRANT CREATE SCHEMA ON DATABASE SNOW_MIGRATE_DATABASE TO ROLE SNOW_MIGRATE_ROLE;
+  
+  USE ROLE ACCOUNTADMIN;
+  
+  GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE SNOW_MIGRATE_ROLE;
+  
+  commit;
+</code></pre>
                 <div id='toastNotif' class='tNtf'></div>
             </div>
         </div>
@@ -202,33 +344,532 @@
                   Destination Connection<br>
                     <span> Snowflake </span>
                 </h2>
-                <label for="accountname"><b>Account Name</b></label><br>
+                <label for="accountname">Account Name</label><br>
                 <input class="accountname" id="accountname" type="text" placeholder="Ex: locator.region" name="accountname" required>
-                <label for="role"><b>Role</b></label><br>
+                <label for="role">Role</label><br>
                 <input class="role" id="role" type="text" value="SNOW_MIGRATE_ROLE" name="role" required>
 
-                <label for="username"><b>Username</b></label><br>
+                <label for="username">Username</label><br>
                 <input class="username" id="username" type="text" value="SNOW_MIGRATE_USER" name="username" required>
     
-                <label for="warehouse"><b>Warehouse</b></label><br>
+                <label for="warehouse">Warehouse</label><br>
                 <input class="warehouse" id="warehouse" type="text" value="SNOW_MIGRATE_WAREHOUSE" name="warehouse" required>
 
-                <label for="database"><b>Database</b></label><br>
+                <label for="database">Database</label><br>
                 <input class="database" id="database" type="text" value="SNOW_MIGRATE_DATABASE" name="database" required>
 
-                <label for="schema"><b>Schema</b></label><br>
+                <label for="schema">Schema</label><br>
                 <input class="schema" id="schema" type="text" value="SNOW_MIGRATE_SCHEMA" name="schema" required>
 
-                <label for="password"><b>Password</b></label><br>
+                <label for="password">Password</label><br>
                 <input class="password" style="margin-bottom: 5px;" id="password" type="password" placeholder="Enter Password" value="password" name="password" required><br>
                 <input id="show-password" type="checkbox" onclick="myFunction()" style="margin-left: 80px; padding: 0;">
-                <label id="show-pass-label" for="show-password" style="font-size: medium; display: inline; margin-left: 0;"> Show Password</label>
+                <label id="show-pass-label" for="show-password" style="font-size: medium; display: inline; margin-left: 0; font-weight: normal;"> Show Password</label>
 
-                <button type="submit" id="snowflake-login-btn" onclick="snowflake_form_validation()">Proceed</button>
+                <button type="submit" id="snowflake-login-btn" onclick="snowflake_form_validation()">Test Connection</button>
             </form>
         </div>
     </div>
   </div>
+
+  <div id="loading-container" class="loading-container">
+    <div id="loader" class="loader">Migrating...</div>
+</div>
+<div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+  <div id="heading">
+    <span onclick="closePopup()" style="cursor: pointer; float: right; font-size: x-large;">&times;</span>
+    <h3 style="display: inline;"><span><b>Testing Connection</b></span></h3>
+  </div>
+  <div id="content">
+    <table>
+        <tr>
+            <td class="odd">
+                <div id="Snowflake_User">
+                Testing Snowflake Connection
+            </td>
+            <td id="even">
+                <span id="SnowflakeUserResult" class="loading"></span>
+                <span id="Error_1" class="failure"></span>
+            </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                    Warehouse, Database, Role, User are created  
+            </td>
+            <td id="even">
+                <span id="RoleResult" class="loading"></span>
+                <span id="Error_2" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd"> 
+                Given access to Create Schemas and its objects
+            </td>
+            <td id="even">
+                <span id="CreatePermissionsResult" class="loading"></span>
+                <span id="Error_3" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                Storage Integration is Created
+            </td>
+            <td id="even">
+                <span id="StorageIntegrationResult" class="loading"></span>
+                <span id="Error_4" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                Storage Integration has Access
+            </td>
+            <td id="even">
+                <span id="StorageIntegrationAccess" class="loading"></span>
+                <span id="Error_5" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                File Format is Created
+            </td>
+            <td id="even"> 
+                <span id="FileFormatResult" class="loading"></span>
+                <span id="Error_6" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                File Format has Access                    
+            </td>
+            <td id="even">
+                <span id="FileFormatAccess" class="loading"></span>
+                <span id="Error_7" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                Stage is Created
+            </td>
+            <td id="even">
+                <span id="StorageStageResult" class="loading"></span>
+                <span id="Error_8" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                Stage has Access
+            </td>
+            <td id="even">
+                <span id="StorageStageAccess" class="loading"></span>
+                <span id="Error_9" class="failure"></span>
+            </td>
+        </tr>
+        <tr>
+            <td class="odd">
+                            Stage Ready to Use
+            </td>
+            <td id="even">
+            <span id="StorageStageReady" class="loading"></span>
+            <span id="Error_10" class="failure"></span>
+            </td>
+            </tr>
+    </table>    
+    <br>
+    <form action="/migration_result" method="post">
+        <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
+        <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()" disabled>Migrate</button>
+    </form>
+    </div>
+</div>
+
+<div id="errorPopup" class="popup_error">
+    <div class="popup-content-error">
+    <span class="close" onclick="closeErrorPopup()">&times;</span>
+    <p id="errorPopupMessage"></p>
+    <button class="connect-btn" onclick="closeErrorPopup()" style="margin-right: 100px;">OK</button>
+    </div>
+</div>
+
+<script>
+    var count=0;
+    // Function to display tick mark
+    function showSuccess(elementId) {
+        document.getElementById(elementId).textContent = '✔';
+        document.getElementById(elementId).classList.add('success');
+        document.getElementById(elementId).classList.remove('loading');
+    }
+
+    // Function to display cross mark
+    function showFailure(elementId) {
+        document.getElementById(elementId).textContent = '✘';
+        document.getElementById(elementId).classList.add('failure');
+        document.getElementById(elementId).classList.remove('loading');
+    }
+
+
+    // Function to test GCP service account connection
+    async function testConnection() {
+        try {
+            // Show loading symbol
+            document.getElementById('SnowflakeUserResult').classList.add('loading');
+            
+            const response = await fetch('/test_connection', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('SnowflakeUserResult');
+            } else {
+                showFailure('SnowflakeUserResult');
+                document.getElementById('Error_1').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed";
+                count = count + 1;
+            }
+        } catch (error) {
+            showFailure('SnowflakeUserResult');
+            document.getElementById('Error_1').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+        }
+    }
+
+    // Function to test required roles
+    async function GrantAccessCheck() {
+        try {
+            // Show loading symbol
+            document.getElementById('RoleResult').classList.add('loading');
+            
+            const response = await fetch('/GrantAccessCheck', {
+                method: 'POST', // Explicitly specify the POST method
+            });
+            const data = await response.json();
+            if (data.success) {
+                showSuccess('RoleResult');
+            } else {
+                showFailure('RoleResult');
+                document.getElementById('Error_2').textContent = data.error;
+                document.getElementById("connecting-btn").disabled = true;
+                document.getElementById("connecting-btn").style.opacity = "0.5";
+                document.getElementById("connecting-btn").style.cursor = "not-allowed";
+                count = count + 1;
+            }
+        } catch (error) {
+            showFailure('RoleResult');
+            document.getElementById('Error_2').textContent = error.message;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed"
+        }
+    }
+
+
+   // Function to test creating table and schema permissions
+async function checkCreatePermissions() {
+    try {
+        // Show loading symbol
+        document.getElementById('CreatePermissionsResult').classList.add('loading');
+
+        const response = await fetch('/CheckCreatePermissions', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('CreatePermissionsResult');
+        } else {
+            showFailure('CreatePermissionsResult');
+            document.getElementById('Error_3').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('CreatePermissionsResult');
+        document.getElementById('Error_3').textContent = error.message;
+    }
+}
+
+
+ // Function to test Storage Integration Created or not
+ async function Integration_Object_Exist() {
+    try {
+        // Show loading symbol
+        document.getElementById('StorageIntegrationResult').classList.add('loading');
+
+        const response = await fetch('/IntegrationObjectExistence', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('StorageIntegrationResult');
+        } else {
+            showFailure('StorageIntegrationResult');
+            document.getElementById('Error_4').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('StorageIntegrationResult');
+        document.getElementById('Error_4').textContent = error.message;
+    }
+}
+
+// Function to test Storage Integration Accesible or not
+async function IntegrationAccess() {
+    try {
+        // Show loading symbol
+        document.getElementById('StorageIntegrationAccess').classList.add('loading');
+
+        const response = await fetch('/IntegrationAccess', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('StorageIntegrationAccess');
+        } else {
+            showFailure('StorageIntegrationAccess');
+            document.getElementById('Error_5').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('StorageIntegrationAccess');
+        document.getElementById('Error_5').textContent = error.message;
+    }
+}
+
+// Function to test File Format Created or not
+async function FileFormat_Object_Exist() {
+    try {
+        // Show loading symbol
+        document.getElementById('FileFormatResult').classList.add('loading');
+
+        const response = await fetch('/FileFormatObjectExistence', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('FileFormatResult');
+        } else {
+            showFailure('FileFormatResult');
+            document.getElementById('Error_6').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('FileFormatResult');
+        document.getElementById('Error_6').textContent = error.message;
+    }
+}
+
+
+// Function to test Storage Integration Accesible or not
+async function FormatAccess() {
+    try {
+        // Show loading symbol
+        document.getElementById('FileFormatAccess').classList.add('loading');
+
+        const response = await fetch('/FormatAccess', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('FileFormatAccess');
+        } else {
+            showFailure('FileFormatAccess');
+            document.getElementById('Error_7').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('FileFormatAccess');
+        document.getElementById('Error_7').textContent = error.message;
+    }
+}
+
+
+// Function to test External Stage Created or not
+async function Stage_Object_Exist() {
+    try {
+        // Show loading symbol
+        document.getElementById('StorageStageResult').classList.add('loading');
+
+        const response = await fetch('/StageObjectExistence', {
+            method: 'POST', // Explicitly specify the POST method
+        });            const data = await response.json();
+        if (data.success) {
+            showSuccess('StorageStageResult');
+        } else {
+            showFailure('StorageStageResult');
+            document.getElementById('Error_8').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('StorageStageResult');
+        document.getElementById('Error_8').textContent = error.message;
+    }
+}
+
+
+// Function to test Storage Integration Accesible or not
+async function StageAccess() {
+    try {
+        // Show loading symbol
+        document.getElementById('StorageStageAccess').classList.add('loading');
+
+        const response = await fetch('/StageAccess', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('StorageStageAccess');
+        } else {
+            showFailure('StorageStageAccess');
+            document.getElementById('Error_9').textContent = data.error;
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('StorageStageAccess');
+        document.getElementById('Error_9').textContent = error.message;
+    }
+}
+
+
+// Function to display pop-up box with error message
+function showErrorPopup(errorMessage) {
+    // Show error message in pop-up box
+    document.getElementById('errorPopupMessage').textContent = errorMessage;
+    // Display the pop-up box
+    document.getElementById('errorPopup').style.display = 'block';
+}
+ 
+// Function to close the pop-up box
+function closeErrorPopup() {
+    // Hide the pop-up box
+    document.getElementById('errorPopup').style.display = 'none';
+}
+ 
+// Function to extract and format error message
+function formatErrorMessage(error) {
+    // Find the position of the first occurrence of '[' and 'Permission'
+    const startIndex = error.indexOf("[");
+    const permissionIndex = error.indexOf("Permission");
+    // Extract the substring between '[' and 'Permission', which contains the desired error message
+    const errorMessageSubstring = error.substring(startIndex + 1, permissionIndex).trim();
+    // Add additional content to the extracted message
+    const formattedErrorMessage = errorMessageSubstring + ". Please provide this service account the Storage Object Viewer permission to proceed further...";
+    return formattedErrorMessage;
+}
+ 
+// Function to test Storage Integration Ready to use or not
+async function StageReady() {
+    try {
+        // Show loading symbol
+        document.getElementById('StorageStageReady').classList.add('loading');
+ 
+        const response = await fetch('/StageReady', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('StorageStageReady');
+        } else {
+            showFailure('StorageStageReady');
+            document.getElementById('Error_10').textContent = "Failure using stage area";
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+             // Extract and format the error message
+            const errorMessage = formatErrorMessage(data.error);
+            // Display error pop-up box with the formatted error message
+            showErrorPopup(errorMessage);
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('StorageStageAccess');
+        document.getElementById('Error_10').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed";
+        showErrorPopup(error.message);
+ 
+    }
+}
+
+function button_enable(){
+      console.log(count);
+      if(count == 0){
+        console.log(count);
+          document.getElementById("connecting-btn").disabled = false;
+          document.getElementById("connecting-btn").style.opacity = "1";
+          document.getElementById("connecting-btn").style.cursor = "pointer";
+        }
+    }
+
+async function runTestsInOrdersf() {
+        try {
+            // Call the async functions in the desired order
+            await testConnection();
+            await GrantAccessCheck();
+            await checkCreatePermissions();
+            await Integration_Object_Exist();
+            await IntegrationAccess();
+            await FileFormat_Object_Exist();
+            await FormatAccess();
+            await Stage_Object_Exist();
+            await StageAccess();
+            await StageReady();
+            button_enable();
+            // Call functions for testing other subsections here
+            console.log("All tests executed successfully");
+        } catch (error) {
+            console.error("An error occurred:", error);
+        }
+    }
+
+
+    // Run tests when the page is loaded
+    // window.onload = function () {
+    //     testConnection();
+    //     GrantAccessCheck();
+    //     checkCreatePermissions();
+    //     Integration_Object_Exist();
+    //     IntegrationAccess();
+    //     FileFormat_Object_Exist();
+    //     FormatAccess();
+    //     Stage_Object_Exist();
+    //     StageAccess();
+    // };
+
+    function display_loader(){
+    document.getElementById("loading-container").style.display = "block";
+    document.getElementById("popup").style.display = "none";
+    }
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+    window.history.back();
+}
+</script>
+
  <!-- jQery -->
  <script>/*<![CDATA[*/ function copyC(e,t){var o=document.getElementById(e),n=document.getElementById(t),e=getSelection(),t=document.createRange();e.removeAllRanges(),t.selectNodeContents(n),e.addRange(t),document.execCommand("copy"),e.removeAllRanges(),o.classList.add("copied"),document.getElementById("toastNotif").innerHTML="<span>Copied to Clipboard!</span>",setTimeout(()=>{o.classList.remove("copied")},3e3)} /*]]>*/</script>
  <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
@@ -249,22 +890,23 @@
 
  <script>
     function snowflake_form_validation(){
-      if ( document.forms["snowflakeForm"]["accountname"].value == "") {
-        alert("Name must be filled out");
-        return false;
-      }
-      if ( document.forms["snowflakeForm"]["username"].value == "") {
-        alert("Name must be filled out");
-        return false;
-      }
-      if ( document.forms["snowflakeForm"]["password"].value == "") {
-        alert("Name must be filled out");
-        return false;
-      }
-      if ( document.forms["snowflakeForm"]["warehouse"].value == "") {
-        alert("Name must be filled out");
-        return false;
-      }
+      // if ( document.forms["snowflakeForm"]["accountname"].value == "") {
+      //   alert("Name must be filled out");
+      //   return false;
+      // }
+      // if ( document.forms["snowflakeForm"]["username"].value == "") {
+      //   alert("Name must be filled out");
+      //   return false;
+      // }
+      // if ( document.forms["snowflakeForm"]["password"].value == "") {
+      //   alert("Name must be filled out");
+      //   return false;
+      // }
+      // if ( document.forms["snowflakeForm"]["warehouse"].value == "") {
+      //   alert("Name must be filled out");
+      //   return false;
+      // }
+      document.getElementById("row2").style.opacity= "0.5";
     }
     function myFunction() {
       var x = document.getElementById("password");
@@ -275,4 +917,12 @@
       }
     }
   </script>
+
+{% if execute_tests %}
+  <script>
+      // Call runTestsInOrdersf() if execute_tests flag is true
+      runTestsInOrdersf();
+  </script>
+{% endif %}
 </body>
+</html>

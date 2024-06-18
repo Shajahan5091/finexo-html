@@ -84,12 +84,6 @@ ul{
   margin-bottom: 50px;
   margin-top: 10px;
 }
-input:hover{
-  cursor: pointer;
-}
-label:hover{
-  cursor: pointer;
-}
   </style>
 </head>
 
@@ -144,31 +138,30 @@ label:hover{
                     </div>
                     <form id="checkboxForm" action="/snowflake_form" method="post">
                       <div class="row">
-                        {% for schema, tables in schemas.items() %}
-                      <div class="col-md-4">
-                        <div class="popup1">
-                          <div id="heading1">
-                            <input type="checkbox" name="schema" class="schema" id="{{ schema }}" value="{{ schema }}" onclick="toggleTables(this)">
-                            <label for="{{ schema }}">{{ schema }}</label>
-                          </div>
-                          <div class="content1">
-                            <ul style="list-style: none;">
-                              {% if tables|length < 1 %}
-                              <p>No tables available</p>
-                              {% else %}
-                              {% for table in tables %}
-                              <li>
-                                <input type="checkbox" name="table" id="{{table}}" value="{{ table }}" class="table-checkbox table-{{ schema }}" onclick="toggleSchema(this)" >
-                                <label for="{{table}}">{{ table }}</label>
-                              </li>
-                              {% endfor %}
-                              {% endif %}
-                            </ul>
+                        {% for schema,tables in schemas.items() %}
+                        <div class="col-md-4 ">
+                          <div class="popup1">
+                            <div id="heading1">
+                              <input type="checkbox" name="schema" id="schema-{{schema}}" value="{{schema}}">
+                              <label for="schema-{{schema}}">{{ schema }}</label>
+                            </div>
+                            <div class="content1">
+                              <ul style="list-style: none;">
+                                {% if tables|length < 1 %}
+                                <p>No tables available</p>
+                                {% else %}
+                                {% for table in tables %}
+                                <li>
+                                  <input type="checkbox" name="table" id="table-{{table}}" value="{{table}}" class="table-checkbox">
+                                  <label for="table-{{table}}">{{ table }}
+                                  </li>
+                                {% endfor %}
+                                {% endif %}
+                              </ul>
+                            </div> 
                           </div>
                         </div>
-                      </div>
-                      {% endfor %}
-
+                        {% endfor %}
                       </div>
                 </div>
                 <br>
@@ -262,21 +255,6 @@ label:hover{
             
             window.location.href = 'http://127.0.0.1:8000/snowflake_form?'  + new URLSearchParams(jsonData);
         }
-
-
-        function toggleTables(checkbox) {
-    const schema = checkbox.value;
-    const tableCheckboxes = document.querySelectorAll('.table-' + schema);
-    tableCheckboxes.forEach(function(tableCheckbox) {
-      tableCheckbox.checked = checkbox.checked;
-    });
-  }
-
-  function toggleSchema(checkbox) {
-    const schemaName = checkbox.classList[1].split('-')[1];
-    const schemaCheckbox = document.getElementById(schemaName);
-    schemaCheckbox.checked = true;
-  }
 </script>
 </body>
 </html>

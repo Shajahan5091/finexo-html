@@ -57,14 +57,31 @@
       50% { height: 8px; width: 40px }
       100% { left: 235px; height: 30px; width: 15px}
     }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 30px;
+      border-radius : 5px;
+      z-index: 1000;
+      min-width: 400px;
+      box-shadow: 0 0 10pt 1pt #D3D3D3;
+    }
+    .loading{
+        margin-left : 100px;
+    }
 </style>
 </head>
 <body>
     <div id="loading-container" class="loading-container">
         <div id="loader" class="loader">Migrating...</div>
     </div>
-    <div id="container-snowflake">
-        <h1>SNOWFLAKE Testing</h1>
+    <div id="popup" class="popup"  {% if show_popup %}style="display: block;"{% endif %}>
+        <span onclick="closePopup()" style="cursor: pointer; float: right;">&times;</span>
+        <h2 style="display: inline;"><span>Testing Connection</span></h2><br><br>
         <div id="Snowflake_User">
             Testing Snowflake Connection:
             <span id="SnowflakeUserResult" class="loading">Loading...</span>
@@ -342,8 +359,13 @@
 
         function display_loader(){
         document.getElementById("loading-container").style.display = "block";
-        document.getElementById("container-snowflake").style.opacity = "0";
+        document.getElementById("popup").style.display = "none";
         }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+        window.history.back();
+    }
     </script>
 </body>
 </html>
