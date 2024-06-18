@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <link rel="shortcut icon" href="{{ url_for('static',filename='Image/logo.png') }}" type="">
+  <title> Snow Migrate </title>
+  <!-- bootstrap core css -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/bootstrap.css') }}" />
+  <!-- fonts style -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!--owl slider stylesheet -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+  <!-- font awesome style -->
+  <link href="{{ url_for('static',filename='styles/font-awesome.min.css') }}" rel="stylesheet" />
+  <!-- Custom styles for this template -->
+  <link href="{{ url_for('static',filename='styles/style.css') }}" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="{{ url_for('static',filename='styles/responsive.css') }}" rel="stylesheet" />
+  <!-- <link rel="stylesheet" href="C:\Users\Elait112.ELAIT-DT-CHE-W-\Downloads\SNOWFLAKE_TOOL\SNOWFLAKE_TOOL (2)\SNOWFLAKE_TOOL\static\styles\bootstrap.css">
+  <link rel="stylesheet" href="C:\Users\Elait112.ELAIT-DT-CHE-W-\Downloads\SNOWFLAKE_TOOL\SNOWFLAKE_TOOL (2)\SNOWFLAKE_TOOL\static\styles\font-awesome.min.css">
+  <link rel="stylesheet" href="C:\Users\Elait112.ELAIT-DT-CHE-W-\Downloads\SNOWFLAKE_TOOL\SNOWFLAKE_TOOL (2)\SNOWFLAKE_TOOL\static\styles\responsive.css">
+  <link rel="stylesheet" href="C:\Users\Elait112.ELAIT-DT-CHE-W-\Downloads\SNOWFLAKE_TOOL\SNOWFLAKE_TOOL (2)\SNOWFLAKE_TOOL\static\styles\style.css"> -->
+  <style>
+    #heading1{
+  background:#072A6C ;
+  padding: 7px;
+  color:white;
+  border-radius : 10px 10px 0px 0px;
+}
+#heading1 input{
+  margin-top: 10px;
+  margin-left: 10px;
+}
+#heading1 label{
+  font-weight: bold;
+}
+#content1{
+  padding: 60px;
+  /* height: 300px; */
+}
+ul{
+  margin-top: 5px;
+} 
+#snowflakeForm select{
+  width: 400px;
+  padding: 10px;
+  /* padding-right: 150px; */
+  border-radius: 5px;
+  border: solid 1.5px #D3D3D3;
+  box-shadow: 0 0 5pt 0.5pt #D3D3D3;
+  font-size: medium;
+}
+#snowflakeForm label{
+  margin: 0;
+  font-weight: 600;
+}
+#snowflakeForm select:hover{
+  box-shadow: 0 0 5pt 0.5pt #D3D3D3;
+}
+#snowflakeForm select:focus {
+  box-shadow: 0 0 5pt 2pt #D3D3D3;
+  outline-width: 0px;
+}
+#submit_inc{
+    width: 100px;
+    padding: 10px 20px;
+    background-color:#00bbf0;
+    color: #ffffff;
+    border-radius: 5px;
+    -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+    border: none;
+    margin-left: 150px;
+}
+#snowflake-form{
+    display: flex;
+    align-items: center;
+    margin-top: 5%;
+}
+#snowflakeForm{
+  padding: 50px;
+  border-radius: 5px;
+  border: solid 1.5px #D3D3D3;
+  box-shadow: 0 0 5pt 0.5pt #D3D3D3;
+  height: 320px;
+  width: 500px;
+}
+#snowflakeForm label{
+    color: #00bbf0;
+}
+#snowflakeForm select:hover, label:hover{
+  cursor: pointer;
+}
+
+#loader_Proceed{
+      display: none;
+      margin-left: 200px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .loader_Proceed {
+        --d:20px;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        /* color: #25b09b; */
+        color: #00bbf0;
+        box-shadow: 
+          calc(1*var(--d))      calc(0*var(--d))     0 0,
+          calc(0.707*var(--d))  calc(0.707*var(--d)) 0 1px,
+          calc(0*var(--d))      calc(1*var(--d))     0 2px,
+          calc(-0.707*var(--d)) calc(0.707*var(--d)) 0 3px,
+          calc(-1*var(--d))     calc(0*var(--d))     0 4px,
+          calc(-0.707*var(--d)) calc(-0.707*var(--d))0 5px,
+          calc(0*var(--d))      calc(-1*var(--d))    0 6px;
+        animation: l27 1s infinite steps(8);
+      }
+      @keyframes l27 {
+        100% {transform: rotate(1turn)}
+      }
+
+  </style>
+</head>
+
+<body class="sub_page">
+  <div class="hero_area">
+    <div class="hero_bg_box">
+      <div class="bg_img_box">
+        <img src="{{ url_for('static',filename='Image/hero-bg.png') }}" alt="">
+      </div>
+    </div>
+    <!-- header section strats -->
+    <header class="header_section">
+      <div class="container-fluid" >
+        <nav class="navbar navbar-expand-lg custom_nav-container ">
+          <a class="navbar-brand" href="{{ url_for('index') }}">
+            <span>
+              Snow Migrate
+            </span>
+          </a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class=""> </span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav  ">
+              <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('index') }}">Home </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="about.html"> About</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="service.html">Services</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="team.html">Team</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!-- end header section -->
+  </div>
+
+  <div id="snowflake-form" class="form-container heading_container"> 
+    <h2 id="form-heading">
+        Select tables for Incremental Migration
+        <!-- <span> Snowflake </span> -->
+    </h2><br>
+    <form id="snowflakeForm" name="myForm" action="/incremental" class="snowflake-form" method="post">
+        <label for="schema_name">SCHEMA NAME:</label><br>
+        <select id="schema_name" name="schema_name" required><br>
+        {% for schema in data %}
+        <option value="{{ schema }}">{{schema}}</option>
+        {% endfor %}
+        </select><br><br>
+        <label for="table_name">TABLE NAME:</label><br>
+        <select id="table_name" name="table_name" required>
+        {% for city in tables %}
+        <option value="{{ city }}">{{ city }}</option>
+        {% endfor %}
+        </select><br><br>
+        <input name="timestamp" type="hidden" id = "my_secret" >
+        <input type="submit" id="submit_inc" value="Submit" onclick="handleFormSubmit(event)">
+        <div class="loader_Proceed" id="loader_Proceed"></div> 
+    </form>
+</div>
+
+<!-- jQery -->
+<script type = "text/javascript" src = "{{ url_for('static',filename = 'js/jquery-3.4.1.min.js') }}"></script>
+<!-- popper js -->
+<script src = "https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity = "sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin = "anonymous">
+</script>
+<!-- bootstrap js -->
+<script type = "text/javascript" src = "{{ url_for('static',filename = 'js/bootstrap.js') }}"></script>
+<!-- owl slider -->
+<script type = "text/javascript" src = "https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js">
+</script>
+<!-- custom js -->
+<script type = "text/javascript" src = "{{ url_for('static',filename = 'styles/bootstrap.css') }}"></script>
+<!-- Google Map -->
+<script src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
+</script>
+<!-- End Google Map -->
+</script>
+<script>
+  document.getElementById('my_secret').value = new Date().toLocaleString(); 
+
+    // Function to fetch cities based on the selected country
+  function fetchCities() {
+      var schema_name = document.getElementById('schema_name').value;
+      fetch('/tables?schema_name=' + schema_name)
+          .then(response => response.json())
+          .then(data => {
+              var table_name = document.getElementById('table_name');
+              table_name.innerHTML = ''; // Clear previous options
+              data.forEach(function(city) {
+                  var option = document.createElement('option');
+                  option.value = city;
+                  option.textContent = city;
+                  table_name.appendChild(option);
+              });
+          });
+  }
+
+  function display_load_proceed() {
+    console.log('hello');
+      document.getElementById("submit_inc").style.display = "none";
+      document.getElementById("loader_Proceed").style.display = "block";
+    }
+
+    // Fetch cities on page load
+  window.addEventListener('load', fetchCities);
+
+    // Fetch cities on country selection change
+  document.getElementById('schema_name').addEventListener('change', fetchCities);
+
+  function handleFormSubmit(event) {
+  event.preventDefault();
+  
+  const form = event.target.closest('form'); // Find the closest form element
+  const data = new FormData(form);
+  
+  const formJSON = Object.fromEntries(data.entries());
+  
+  window.location.href = 'http://127.0.0.1:8000/submit_incremental?' + new URLSearchParams(formJSON); // Redirect to submit route with query string
+  display_load_proceed();
+}
+</script>
+</body>
+</html>

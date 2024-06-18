@@ -152,6 +152,49 @@
     line-height: 0%;
 }
 
+.popup_error {
+  display: none; 
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius : 10px;
+  z-index: 1000;
+  min-width: 400px;
+  box-shadow: 0 0 10pt 1pt #D3D3D3;
+}
+ 
+/* Pop-up box content */
+.popup-content-error {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+}
+ 
+/* Close button */
+.close {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+ 
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
   </style>
 </head>
 
@@ -422,12 +465,29 @@
                 <span id="Error_9" class="failure"></span>
             </td>
         </tr>
+        <tr>
+            <td class="odd">
+                            Stage Ready to Use
+            </td>
+            <td id="even">
+            <span id="StorageStageReady" class="loading"></span>
+            <span id="Error_10" class="failure"></span>
+            </td>
+            </tr>
     </table>    
     <br>
     <form action="/migration_result" method="post">
         <!-- <button  class="connect-btn" type="submit" onclick="display_loader()">Proceed</button> -->
         <button style="margin-left: 200px; border-radius: 5px;"  id="connecting-btn" name="connect-btn" class="connect-btn" type="submit" onclick="display_loader()" disabled>Migrate</button>
     </form>
+    </div>
+</div>
+
+<div id="errorPopup" class="popup_error">
+    <div class="popup-content-error">
+    <span class="close" onclick="closeErrorPopup()">&times;</span>
+    <p id="errorPopupMessage"></p>
+    <button class="connect-btn" onclick="closeErrorPopup()" style="margin-right: 100px;">OK</button>
     </div>
 </div>
 
@@ -692,6 +752,68 @@ async function StageAccess() {
     }
 }
 
+
+// Function to display pop-up box with error message
+function showErrorPopup(errorMessage) {
+    // Show error message in pop-up box
+    document.getElementById('errorPopupMessage').textContent = errorMessage;
+    // Display the pop-up box
+    document.getElementById('errorPopup').style.display = 'block';
+}
+ 
+// Function to close the pop-up box
+function closeErrorPopup() {
+    // Hide the pop-up box
+    document.getElementById('errorPopup').style.display = 'none';
+}
+ 
+// Function to extract and format error message
+function formatErrorMessage(error) {
+    // Find the position of the first occurrence of '[' and 'Permission'
+    const startIndex = error.indexOf("[");
+    const permissionIndex = error.indexOf("Permission");
+    // Extract the substring between '[' and 'Permission', which contains the desired error message
+    const errorMessageSubstring = error.substring(startIndex + 1, permissionIndex).trim();
+    // Add additional content to the extracted message
+    const formattedErrorMessage = errorMessageSubstring + ". Please provide this service account the Storage Object Viewer permission to proceed further...";
+    return formattedErrorMessage;
+}
+ 
+// Function to test Storage Integration Ready to use or not
+async function StageReady() {
+    try {
+        // Show loading symbol
+        document.getElementById('StorageStageReady').classList.add('loading');
+ 
+        const response = await fetch('/StageReady', {
+            method: 'POST', // Explicitly specify the POST method
+        });
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('StorageStageReady');
+        } else {
+            showFailure('StorageStageReady');
+            document.getElementById('Error_10').textContent = "Failure using stage area";
+            document.getElementById("connecting-btn").disabled = true;
+            document.getElementById("connecting-btn").style.opacity = "0.5";
+            document.getElementById("connecting-btn").style.cursor = "not-allowed";
+             // Extract and format the error message
+            const errorMessage = formatErrorMessage(data.error);
+            // Display error pop-up box with the formatted error message
+            showErrorPopup(errorMessage);
+            count = count + 1;
+        }
+    } catch (error) {
+        showFailure('StorageStageAccess');
+        document.getElementById('Error_10').textContent = error.message;
+        document.getElementById("connecting-btn").disabled = true;
+        document.getElementById("connecting-btn").style.opacity = "0.5";
+        document.getElementById("connecting-btn").style.cursor = "not-allowed";
+        showErrorPopup(error.message);
+ 
+    }
+}
+
 function button_enable(){
       console.log(count);
       if(count == 0){
@@ -714,6 +836,7 @@ async function runTestsInOrdersf() {
             await FormatAccess();
             await Stage_Object_Exist();
             await StageAccess();
+            await StageReady();
             button_enable();
             // Call functions for testing other subsections here
             console.log("All tests executed successfully");
@@ -722,10 +845,6 @@ async function runTestsInOrdersf() {
         }
     }
 
-    // Run tests when the page is loaded
-    window.onload = function () {
-        runTestsInOrdersf();
-    }
 
     // Run tests when the page is loaded
     // window.onload = function () {
@@ -798,5 +917,12 @@ function closePopup() {
       }
     }
   </script>
+
+{% if execute_tests %}
+  <script>
+      // Call runTestsInOrdersf() if execute_tests flag is true
+      runTestsInOrdersf();
+  </script>
+{% endif %}
 </body>
 </html>

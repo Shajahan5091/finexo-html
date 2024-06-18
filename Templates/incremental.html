@@ -104,6 +104,7 @@ ul{
     <option value="{{ city }}">{{ city }}</option>
     {% endfor %}
     </select><br><br>
+    <input name="timestamp" type="hidden" id = "my_secret" >
     <input type="submit" value="Submit" onclick="handleFormSubmit(event)">
   </form>
 
@@ -128,27 +129,27 @@ ul{
   document.getElementById('my_secret').value = new Date().toLocaleString(); 
 
     // Function to fetch cities based on the selected country
-    function fetchCities() {
-        var schema_name = document.getElementById('schema_name').value;
-        fetch('/tables?schema_name=' + schema_name)
-            .then(response => response.json())
-            .then(data => {
-                var table_name = document.getElementById('table_name');
-                table_name.innerHTML = ''; // Clear previous options
-                data.forEach(function(city) {
-                    var option = document.createElement('option');
-                    option.value = city;
-                    option.textContent = city;
-                    table_name.appendChild(option);
-                });
-            });
-    }
+  function fetchCities() {
+      var schema_name = document.getElementById('schema_name').value;
+      fetch('/tables?schema_name=' + schema_name)
+          .then(response => response.json())
+          .then(data => {
+              var table_name = document.getElementById('table_name');
+              table_name.innerHTML = ''; // Clear previous options
+              data.forEach(function(city) {
+                  var option = document.createElement('option');
+                  option.value = city;
+                  option.textContent = city;
+                  table_name.appendChild(option);
+              });
+          });
+  }
 
     // Fetch cities on page load
-    window.addEventListener('load', fetchCities);
+  window.addEventListener('load', fetchCities);
 
     // Fetch cities on country selection change
-    document.getElementById('schema_name').addEventListener('change', fetchCities);
+  document.getElementById('schema_name').addEventListener('change', fetchCities);
 
   function handleFormSubmit(event) {
   event.preventDefault();

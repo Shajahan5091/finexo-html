@@ -22,10 +22,10 @@ def setup_logger(log_filename):
     # Set up logging configuration for the logger
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(levelname)8s - %(name)10s > %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    file_handler = logging.FileHandler('D:/Log/migration.log')
+    file_handler = logging.FileHandler('C:/sample/migration.log',mode='a')
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-    
+    # The mode is the file opening mode: ‘w’ to clobber and make a new file each time, ‘a’ to append to an existing file
     return logger
 
 
@@ -38,20 +38,20 @@ def log_system_message(logger, err_message):
     # Log the entire multiline message as a single entry with proper indentation and formatting
     logger.error('\n'.join([' ' * 4 + line.strip() for line in err_message.split('\n')]) + '\n')
 
-logger = setup_logger('D:/Log/migration.log')
+logger = setup_logger('C:/sample/migration.log')
 
 def Migration_report(connection, database, schema):
     try:
         logger.info('Creating Stage for Streamlit App')
         msg = f'create stage if not exists {database}.{schema}.Migration_Report;'
         logger.info(msg)
-
+        
         print('inside migration report')
         connection_cursor = connection.cursor()
         connection_cursor.execute(f"create stage if not exists {database}.{schema}.Migration_Report;")
         logger.info('Stage named Migration_Report Created Successfully')
-        connection_cursor.execute(f"put file://D:\Stream_lit_code_frame\environment.yml @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
-        connection_cursor.execute(f"put file://D:\Stream_lit_code_frame\streamlit.py @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
+        connection_cursor.execute(f"put file://C:/Users/Elait112.ELAIT-DT-CHE-W-/Downloads/Stream_lit_code_frame/Stream_lit_code_frame/environment.yml @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
+        connection_cursor.execute(f"put file://C:/Users/Elait112.ELAIT-DT-CHE-W-/Downloads/Stream_lit_code_frame/Stream_lit_code_frame/streamlit.py @{database}.{schema}.Migration_Report/REPORT_FLD AUTO_COMPRESS=FALSE")
         logger.info('Creating Streamlit App')
         msg = f"""create or replace STREAMLIT {database}.{schema}.Migration_Report
             ROOT_LOCATION = '@{database}.{schema}.Migration_Report/REPORT_FLD'
@@ -123,8 +123,8 @@ def upload():
             logger.info(' Connection established successfully')
             return render_template('file_upload.html', show_popup = True)
         except Exception as e:
-            log_system_message(logger, """Error establishing connection to BigQuery:
-                            {}""".format(str(e)))
+            # log_system_message(logger, """Error establishing connection to BigQuery:
+            #                 {}""".format(str(e)))
             return f'Error establishing connection to BigQuery: {str(e)}'
 
     else:
@@ -148,8 +148,8 @@ def test_service_account_connection():
             logger.error("Failed to retrieve service account email. Connection to GCP failed.")
             return False
     except Exception as e:
-        log_system_message(logger, """Error connecting to GCP:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """Error connecting to GCP:
+        #                     {}""".format(str(e)))
         return False
 
 
@@ -218,14 +218,14 @@ def Check_role_permissions():
         if failure_message:
             logger.error("Failure:")
             failure_message = failure_message + "\nFollow steps in GCP Setup page to create Custom Role"
-            log_system_message(logger, failure_message)
+            # log_system_message(logger, failure_message)
             return failure_message
         
         return ""
     
     except Exception as e:
-        log_system_message(logger, """Failed to create dataset:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """Failed to create dataset:
+        #                     {}""".format(str(e)))
         return jsonify({"success": False})
     
 
@@ -259,8 +259,8 @@ def test_service_account_connection_route():
             logger.error("Failed to connect to GCP")
             return jsonify({'success': False, 'error': 'Failed to connect to GCP'}), 500
     except Exception as e:
-        log_system_message(logger, """An error occurred:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred:
+        #                     {}""".format(str(e)))
         return jsonify({'success': False, 'error': 'An error occurred while testing the service account connection'}), 500
 
 
@@ -277,13 +277,13 @@ def CheckBigqueryDatasetsCreatePermissions():
             return jsonify({'success': True})
         else:
             err_msg = str({status})
-            log_system_message(logger, """Error:
-                            {}""".format(err_msg))
+            # log_system_message(logger, """Error:
+            #                 {}""".format(err_msg))
             return jsonify({'success': False, 'error':status}), 500
     except Exception as e:
         print(f"Error occurred: {e}")
-        log_system_message(logger, """An error occurred:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred:
+        #                     {}""".format(str(e)))
         return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
 
 
@@ -297,18 +297,18 @@ def CheckBucketCreated():
             logger.info("Bucket exists with the given name.")
             return jsonify({'success': True})
         else:
-            log_system_message(logger, """Bucket does not exist with the given name.
-                    Make sure to give the correct name in the UI""")
+            # log_system_message(logger, """Bucket does not exist with the given name.
+            #         Make sure to give the correct name in the UI""")
             return jsonify({'success': False, 'error':'Bucket does not Exist with the given name, Make sure to give the correct name in the UI'}), 500
     except Exception as e:
         print(f"Error occurred: {e}")
-        log_system_message(logger, """Error occurred:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """Error occurred:
+        #                     {}""".format(str(e)))
         return jsonify({'success': False, 'error': 'An error occurred while checking permissions'}), 500
 
 
 
-@app.route('/fetch_schemas', methods = ['POST'])    
+@app.route('/fetch_schemas', methods = ['POST'])
 def fetch_schemas():
     logger.info("Fetching schemas from BigQuery")
     try:
@@ -321,8 +321,8 @@ def fetch_schemas():
             schemas[sch] = tables
         return render_template('schemas_copy.html', schemas = schemas)
     except Exception as e:
-        log_system_message(logger, """An error occurred while fetching schemas:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred while fetching schemas:
+        #                     {}""".format(str(e)))
         return jsonify({'success': False, 'error': 'An error occurred while fetching schemas'}), 500
 
 
@@ -357,8 +357,8 @@ def fetch_schemas_tables(client, schema_name):
                     Tables.append(table_ref.table_id)
         return Tables
     except Exception as e:
-        log_system_message(logger, """An error occurred while fetching tables for schema '{}':
-                            {}""".format(schema_name, str(e)))
+        # log_system_message(logger, """An error occurred while fetching tables for schema '{}':
+        #                     {}""".format(schema_name, str(e)))
         return []
 
 def get_tables(schema_name):
@@ -377,7 +377,7 @@ def fetch_cities():
     print(tables)
     return jsonify(tables)
 
-@app.route('/incremental', methods = ['POST'])
+@app.route('/incremental', methods = ['GET','POST'])
 def incremental():
     cur = conn.cursor()
     tables =[]
@@ -385,12 +385,196 @@ def incremental():
     schemas = cur.fetchall()
     print(schemas)
     data=list(sum(schemas, ()))
-    # if request.method == ['GET','POST']:
-    schema_name= request.form.get('schema_name')
-    data2 = get_tables(schema_name)
-    tables=list(sum(data2, ()))
-    # return redirect(url_for('submit_incremental'))
-    return render_template('incremental.html',data=data,tables=tables)
+    if request.method == ['GET','POST']:
+        schema_name= request.form.get('schema_name')
+        data2 = get_tables(schema_name)
+        tables=list(sum(data2, ()))
+        return redirect(url_for('submit_incremental'))
+    return render_template('incremental_copy.html',data=data,tables=tables)
+
+#FUNCTION TO FETCH INCREMENTAL DATA
+def fetch_inc_data(response_dict):
+
+    client = bq_client
+    
+    for key, value in response_dict.items():
+            globals()[key] = value
+    
+    
+    query = "select * from `{}`.META.BQ_TABLE_WM where lower(TABLE_SCHEMA) = lower('{}') and lower(TABLE_NAME) = lower('{}') ".format(project_id,schema_name,table_name)
+    query_job = client.query(query)
+    rows = query_job.result()
+ 
+    for row in rows:
+            catalogname = row.TABLE_CATALOG
+            schemaname = row.TABLE_SCHEMA
+            tablename = row.TABLE_NAME
+            get_ts_column = row.TS_COLUMN
+            get_ts_value = row.LAST_EXPORT_DATE
+            inc_count_query = """ SELECT COUNT(*) as INC FROM `{}`.{}.{} WHERE {} > CAST((SELECT LAST_EXPORT_DATE FROM META.BQ_TABLE_WM WHERE 
+            TABLE_NAME = '{}')as TIMESTAMP)  """ .format(catalogname,schemaname,tablename,get_ts_column,tablename)
+            print(inc_count_query)
+            data_job = client.query(inc_count_query)
+            data_rows = data_job.result() 
+            for data in data_rows:
+                inc_count = data[0]
+            print(inc_count)
+
+            last_export_query = """ (SELECT cast(LAST_EXPORT_DATE as DATETIME) as TS FROM `{}`.META.BQ_TABLE_WM WHERE TABLE_NAME = '{}' LIMIT 1); """ .format(catalogname,tablename)
+            print(last_export_query)
+            data_job = client.query(last_export_query)
+            data_rows = data_job.result() 
+            for data in data_rows:
+                last_export = data[0]
+            print(last_export)
+        
+            if(inc_count > 0):
+                export_query = """ EXPORT DATA OPTIONS (
+                        uri = 'gs://{}/{}/{}/{}-INC-'||'{}'||'-*.parquet',
+                        format = 'PARQUET',
+                        overwrite = True
+                        )
+                    AS (
+                      SELECT *
+                      FROM `{}`.{}.{} WHERE {} > CAST((SELECT LAST_EXPORT_DATE FROM META.
+                      BQ_TABLE_WM WHERE TABLE_NAME = '{}')as TIMESTAMP)
+                    ); """.format(bucket_name,schemaname,tablename,tablename,last_export,catalogname,schemaname,tablename,get_ts_column,tablename)
+                export_job = client.query(export_query)
+                print(export_query)
+                export_rows = export_job.result() 
+
+                update_query = """ UPDATE `{}`.META.BQ_TABLE_WM
+                      SET LAST_EXPORT_DATE = OtherTable.TS
+                      FROM (
+                      SELECT cast(max({}) as DATETIME) as TS FROM `{}`.{}.{} LIMIT 1) AS 
+                      OtherTable WHERE TABLE_NAME = '{}'; """ .format(catalogname,get_ts_column,catalogname,schemaname,tablename,tablename)
+                update_job = client.query(export_query)
+                print(update_query)
+                update_rows = update_job.result() 
+                print("Exported incremental data for {} table into {} bucket ".format(tablename,bucket_name))
+            else : 
+                print('No incremental data exists for export')
+    print('done')
+
+#FUNCTION TO LOAD INCREMENTAL DATA
+def load_inc_data():
+    
+    table_query= """ select * from {}.{}.BQ_WM_TABLE where incremental = true and COPY_DONE = 'Y' """.format(database,schema) 
+    cursor = conn.cursor()  
+    cursor.execute(table_query)
+    result = cursor.fetchall()
+    Columns = ['TABLE_CATALOG','TABLE_SCHEMA','TABLE_NAME','TABLE_COLUMNS','EXPORT_TYPE','COPY_DONE','LAST_EXPORT_DATE','TS_COLUMN','KEY_COLUMN','INCREMENTAL'] 
+    data = pd.DataFrame(result,columns=Columns)
+    for i in range(0,len(data)):
+        table_catalog = data['TABLE_CATALOG'].iloc[i];
+        table_name = data['TABLE_NAME'].iloc[i];
+        table_columns = data['TABLE_COLUMNS'].iloc[i];
+        table_schema = data['TABLE_SCHEMA'].iloc[i];
+        last_export_date = data['LAST_EXPORT_DATE'].iloc[i];
+        key_column = data['KEY_COLUMN'].iloc[i];
+        ts_column = data['TS_COLUMN'].iloc[i];
+    
+        parquet_columns_query =  """ with my_cte as (SELECT CASE WHEN VALUE = '{}' then 
+            '$1:'||VALUE||'::varchar::timestamp_ntz' || ' as ' || VALUE  else '$1:'||VALUE|| ' as ' || VALUE  END as 
+            COLUMNS_2 from table(SPLIT_TO_TABLE( '{}',',')) )
+            SELECT LISTAGG(COLUMNS_2,',') as DATA from my_cte ; """.format(ts_column,table_columns)
+        cursor.execute(parquet_columns_query)
+        data2 = cursor.fetchall()
+        df1 = pd.DataFrame(data2,columns = ['DATA']) 
+        parquet_columns = df1['DATA'].iloc[0];
+        print ('parquet_columns succesfully created')
+    
+        format_table_columns_query = """(SELECT LISTAGG(VALUE,',') as DATA from table(SPLIT_TO_TABLE('{}',',')) ); """.format(table_columns)
+        cursor.execute(format_table_columns_query)
+        data3 = cursor.fetchall()
+        df2 = pd.DataFrame(data3,columns = ['DATA']) 
+        format_table_columns = df2['DATA'].iloc[0];
+        print ('format_table_columns succesfully created')
+    
+        inc_table_columns_query = """ (SELECT LISTAGG('INC.'||VALUE,',') as DATA from table(SPLIT_TO_TABLE(  '{}',',')) );""".format(table_columns)
+        cursor.execute(inc_table_columns_query)
+        data4 = cursor.fetchall()
+        df3 = pd.DataFrame(data4,columns = ['DATA']) 
+        inc_table_columns = df3['DATA'].iloc[0];
+        print ('inc_table_columns succesfully created')
+    
+        eq_table_columns_query = """(SELECT LISTAGG( '{}'||'.'||VALUE || '=' || 'INC.'||VALUE,',') as DATA from table(SPLIT_TO_TABLE( '{}',',')) );""".format(table_name,table_columns)
+        cursor.execute( eq_table_columns_query)
+        data5 = cursor.fetchall()
+        df4 = pd.DataFrame(data5,columns = ['DATA']) 
+        eq_table_columns = df4['DATA'].iloc[0];
+        print ( 'eq_table_columns succesfully created')
+    
+        file_query = """ (SELECT METADATA$FILENAME as METADATA FROM @{}.{}.snow_migrate_stage/{}/{}/
+        ( FILE_FORMAT => my_parquet_format ) WHERE regexp_like( METADATA,\'.*{}-INC-{}.*\'))""" .format(database,schema,table_schema,table_name,table_name,last_export_date)
+        cursor.execute( file_query)
+        print(file_query)
+        data6 = cursor.fetchall()
+        files=''
+        df5 = pd.DataFrame(data6,columns = ['METADATA']) 
+        if (len(df5)==0):
+            print('No files exist for incremenatal')
+            
+        else:
+            print(len(df5))
+            for i in range(0,1):
+                file_data = df5['METADATA'].iloc[0];
+                files = file_data + ',' + files
+                print(file_data)
+                print(files)
+                
+                MERGE_STM = """  MERGE INTO {}.{}.{}  USING
+                        (SELECT {}
+                         
+                        FROM @{}.{}.snow_migrate_stage/{}/{}/{} ( FILE_FORMAT => my_parquet_format , PATTERN =>\'.*{}-INC-{}.*\' )
+                        ) INC ON {}.{} = INC.{}
+                        WHEN MATCHED THEN
+                         UPDATE SET
+                         {}
+                        WHEN NOT MATCHED THEN
+                         INSERT
+                         ({})
+                         VALUES
+                         ({});""".format(database,table_schema,table_name,parquet_columns,database,schema,table_schema,table_name,table_name,
+                                         table_name,last_export_date,table_name,key_column,key_column,eq_table_columns,format_table_columns,inc_table_columns) 
+                curb = conn.cursor()
+                print(MERGE_STM)
+                query_run = curb.execute(MERGE_STM)
+                query_job = curb.fetchall()
+                query= curb.sfqid
+                print(query)
+                
+                curc = conn.cursor()
+                load=""" SELECT "number of rows inserted" as DATA1,"number of rows updated" as DATA2 FROM TABLE(RESULT_SCAN('{}'));""".format(query)
+                load_query = curc.execute(load)
+                load_job = curc.fetchall()
+                df6 = pd.DataFrame(load_job,columns = ['DATA1','DATA2']) 
+                ins_rows = df6['DATA1'].iloc[0];
+                upd_rows = df6['DATA2'].iloc[0];
+                total_rows = ins_rows + upd_rows
+                print ( ins_rows + upd_rows)
+        
+                insert_query = """ INSERT INTO {}.{}.BIGQUERY_LOAD_HISTORY(DATABASE, SCHEMA, TABLE_NAME, TYPE_OF_LOAD, FILE_NAME, NO_OF_ROWS, NO_OF_UPDATES, 
+                NO_OF_INSERT, TIMESTAMP) VALUES ('{}' , '{}' , '{}' , 'INCREMENTAL' , '{}' , '{}', '{}' ,'{}' , 
+                current_timestamp);  """.format(database,schema,table_catalog,table_schema,table_name,files,total_rows,upd_rows,ins_rows) 
+                print(insert_query)
+                insert_job= curc.execute(insert_query)
+                insert_result=curc.fetchall()
+        
+                export_date = """SELECT MAX(to_timestamp_ntz({})) as TS_COL FROM {}.{}.{}""".format(ts_column,database,table_schema,table_name)
+                print(export_date)
+                curc.execute(export_date)
+                result=curc.fetchone()
+                last_export_date_new = result[0]
+                
+                update_query = """ UPDATE {}.{}.BQ_WM_TABLE
+                SET LAST_EXPORT_DATE = '{}'::varchar::timestamp_ntz  where TABLE_NAME = '{}'; """.format(database,schema,last_export_date_new,table_name)
+                print(update_query)
+                curc.execute(update_query)
+                result = curc.fetchall()
+      
+    return ('INCREMENTAL LOAD IS SUCCESFULL'); 
+
 
 @app.route('/submit_incremental', methods=(['POST','GET']))
 def submit_incremental():
@@ -402,7 +586,8 @@ def submit_incremental():
         form_data = request.json
     print(form_data)
     print(type(form_data))
-
+    fetch = fetch_inc_data(form_data)
+    load = load_inc_data()
     return render_template('submit.html')
 
 @app.route('/snowflake_form', methods = ["GET", "POST"])
@@ -418,8 +603,8 @@ def snowflake_form():
             print('----------------------')
         return render_template("snowflake_form_copy.html")
     except Exception as e:
-        log_system_message(logger, """An error occurred
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred
+        #                     {}""".format(str(e)))
         return e
     
 ###
@@ -468,7 +653,9 @@ def connect_snowflake():
         )
         self_execute(conn, bucket_name , schema , database )
         # result = create_schemas_and_copy_table(conn,schemas_list)
-        return render_template('snowflake_form_copy.html', show_popup = True)
+        execute_tests = True
+        # result = create_schemas_and_copy_table(conn,schemas_list)
+        return render_template('snowflake_form_copy.html', show_popup=True, execute_tests=execute_tests)
     except Exception as e:
         log_system_message(logger, """An error occurred
                             {}""".format(str(e)))
@@ -564,8 +751,8 @@ def test_connection():
     if isinstance(cursor, str):
         # If cursor is a string, it means an error occurred during Snowflake connection
         error_message = cursor
-        log_system_message(logger, """Snowflake connection error:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """Snowflake connection error:
+        #                     {}""".format(str(e)))
         return jsonify({"success": False, "error": error_message}), 500
     else:
         # Connection successful, perform your logic here
@@ -579,8 +766,8 @@ def test_connection():
             return jsonify({"success": True})
         except Exception as e:
             error_message = str(e).split(":")[-1].strip()
-            log_system_message(logger, """An error occurred while testing service account connection:
-                            {}""".format(error_message))
+            # log_system_message(logger, """An error occurred while testing service account connection:
+            #                 {}""".format(error_message))
             return jsonify({"success": False, "error": error_message}), 500
     
 
@@ -591,8 +778,8 @@ def grant_access_check():
     if isinstance(cursor, str):
         # If cursor is a string, it means an error occurred during Snowflake connection
         error_message = cursor
-        log_system_message(logger, """Snowflake connection error:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """Snowflake connection error:
+        #                     {}""".format(str(e)))
         return jsonify({"success": False, "error": error_message}), 500
     else:
         try:
@@ -615,12 +802,12 @@ def grant_access_check():
                     error_message += "Role access failed. "
                 if not user_access:
                     error_message += "User access failed. "
-                log_system_message(logger, """Access check failed:
-                            {}""".format(str(e)))
+                # log_system_message(logger, """Access check failed:
+                #             {}""".format(str(e)))
                 return jsonify({"success": False, "error": error_message.strip()}), 500
         except Exception as e:
-            log_system_message(logger, """An error occurred while checking role access: 
-                            {}""".format(str(e)))
+            # log_system_message(logger, """An error occurred while checking role access: 
+            #                 {}""".format(str(e)))
             return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -639,8 +826,8 @@ def check_warehouse_access(cursor):
             logger.error("Warehouse access check failed")
             return False
     except Exception as e:
-        log_system_message(logger, """An error occurred while checking warehouse access: 
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred while checking warehouse access: 
+        #                     {}""".format(str(e)))
         return jsonify({"success": False})
     
 
@@ -657,8 +844,8 @@ def check_database_access(cursor):
             logger.error("Database access check failed")
             return False
     except Exception as e:
-        log_system_message(logger, """An error occurred while checking database access: 
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred while checking database access: 
+        #                     {}""".format(str(e)))
         return jsonify({"success": False})
     
 
@@ -674,8 +861,8 @@ def check_role_access(cursor):
             logger.error("Role access check failed")
             return False
     except Exception as e:
-        log_system_message(logger, """An error occurred while checking role access: 
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred while checking role access: 
+        #                     {}""".format(str(e)))
         return jsonify({"success": False})
     
     
@@ -691,8 +878,8 @@ def check_user_access(cursor):
             logger.error("User access check failed")
             return False
     except Exception as e:
-        log_system_message(logger, """An error occurred while checking user access: 
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred while checking user access: 
+        #                     {}""".format(str(e)))
         return jsonify({"success": False})
 
 
@@ -704,8 +891,8 @@ def check_create_permissions():
         if isinstance(cursor, str):
             # If cursor is a string, it means an error occurred during Snowflake connection
             error_message = cursor
-            log_system_message(logger, """Snowflake connection error: 
-                            {}""".format(str(e)))
+            # log_system_message(logger, """Snowflake connection error: 
+            #                 {}""".format(str(e)))
             return jsonify({"success": False, "error": error_message}), 500
         else:
             try:
@@ -727,12 +914,12 @@ def check_create_permissions():
                     return jsonify({"success": False, "error": error_message.strip()}), 500
                 
             except Exception as e:
-                log_system_message(logger, """An error occurred while checking permissions:
-                            {}""".format(str(e)))
+                # log_system_message(logger, """An error occurred while checking permissions:
+                #             {}""".format(str(e)))
                 return jsonify({"success": False, "error": str(e)}), 500
     except Exception as e:
-        log_system_message(logger, """An error occurred while checking create permissions:
-                            {}""".format(str(e)))
+        # log_system_message(logger, """An error occurred while checking create permissions:
+        #                     {}""".format(str(e)))
         return jsonify({"success": False, "error": str(e)}), 500
 
 # Function to check if creating table is allowed
@@ -925,6 +1112,23 @@ def StageAccess():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)})
 
+# Endpoint to check whether Snowflake Stage is ready to use
+@app.route('/StageReady', methods=['POST'])
+def StageReady():
+    cursor = conn.cursor()
+    if isinstance(cursor, str):
+        # If cursor is a string, it means an error occurred during Snowflake connection
+        return jsonify({"success": False, "error": cursor})
+    else:
+        try:
+            # query = f"LIST @SNOW_MIGRATE_STAGE"
+            stage_name = "{}.{}.SNOW_MIGRATE_STAGE".format(database,schema)
+            query = f"LIST @{stage_name}"
+            cursor.execute(query)
+            return jsonify({"success": True})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+            # return jsonify({"success": False})
     
 # Function to check if access is granted to the specified object
 def check_grants(cursor, privilege, granted_on, object_name, role_name):      
@@ -945,13 +1149,15 @@ def check_grants(cursor, privilege, granted_on, object_name, role_name):
 def migration_result():
     streamlit(database,schema)
     result = create_schemas_and_copy_table(conn,inner_dict)
+    auditing_log_into_Snowflake(conn, project_id, inner_dict)
+    Migration_report(conn, database, schema) 
     return result
 
 #Logging the Execution status
 @app.route('/log')
 def log():
     # Path to the log file
-    log_file_path = "D:/Log/migration.log"
+    log_file_path = "C:/sample/migration.log"
     
     # Read log content from the file
     if os.path.exists(log_file_path):
@@ -965,7 +1171,7 @@ def log():
 
 @app.route('/download-log')
 def download_log():
-    log_file_path = "D:/Log/migration.log"
+    log_file_path = "C:/sample/migration.log"
     if os.path.exists(log_file_path):
         return send_file(log_file_path, as_attachment = True, download_name = 'migration.log')
     else:
@@ -1183,7 +1389,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
             logger.info("Exporting data to snowflake...")
             logger.info("Exporting data for table {} ...export type is {}".format(table_name, export_type)) 
             print("Exporting data for table {} ...export type is {}".format(table_name, export_type))
-            destination_uri = "gs://{}/{}/{}/{}-*.{}".format(bucket_name, schema_lo, table_name, table_name, export_type)
+            destination_uri = "gs://{}/{}/{}/{}.{}".format(bucket_name, schema_lo, table_name, table_name, export_type)
             print(destination_uri)
             
             dataset_ref = bigquery.DatasetReference(project_id, schema_lo)
@@ -1259,7 +1465,7 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
         copy_command = """copy into {db}.{sc}.{tb} from ( select
         {col_list}
         from @{db}.{sch}.snow_migrate_stage/{sc}/{tb}/{tb}
-        (file_format => my_parquet_format))"""
+        (file_format => my_parquet_format,PATTERN =>'.*{tb}.parquet*'))"""
         
         print(table_name + export_type)
     
@@ -1294,12 +1500,13 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
             rows_parsed = df_files['ROWS_PARSED'].iloc[i];
             rows_loaded  = df_files['ROWS_LOADED'].iloc[i];
             errors_seen = df_files['ERRORS_SEEN'].iloc[i];
+            rows_updated = ''
 
             load = """INSERT INTO {}.{}.BIGQUERY_LOAD_HISTORY(DATABASE, SCHEMA, TABLE_NAME, TYPE_OF_LOAD, 
         FILE_NAME, NO_OF_ROWS, NO_OF_UPDATES, NO_OF_INSERT, TIMESTAMP) 
-        VALUES ('{}'::varchar , '{}'::varchar , '{}'::varchar , 'INITIAL' , '{}'::varchar , '{}'::integer, '{}'::integer,'{}'::integer , current_timestamp); """
+        VALUES ('{}'::varchar , '{}'::varchar , '{}'::varchar , 'INITIAL' , '{}'::varchar , '{}'::integer, '{}','{}'::integer , current_timestamp); """
     
-            load = load.format(database,schema,table_catalog,table_schema,table_name,file,rows_parsed,rows_loaded,errors_seen)
+            load = load.format(database,schema,table_catalog,table_schema,table_name,file,rows_parsed,rows_updated,rows_loaded)
 
             curc.execute(load)
             print(load)
@@ -1326,8 +1533,8 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
             result = curc.fetchall()
             log_multiline_message(logger, """Updated the copy done status and the Last export date for table {} in SNOWFLAKE Watermark table """.format (table_name))
     
-    auditing_log_into_Snowflake(conn, project_id, inner_dict)
-    Migration_report(conn, database, schema)  
+    # auditing_log_into_Snowflake(conn, project_id, inner_dict)
+    # Migration_report(conn, database, schema)  
     return render_template('result.html')
 
 
@@ -1335,11 +1542,10 @@ def create_schemas_and_copy_table(conn,Dist_user_input):
 
 # Function to create audit log tables in snowflake
 def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_user_input):
-    # log_multiline_message(logger, """Starting auditing log function with project_name:
-    #              {} and schema_names: {}""".format(project_name, schema_names))
+
     logger.info("Executing Auditing Log into Snowflake")
     
-    table_struct_cln = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME', 'TABLE_ROWS', 'DDL', 'TABLE_COLUMNS']
+    table_struct_cln = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME','TOTAL_ROWS','TABLE_COLUMNS']
     columns_struct_cln = ['TABLE_CATALOG', 'TABLE_SCHEMA', 'TABLE_NAME', 'COLUMN_NAME', 'ORDINAL_POSITION', 'IS_NULLABLE', 'DATA_TYPE']
     table_struct = pd.DataFrame(columns = table_struct_cln)
     columns_struct= pd.DataFrame(columns = columns_struct_cln)
@@ -1357,9 +1563,7 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                          {}""".format(query_TABLE_DETAILS))
         else:
             schema_name_tuple=tuple(schema_name)
-            query_TABLE_DETAILS = (f"""select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TOTAL_ROWS from
-                                   `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type = 'BASE TABLE' 
-                                   and deleted = false and  TABLE_SCHEMA = ('{schema_name}') and TABLE_NAME in {table_tuple};""")
+            query_TABLE_DETAILS = (f"""select TABLE_CATALOG,TABLE_SCHEMA,TABLE_NAME,TOTAL_ROWS from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLE_STORAGE where table_type='BASE TABLE' and deleted=false and  TABLE_SCHEMA =('{schema_name}') and TABLE_NAME in {table_tuple};""")
             print(query_TABLE_DETAILS)
             log_multiline_message(logger, """Executing query for a multiple schemas:
                          {}""".format(query_TABLE_DETAILS))
@@ -1370,6 +1574,7 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         schema_list_name = [field.name for field in results_schema_database_lst.schema]
         log_multiline_message(logger, """Schema column names retrieved: 
                     {}""".format(schema_list_name))
+        print('schem below:')
         print(schema_list_name)
     
         # Create DataFrame with both column names and data---------------------------------------------------------------------------------------------
@@ -1407,7 +1612,7 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                     'BOOL','BOOLEAN'),'STRUCT','VARIANT'),'PARTITION BY','CLUSTER BY ('),';',');'),'CREATE TABLE ','CREATE TABLE if not exists '), "table INT,",
                     '"table" INT,'),'_"table" INT,','_table INT,'),'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),
                     'DATE(_PARTITIONTIME)','date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"','_start'),
-                    'order ','"order" '),'<',', //'),'_"order"','_order') as ddl from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES 
+                    'order ','"order" '),'<',', //'),'_"order"','_order') as DDL from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES 
                     where  TABLE_SCHEMA = ' {schema_name}' and TABLE_NAME in {table_tuple} """)
             
             query_ddl_log = (f"""
@@ -1418,7 +1623,7 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
                     'CREATE TABLE if not exists '), "table INT,",'"table" INT,'),'_"table" INT,','_table INT,'),
                     'ARRAY<STRING>','ARRAY'),'from','"from"'),'_"from"','_from'),'"from"_','from_'),'DATE(_PARTITIONTIME)',
                     'date(loaded_at)'),' OPTIONS(',', //'),'));',');'),'_at);','_at));'),'start ','"start" '),'_"start"',
-                    '_start'),'order ','"order" '),'<',', //'),'_"order"','_order') as ddl 
+                    '_start'),'order ','"order" '),'<',', //'),'_"order"','_order') as DDL 
                     from `{project_name}`.`region-US`.INFORMATION_SCHEMA.TABLES 
                     where  TABLE_SCHEMA = ' {schema_name}' and TABLE_NAME in {table_tuple} """)
         
@@ -1467,8 +1672,8 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
             results_copy_dol = query_job.result()
             logger.info("Query executed successfully and results fetched.")
         except Exception as e:
-            log_system_message(logger, """An error occurred while executing the query: 
-                            {}""".format(e))
+            # log_system_message(logger, """An error occurred while executing the query: 
+            #                 {}""".format(e))
             return e
 
         schema_3 = [field.name for field in results_copy_dol.schema]
@@ -1482,8 +1687,8 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
 
         try:
             logger.info("Merging dataframes...")
-            result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how = "outer", on = ["TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"])
-            result_ddl_ed_table = pd.merge(result_ddl_ed_table, dataframe_copy_dol, how = "outer", on=["TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"])
+            # result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_ddl_table_info, how = "outer", on = ["TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"])
+            result_ddl_ed_table = pd.merge(dataframe_schema_table_info, dataframe_copy_dol, how = "inner", on=["TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME"])
             table_struct = pd.concat([table_struct, result_ddl_ed_table] , ignore_index = True)
             print(result_ddl_ed_table)
             
@@ -1493,8 +1698,8 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
             # logger.info("Data written to Snowflake successfully.")
             print(result_ddl_ed_table)
         except Exception as e:
-            log_system_message(logger, """Failed to Merge Dataframes: 
-                        {}""".format(e))
+            # log_system_message(logger, """Failed to Merge Dataframes: 
+            #             {}""".format(e))
             return e
             
         if len(table_tuple)<2:
@@ -1520,10 +1725,305 @@ def auditing_log_into_Snowflake(snowflake_connection_config,project_name,Dist_us
         write_pandas(snowflake_connection_config,table_struct, 'META_TABLES_STRUCT_SOURCE', database = database, schema = schema, auto_create_table = True, overwrite = True, table_type = "transient")
         logger.info("Column information written to Snowflake successfully.")
     except Exception as e:
-        log_system_message(logger, """An error occurred while executing or processing the query:
-                    {}""".format(e))
+        # log_system_message(logger, """An error occurred while executing or processing the query:
+        #             {}""".format(e))
         return e
 
+
+# def streamlit(database, schema):
+#     stream_script = ("""
+# import streamlit as st
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# import numpy as np
+# import matplotlib
+
+# from snowflake.snowpark.context import get_active_session
+
+
+# st.set_page_config(layout="wide")
+# st.header("Migration Report")
+# st.button(":arrows_counterclockwise:", type="primary")
+# st.divider()
+# tab1,tab3,tab4 = st.tabs(["Table Loaded","Table Structure","incremental Load"])
+# session = get_active_session()
+# time=session.sql('select getdate();').collect()
+# backgroundColor="#FFFFFF"
+# def Table_report():
+#     session.write_pandas(df_table_Source,f'Migration_Report_Schema_/time/',database="{database}",schema="{schema}", auto_create_table=True,overwrite=True,table_type="transient")
+
+# with tab1:
+#     col1,col2,col3=st.columns([1,2,0.5])
+#     with col1:
+#         def Schema_report():
+#             session.write_pandas(df_schema,f'Migration_Report_Schema_/time/',database="{database}",schema="{schema}", auto_create_table=True,overwrite=True,table_type="transient")
+#         st.write("Schema  Availability:")
+#         st.button(":inbox_tray:",help="download Schema Report",on_click=Schema_report)
+#         dataframe=session.sql('select distinct(table_schema) as "Schema Available in BigQuery"  from {database}.{schema}.META_TABLES_STRUCT_SOURCE')
+#         df_schema=dataframe.to_pandas()
+#         df_schema.insert(1,"Schema Loaded in snowflake",'❌')
+#         list_schema_target=session.sql("select SCHEMA_NAME,CREATED from {database}.INFORMATION_SCHEMA.SCHEMATA;").collect()
+#         count_Schema=len(df_schema)
+#         count_load_Schema =0
+#         count_unloade_schema=0
+#         schema_list=df_schema["Schema Available in BigQuery"].tolist()
+#         df_schema.insert(2,"Schema Create Date",np.nan)
+#         for i in range (len(df_schema)):
+#             schema_source=df_schema.iloc[i][0]
+#             upper_schema_source=schema_source.upper()
+#             for len_schema_target in range (len(list_schema_target)):
+#                 if(list_schema_target[len_schema_target]['SCHEMA_NAME'] == upper_schema_source):
+#                     df_schema.iloc[i,1]='✅' 
+#                     df_schema.iloc[i,2]=list_schema_target[len_schema_target]['CREATED']
+#                     count_load_Schema+=1
+#                     schema_list.remove(schema_source)
+#                     break
+#         st.table(df_schema)
+       
+#         count_unloade_schema=count_Schema-count_load_Schema
+        
+#         st.caption(f"Total Number of Schema: /count_Schema/")
+#         y = np.array([count_load_Schema,count_unloade_schema])
+#         mylabels = [ count_load_Schema,count_unloade_schema]
+#         lables_info = ["No of successful create schema", "No of unsuccessful create schema " ]
+#         myexplode = [0, 0.1]
+#         mycolors = ["#ACEC6B", "#FF7777"]
+#         plt.pie(y, labels = mylabels, explode = myexplode,startangle = 90,colors = mycolors)
+#         plt.legend(title = "Schema Status:",labels=lables_info )
+#         a=plt.show() 
+#         st.set_option('deprecation.showPyplotGlobalUse', False)
+#         st.pyplot(a)
+#         if(count_Schema==count_load_Schema):
+#             st.success('All schema have been successfully created.', icon="✅")
+#         else:
+#             st.write("Unavailable Schema In Snowflake:")
+#             df = pd.DataFrame(schema_list, columns =['Schema Name'])
+#             st.dataframe(df)
+#             st.warning('Some schema are missing. Please verify them.', icon="❌")
+       
+      
+            
+#     with col2:
+#         st.write("Table  Availability:")
+#         dataframe_table_source=session.sql('select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;')
+#         st.button(":inbox_tray:",help="download Table Report",on_click=Table_report)
+#         df_table_Source=dataframe_table_source.to_pandas()
+#         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
+#         df_table_Target=dataframe_table_target.to_pandas()
+#         df_table_Source.insert(3,"Table Create Date",np.nan)
+#         df_table_Source.insert(4,"Table Create in snowflake",'❌')
+#         df_table_Source.insert(5,"Loaded Row Count in snowflake",0)
+#         df_table_Source.insert(6," Compare Loaded RowCount in snowflake and BigQuery ",'❌')
+#         count_table_source=len(df_table_Source)
+#         count_table_target=0
+#         count_table_row_Target=0
+#         table_list=df_table_Source["Table On Source"].tolist()
+#         table_load_list=df_table_Source["Table On Source"].tolist()
+       
+#         for len_table in range(count_table_source):
+#             table_source=df_table_Source.iloc[len_table][1]
+#             upper_table_source=table_source.upper()
+#             for len_table_target in range(len(df_table_Target)):
+#                 if(df_table_Target.iloc[len_table_target]["TABLE_NAME"]==upper_table_source):
+#                     df_table_Source.iloc[len_table,4]='✅' 
+#                     df_table_Source.iloc[len_table,3]=df_table_Target.iloc[len_table_target]["CREATED"]
+#                     count_table_target +=1
+#                     table_list.remove(table_source)
+#                     snowflake_count=df_table_Target.iloc[len_table_target]["ROW_COUNT"]
+#                     bigquery_count=df_table_Source.iloc[len_table]["Table Row Count in BigQuery"]
+#                     if(snowflake_count==bigquery_count):
+#                          df_table_Source.iloc[len_table,5]=df_table_Target.iloc[len_table_target]["ROW_COUNT"]
+#                          df_table_Source.iloc[len_table,6]='✅'
+#                          count_table_row_Target +=1
+#                          table_load_list.remove(table_source)
+#                     else:
+#                         df_table_Source.iloc[len_table,5]=df_table_Target.iloc[len_table_target]["ROW_COUNT"]
+#         st.table(df_table_Source)
+        
+#         unloaded_table_count=count_table_source-count_table_target
+        
+#     with col3:
+#         st.write("Table loaded overview")
+#         st.caption(f"Total Number of Tables In Big Query : /count_Schema/")
+#         y = np.array([count_table_target,unloaded_table_count])
+#         mylabels = [count_table_target,unloaded_table_count]
+#         lables_info = ["No of table Loaded ", "No of table unloaded " ]
+#         myexplode = [0, 0.1]
+#         mycolors = ["#ACEC6B", "#FF7777"]
+#         plt.pie(y, labels = mylabels, explode = myexplode,startangle = 90,colors = mycolors)
+#         plt.legend(title = "Table Loaded Status:",labels=lables_info )
+#         a=plt.show() 
+#         st.set_option('deprecation.showPyplotGlobalUse', False)
+#         st.pyplot(a)
+#         if(count_table_source==count_table_target):
+#             st.success('All table are create successfully In Snowflake.', icon="✅")
+#         else:
+#             table_frame= pd.DataFrame(table_list, columns =['Table Name'])
+#             st.divider()
+#             st.write('Unavailable table in snowflake:')
+#             st.dataframe(table_frame)
+#             st.warning('Some table are missing Please verify them.', icon="❌")
+#         if(count_table_source==count_table_row_Target):
+#             st.success('All data has been successfully loaded into the table', icon="✅")
+#         else:
+#             st.divider()
+#             table_load_frame= pd.DataFrame(table_load_list, columns =['Table Name'])
+#             st.write("Loading Failed Table:")
+#             st.dataframe(table_load_frame)
+#             st.warning('Some data did not load into the table. Please verify them.', icon="❌")
+    
+
+# with tab3:
+#     def table_overview(schema,table):
+#         dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
+#         df_table_Source=dataframe_table_source.to_pandas()
+#         dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
+#         df_table_Target=dataframe_table_target.to_pandas()
+#         df_table_Source.insert(3,"Table Create Date",np.nan)
+#         df_table_Source.insert(4,"Table Create in snowflake",'❌')
+#         df_table_Source.insert(5,"Loaded Row Count in snowflake",0)
+#         df_table_Source.insert(6," Compare Loaded RowCount in snowflake and BigQuery ",'❌')
+#         count_table_source=len(df_table_Source)
+#         count_table_target=0
+#         count_table_row_Target=0
+#         table_list=df_table_Source["Table On Source"].tolist()
+#         table_load_list=df_table_Source["Table On Source"].tolist()
+       
+#         for len_table in range(count_table_source):
+#             table_source=df_table_Source.iloc[len_table][1]
+#             upper_table_source=table_source.upper()
+#             for len_table_target in range(len(df_table_Target)):
+#                 if(df_table_Target.iloc[len_table_target]["TABLE_NAME"]==upper_table_source):
+#                     df_table_Source.iloc[len_table,4]='✅' 
+#                     df_table_Source.iloc[len_table,3]=df_table_Target.iloc[len_table_target]["CREATED"]
+#                     count_table_target +=1
+#                     table_list.remove(table_source)
+#                     snowflake_count=df_table_Target.iloc[len_table_target]["ROW_COUNT"]
+#                     bigquery_count=df_table_Source.iloc[len_table]["Table Row Count in BigQuery"]
+#                     if(snowflake_count==bigquery_count):
+#                          df_table_Source.iloc[len_table,5]=df_table_Target.iloc[len_table_target]["ROW_COUNT"]
+#                          df_table_Source.iloc[len_table,6]='✅'
+#                          count_table_row_Target +=1
+#                          table_load_list.remove(table_source)
+#                     else:
+#                         df_table_Source.iloc[len_table,5]=df_table_Target.iloc[len_table_target]["ROW_COUNT"]
+#         st.table(df_table_Source)
+#     table_input_struct=st.form('table Struct')
+    
+#     schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+#     def Table_Struct():
+#         session.write_pandas(source_table,f'Migration_Report_Table_Struct_/time/',database="{database}",schema="PUBLIC", auto_create_table=True,overwrite=True,table_type="transient")        
+#     schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+#     schema_name=table_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view',key="schema_name")
+#     Table_SQL=('''select distinct table_name from {database}.{schema}.META_TABLES_STRUCT_SOURCE where table_schema='/schema_name/';''').format(schema_name=schema_name)
+#     Table_List =session.sql(Table_SQL).collect()
+#     table_name=table_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view')
+    
+#     submit=table_input_struct.form_submit_button("Fetch Details")
+#     if submit:
+#         st.write("Table overview:")
+#         table_overview(schema_name,table_name)
+#         col1,col2=st.columns([1,0.2])
+        
+#         source_table_sql=(f'''select column_name as  "Column Available In Source",data_type as  "Data type In BigQuery"  from {database}.{schema}.META_COLUMNS_STRUCT_SOURCE where table_schema='/schema_name/' and table_name='/table_name/'  ;''').format(schema_name=schema_name,table_name=table_name)
+#         source_table=session.sql(source_table_sql)
+#         source_table=source_table.to_pandas()
+#         source_table.insert(2,"Column Available In Snowflake",'❌')
+#         source_table.insert(3,"Column Type In Snowflake",'❌')
+#         source_table.insert(4,"Column Type Available On Target","INT")
+#         # source_table.insert(4,"Load Row Count On Target",0)
+#         len_column=len(source_table)
+#         Len_column_count_check=0
+#         column_list=source_table["Column Available In Source"].tolist()
+        
+    
+#         for len_column_count in range (len_column):
+#             column_name_capital=source_table.iloc[len_column_count]["Column Available In Source"]
+#             column_name=column_name_capital.upper()
+#             sql_target_column=("select column_name,data_type from {database}.INFORMATION_SCHEMA.COLUMNS where  table_schema=upper('/schema_name/') and table_name=upper('/table_name/' ) ;").format(schema_name=schema_name,table_name=table_name)
+#             target_table_column=session.sql(sql_target_column)
+#             target_table_column=target_table_column.to_pandas()
+#             if(len(target_table_column)<1):
+#                 break
+#             for len_column_count_target in range(len(target_table_column)):
+#                 name=target_table_column.iloc[len_column_count_target]['COLUMN_NAME']
+#                 if(column_name==target_table_column.iloc[len_column_count_target]['COLUMN_NAME']):
+#                     column_list.remove(column_name_capital)
+#                     source_table.iloc[len_column_count,2]='✅'
+#                     Len_column_count_check +=1
+#                     source_table.iloc[len_column_count,4]=target_table_column.iloc[len_column_count_target]['DATA_TYPE']
+#                     if(source_table.iloc[len_column_count]["Data type In BigQuery"]==('STRING')):
+#                         if(target_table_column.iloc[len_column_count_target]['DATA_TYPE']==("TEXT")):
+#                             source_table.iloc[len_column_count,3]='✅'
+#                     if(source_table.iloc[len_column_count]["Data type In BigQuery"]==('INT64')):
+#                         if(target_table_column.iloc[len_column_count_target]['DATA_TYPE']==("INT") or ("NUMBER")):
+#                             source_table.iloc[len_column_count,3]='✅'
+#                     if(source_table.iloc[len_column_count]["Data type In BigQuery"]==('FLOAT64')):
+#                         if(target_table_column.iloc[len_column_count_target]['DATA_TYPE']==("FLOAT4") or ("FLOAT")):
+#                             source_table.iloc[len_column_count,3]='✅'
+#                     if(source_table.iloc[len_column_count]["Data type In BigQuery"]==('TIMESTAMP')):
+#                         if(target_table_column.iloc[len_column_count_target]['DATA_TYPE']==("TIMESTAMP") or ("TIMESTAMP_LTZ")):
+#                             source_table.iloc[len_column_count,3]='✅'
+#                     if(source_table.iloc[len_column_count]["Data type In BigQuery"]==('DATE')):
+#                         if(target_table_column.iloc[len_column_count_target]['DATA_TYPE']==("DATE") ):
+#                             source_table.iloc[len_column_count,3]='✅'
+#                     if(source_table.iloc[len_column_count]["Data type In BigQuery"]==('DATETIME')):
+#                         if(target_table_column.iloc[len_column_count_target]['DATA_TYPE']==("TIMESTAMP_NTZ") ):
+#                             source_table.iloc[len_column_count,3]='✅'
+#                     break
+#         if(len(target_table_column)<1):
+#             st.error("No Table Found On Snowflake") 
+#             st.exception("No Table Found On Snowflake")
+#         else:
+#             with col1:
+#                 st.write(" Column Structure:")
+#                 st.dataframe(source_table)
+#                 st.button(":inbox_tray:",help="download Tabel Struct Report",on_click=Table_Struct)
+#                 st.write("Initial Load File:")
+#                 capital_schema_name=schema_name.upper()
+#                 capital_table_name=table_name.upper()
+#                 sql_inital_load_file=("select FILE_NAME,last_load_time,status,row_count,row_parsed  from {database}.{schema}.LOAD_HISTORY where schema_name=upper('/schema_name/')  and table_name=upper('/table_name/' ) ;").format(schema_name=schema_name,table_name=table_name)
+#                 inital_load_frame=session.sql(sql_inital_load_file)
+#                 inital_load_frame=inital_load_frame.to_pandas()
+#                 st.dataframe(inital_load_frame)
+#             unloaded_column=len_column-Len_column_count_check
+#             Table_Struct = np.array([Len_column_count_check,unloaded_column])
+#             Table_Column_count = [Len_column_count_check,unloaded_column]
+#             lables_info = ["No of column Loaded", "No of Column Unloaded " ]
+#             myexplode = [0, 0.1]
+#             mycolors = ["#ACEC6B", "#FF7777"]
+#             plt.pie(Table_Struct, labels = Table_Column_count, explode = myexplode,startangle = 90,colors = mycolors)
+#             plt.legend(title = "Table Column Status:",labels=lables_info )
+#             a=plt.show() 
+#             st.set_option('deprecation.showPyplotGlobalUse', False)
+#             with col2:
+#                 st.pyplot(a)
+#                 if(len_column==Len_column_count_check):
+#                     st.success('All Column are Available In Table.', icon="✅")   
+#                 else:
+#                     st.warning('Column are missing Please verify them.', icon="❌")
+#                     st.write("unavailable column in table:")
+#                     column_list= pd.DataFrame(column_list, columns =['Column Name'])
+#                     st.table(column_list)
+# with tab4:
+#     incremental_input_struct=st.form('incremental Struct')
+#     schema_list=session.sql('select distinct table_schema from {database}.{schema}.META_TABLES_STRUCT_SOURCE;').collect()
+#     schema_name=incremental_input_struct.selectbox('Bigquery Schema List',schema_list,help='select Schema need to view')
+#     Table_SQL=('''select distinct table_name from {database}.{schema}.META_TABLES_STRUCT_SOURCE where table_schema='/schema_name/';''').format(schema_name=schema_name)
+#     Table_List =session.sql(Table_SQL).collect()
+#     table_name=incremental_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view',)
+#     submit=incremental_input_struct.form_submit_button("Fetch Details")
+# """.format(database=database, schema=schema))
+#     stream_script=stream_script.replace("/count_table_source/","{count_table_source}")
+#     stream_script=stream_script.replace("Migration_Report_Schema_/time/","Migration_Report_Schema_{time[0][0]}")
+#     stream_script=stream_script.replace("/count_Schema/","{count_Schema}")
+#     stream_script=stream_script.replace("/schema_name/","{schema_name}")
+#     stream_script=stream_script.replace("/table_name/","{table_name}")     
+#     results = stream_script
+#     # print(results)
+#     text_file_path = r'C:/Users/Elait112.ELAIT-DT-CHE-W-/Downloads/Stream_lit_code_frame/Stream_lit_code_frame/streamlit.py'
+#     with open(text_file_path, 'w', encoding='utf-8') as text_file:
+#         text_file.write(results)
 
 def streamlit(database, schema):
     stream_script = ("""
@@ -1603,7 +2103,8 @@ with tab1:
         dataframe_table_source=session.sql('select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE;')
         st.button(":inbox_tray:",help="download Table Report",on_click=Table_report)
         df_table_Source=dataframe_table_source.to_pandas()
-        dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
+        #dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME, ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES  where Table_schema !='INFORMATION_SCHEMA' ;") 
+        dataframe_table_target=session.sql("select upper(a.SCHEMA) as TABLE_SCHEMA,upper(a.TABLE_NAME) as TABLE_NAME,CAST( a.NO_OF_INSERT as INT) as ROW_COUNT,t.CREATED as CREATED from {database}.INFORMATION_SCHEMA.TABLES as t inner join {database}.{schema}.BIGQUERY_LOAD_HISTORY a on lower(a.table_name) = lower(t.table_name) where t.Table_schema !='INFORMATION_SCHEMA' and a.type_of_load = 'INITIAL';")
         df_table_Target=dataframe_table_target.to_pandas()
         df_table_Source.insert(3,"Table Create Date",np.nan)
         df_table_Source.insert(4,"Table Create in snowflake",'❌')
@@ -1672,7 +2173,8 @@ with tab3:
     def table_overview(schema,table):
         dataframe_table_source=session.sql(f'''select distinct table_schema as "Table Schema On Source",table_name as "Table On Source" ,case when total_rows is null then 0 else total_rows end as "Table Row Count in BigQuery" from {database}.{schema}.META_TABLES_STRUCT_SOURCE where "Table Schema On Source" ='/schema_name/' and "Table On Source" ='/table_name/' ;''')
         df_table_Source=dataframe_table_source.to_pandas()
-        dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME,ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES where Table_schema !='INFORMATION_SCHEMA';") 
+        #dataframe_table_target=session.sql("select TABLE_SCHEMA,TABLE_NAME, ROW_COUNT,CREATED from {database}.INFORMATION_SCHEMA.TABLES  where Table_schema !='INFORMATION_SCHEMA' ;") 
+        dataframe_table_target=session.sql("select upper(a.SCHEMA) as TABLE_SCHEMA,upper(a.TABLE_NAME) as TABLE_NAME,CAST(a.NO_OF_INSERT as INT) as ROW_COUNT,t.CREATED as CREATED from {database}.INFORMATION_SCHEMA.TABLES as t inner join {database}.{schema}.BIGQUERY_LOAD_HISTORY a on lower(a.table_name) = lower(t.table_name) where t.Table_schema !='INFORMATION_SCHEMA' and a.type_of_load = 'INITIAL';")
         df_table_Target=dataframe_table_target.to_pandas()
         df_table_Source.insert(3,"Table Create Date",np.nan)
         df_table_Source.insert(4,"Table Create in snowflake",'❌')
@@ -1808,6 +2310,15 @@ with tab4:
     Table_List =session.sql(Table_SQL).collect()
     table_name=incremental_input_struct.selectbox('Bigquery Table List',Table_List,help='select Table need to view',)
     submit=incremental_input_struct.form_submit_button("Fetch Details")
+    if submit:
+        st.write("Incremental load overview:") 
+        inc_table_sql=(f'''select DATABASE, SCHEMA, TABLE_NAME, TYPE_OF_LOAD, FILE_NAME, NO_OF_ROWS, NO_OF_UPDATES, NO_OF_INSERT, TIMESTAMP  from SNOW_MIGRATE_DATABASE.SNOW_MIGRATE_SCHEMA.BIGQUERY_LOAD_HISTORY where schema='/schema_name/' and table_name='/table_name/'  and TYPE_OF_LOAD = 'INCREMENTAL';''').format(schema_name=schema_name,table_name=table_name)
+        inc_table=session.sql(inc_table_sql)
+        inc_table=inc_table.to_pandas()
+        if (len(inc_table) > 0):
+            st.dataframe(inc_table)
+        else:
+            st.write('No Incremental log found for the selected table')
 """.format(database=database, schema=schema))
     stream_script=stream_script.replace("/count_table_source/","{count_table_source}")
     stream_script=stream_script.replace("Migration_Report_Schema_/time/","Migration_Report_Schema_{time[0][0]}")
@@ -1816,10 +2327,9 @@ with tab4:
     stream_script=stream_script.replace("/table_name/","{table_name}")     
     results = stream_script
     # print(results)
-    text_file_path = r'D:\Stream_lit_code_frame\streamlit.py'
+    text_file_path = r'C:/Users/Elait112.ELAIT-DT-CHE-W-/Downloads/Stream_lit_code_frame/Stream_lit_code_frame/streamlit.py'
     with open(text_file_path, 'w', encoding='utf-8') as text_file:
         text_file.write(results)
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

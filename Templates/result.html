@@ -12,6 +12,7 @@
   <meta name="author" content="" />
   <link rel="shortcut icon" href="{{ url_for('static',filename='Image/logo.png') }}" type="">
   <link href="{{ url_for('static',filename='styles/result.css') }}" rel="stylesheet" />
+  <!-- <link rel="stylesheet" href="C:\Users\Elait112.ELAIT-DT-CHE-W-\Downloads\SNOWFLAKE_TOOL\SNOWFLAKE_TOOL (2)\SNOWFLAKE_TOOL\static\styles\result.css"> -->
   <style>
     body{
         background-color: #072A6C;
@@ -32,6 +33,10 @@
         border-radius: 5px;
         margin-left: 110px;
     }
+    form{
+        margin-right: 120px;
+        margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -47,7 +52,6 @@
                 <form action="/incremental" method="post">
                     <button type="submit" class="connect-btn">Incremental</button>
                 </form>
-                
                 <a class="connect-btn" href="{{ url_for('index') }}" style="margin-right: 120px; margin-top: 10px;">Back to Home</a>
             </div>
         </div>
